@@ -1,0 +1,6 @@
+[package]
+name = "bobomb"
+version = "0.1.0"
+authors = ["Andrew Williams <williams.andrew@gmail.com>"]
+
+[dependencies]
