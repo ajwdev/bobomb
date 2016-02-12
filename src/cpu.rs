@@ -2,7 +2,7 @@
 
 use super::mem::Memory;
 
-pub struct Cpu {
+pub struct Cpu<'a> {
     PC : u16, // Program counter
     X  : u8,  // General purpose register
     Y  : u8,  // General purpose register
@@ -10,11 +10,11 @@ pub struct Cpu {
     SP : u8,  // Stack pointer
     SR : StatusRegister,  // Status register
 
-    mem: Memory,
+    mem: Memory<'a>,
 }
 
-impl Cpu {
-    pub fn new(mem: Memory) -> Self {
+impl<'a> Cpu<'a> {
+    pub fn new(mem: Memory<'a>) -> Self {
         Cpu {
             X: 0,
             Y: 0,

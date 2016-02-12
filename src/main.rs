@@ -17,7 +17,8 @@ fn main() {
         panic!("header validation failed: {:?}", &file_buf[0..16]);
     }
 
-    let mut memory = mem::Memory::new(file_buf);
+    // TODO Handle multi banked roms
+    let memory = mem::Memory::new(&file_buf[16..16*1024], &file_buf[16..16*1024]);
     let mut cpu = cpu::Cpu::new(memory);
     cpu.start();
 }

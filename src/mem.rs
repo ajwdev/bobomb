@@ -9,48 +9,44 @@ const SYSTEM_RAM_END: u16 = 0x07FF;
 const PPU_REGISTERS_START: u16 = 0x2000;
 const PPU_REGISTERS_END: u16 = 0x2007;
 
-const CARTRIDE_START: u16 = 0x4020;
-const CARTRIDE_END: u16 = 0xFFFF;
+const ROM_BANK_SIZE: u16 = 16 * 1024;
+const ROM_LOWER_START: u16 = 0x8000;
+const ROM_UPPER_START: u16 = 0xc000;
 
 // TODO Should we call this address space?
-pub struct Memory {
+pub struct Memory<'a> {
+    // TODO Look at this again once lifetimes make more sense
+    lower_rom: &'a [u8],
+    upper_rom: &'a [u8],
+
+    // TODO Look into a Cell<T> here
     ram: Vec<u8>,
-    rom: Vec<u8>,
     ppu: Vec<u8>,
 }
 
-pub enum Bank {
-    SystemRam,
-    LowerRom,
-    UpperRom,
-}
-
-impl Memory {
-    pub fn new(rom: Vec<u8>) -> Self {
+impl<'a> Memory<'a> {
+    pub fn new(lower_rom: &'a [u8], upper_rom: &'a [u8]) -> Self {
         Memory {
             ram: vec![0; SYSTEM_RAM],
-            rom: rom,
             ppu: vec![0; PPU_SIZE],
+            lower_rom: lower_rom,
+            upper_rom: upper_rom,
         }
     }
 
     pub fn read_word(&self, addr: u16) -> u8 {
-        // TODO Deal with ROM banking
-
-        // Convert to pattern range
+        // TODO Convert to pattern range
         //     1 ... 5 => println!("one through five"),
-        if addr >= 0x8000 {
-            // TODO Deal with multi banked ROM such as
-            // super mario bros
-            let reladdr;
-            if addr >= 0xc000 {
+        if addr >= ROM_LOWER_START {
+            if addr >= ROM_UPPER_START {
                 // We're in the second/upper bank
-                reladdr = (addr - (0x8000 + 0x4000) + 0x10);
+                let reladdr = addr - (ROM_LOWER_START + ROM_BANK_SIZE);
+                return self.upper_rom[reladdr as usize];
             } else {
                 // Lower bank
-                reladdr = (addr - 0x8000) + 0x10;
+                let reladdr = (addr - ROM_LOWER_START);
+                return self.lower_rom[reladdr as usize];
             }
-            self.rom[reladdr as usize]
 
         } else if addr < 0x2000 {
             self.ram[addr as usize]
@@ -62,26 +58,13 @@ impl Memory {
 
     pub fn write_word(&mut self, addr: u16, value: u8) {
         match addr {
-            0x2000 ... 0x2007 => {    // PPU
+            0x2000...0x2007 => {    // PPU
                 let offset: usize = (addr - 0x2000) as usize;
                 self.ppu[offset] = value;
             }
             _ => { panic!("unimplemented write address {:#x}", addr); }
         }
     }
-
-    /*pub fn find_map(&self, addr: u16) -> Bank {
-        if addr >= 0xc000 {
-            return Bank::UpperRom;
-        } else {
-            return Bank::Lower;
-        }
-    }
-
-    fn read_word_lower_bank(&self, addr: u16) -> u8 {
-    }
-    */
-
 }
 
 #[cfg(test)]
@@ -90,12 +73,12 @@ mod test {
 
     #[test]
     fn test_read_system_ram() {
-        let mut faux_rom = vec![0; 16*1024+16];
-        let mem = Memory::new(faux_rom);
+        let faux_rom = vec![0; 1024*16];
+        let mut mem = Memory::new(&faux_rom, &faux_rom);
         mem.ram[0] = 0xFF;
         mem.ram[0x10] = 0xFF;
         mem.ram[0xa0] = 0xFF;
-        mem.ram[0x800] = 0xFF;
+        mem.ram[0x7ff] = 0xFF;
 
         assert_eq!(0xFF, mem.read_word(0x00)); 
         assert_eq!(0xFF, mem.read_word(0x10)); 
@@ -105,14 +88,14 @@ mod test {
 
     #[test]
     fn test_read_rom_single_bank() {
-        let mut faux_rom = vec![0; 16*1024+16];
-        faux_rom[16]        = 0xFF;
-        faux_rom[16+0x10]   = 0xFF;
-        faux_rom[16+0xa0]   = 0xFF;
-        faux_rom[16+0x3FFF] = 0xFF;
+        let mut faux_rom = vec![0; 16*1024];
+        faux_rom[0]      = 0xFF;
+        faux_rom[0x10]   = 0xFF;
+        faux_rom[0xa0]   = 0xFF;
+        faux_rom[0x3FFF] = 0xFF;
 
 
-        let mem = Memory::new(faux_rom);
+        let mem = Memory::new(&faux_rom, &faux_rom);
         // Lower bank
         assert_eq!(0xFF, mem.read_word(0x8000)); 
         assert_eq!(0xFF, mem.read_word(0x8010)); 
@@ -127,20 +110,19 @@ mod test {
 
     #[test]
     fn test_read_rom_double_bank() {
-        // TODO This test is expected to fail right now
-        let mut faux_rom = vec![0; 32*1024+16];
-        faux_rom[16]        = 0xFF;
-        faux_rom[16+0x10]   = 0xFF;
-        faux_rom[16+0xa0]   = 0xFF;
-        faux_rom[16+0x3FFF] = 0xFF;
+        let mut faux_rom = vec![0; 32*1024];
+        faux_rom[0]       = 0xFF;
+        faux_rom[0x10]   = 0xFF;
+        faux_rom[0xa0]   = 0xFF;
+        faux_rom[0x3FFF] = 0xFF;
 
-        faux_rom[16+0x4000] = 0xAA;
-        faux_rom[16+0x4010] = 0xAA;
-        faux_rom[16+0x40a0] = 0xAA;
-        faux_rom[16+0x7FFF] = 0xAA;
+        faux_rom[0x4000] = 0xAA;
+        faux_rom[0x4010] = 0xAA;
+        faux_rom[0x40a0] = 0xAA;
+        faux_rom[0x7FFF] = 0xAA;
 
 
-        let mem = Memory::new(faux_rom);
+        let mem = Memory::new(&faux_rom[0..16*1024], &faux_rom[16*1024..]);
         // Lower bank
         assert_eq!(0xFF, mem.read_word(0x8000)); 
         assert_eq!(0xFF, mem.read_word(0x8010)); 
@@ -154,6 +136,7 @@ mod test {
     }
     
     #[test]
+    #[ignore]
     fn test_write_word() {
         panic!("implement");
     }
