@@ -98,9 +98,7 @@ impl<'a> Cpu<'a> {
 
     pub fn start(&mut self) {
         println!("PC: {:#x}", self.PC);
-        loop {
-            self.execute_instruction();
-        }
+        loop { self.execute_instruction(); }
     }
 
     fn find_pc_addr(mem: &Memory) -> u16 {
@@ -183,7 +181,7 @@ impl<'a> Cpu<'a> {
             }
             // STA absolute
             0x8d => {
-               let dest = self.read_dword_and_increment(); 
+               let dest = self.read_dword_and_increment();
                self.mem.write_word(dest, self.AC);
             }
             _ => {

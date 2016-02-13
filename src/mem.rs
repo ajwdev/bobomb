@@ -1,3 +1,5 @@
+use std::ops::Index;
+
 const SYSTEM_RAM: usize = 2 * 1024;
 const PPU_SIZE: usize = 8;
 
@@ -18,6 +20,7 @@ const ROM_UPPER_END: u16 = ROM_UPPER_START + 0x3FFF;
 
 
 // TODO Should we call this address space?
+#[derive(Debug)]
 pub struct Memory<'a> {
     // TODO Look at this again once lifetimes make more sense
     lower_rom: &'a [u8],
@@ -42,20 +45,20 @@ impl<'a> Memory<'a> {
         match addr {
             ROM_LOWER_START...ROM_LOWER_END => {
                 // Lower bank
-                let reladdr: u16 = (addr - ROM_LOWER_START);
+                let reladdr: u16 = addr - ROM_LOWER_START;
                 return self.lower_rom[reladdr as usize];
-            }
+            },
             ROM_UPPER_START...ROM_UPPER_END => {
                 let reladdr: u16 = addr - (ROM_LOWER_START + ROM_BANK_SIZE);
                 return self.upper_rom[reladdr as usize];
-            }
+            },
             // TODO Review this as RAM technically starts 0x0200
             0x00...0x07ff => {
                 self.ram[addr as usize]
-            }
+            },
             0x2000...0x2007 => {
                 self.ppu[(addr-0x2000) as usize]
-            }
+            },
             _ => {
                 panic!("unknown address {:#x}", addr);
             }
@@ -111,12 +114,10 @@ mod test {
         mem.ram[0xa0] = 0xFF;
         mem.ram[0x7ff] = 0xFF;
 
-        let mut result: u8;
-
-        assert_eq!(0xFF, mem.read_word(0x00)); 
-        assert_eq!(0xFF, mem.read_word(0x10)); 
-        assert_eq!(0xFF, mem.read_word(0x7ff)); 
-        assert_eq!(0, mem.read_word(0x01)); 
+        assert_eq!(0xFF, mem.read_word(0x00));
+        assert_eq!(0xFF, mem.read_word(0x10));
+        assert_eq!(0xFF, mem.read_word(0x7ff));
+        assert_eq!(0, mem.read_word(0x01));
     }
 
     #[test]
@@ -130,41 +131,41 @@ mod test {
 
         let mem = Memory::new(&mock_rom, &mock_rom);
         // Lower bank
-        assert_eq!(0xFF, mem.read_word(0x8000)); 
-        assert_eq!(0xFF, mem.read_word(0x8010)); 
-        assert_eq!(0xFF, mem.read_word(0xbfff)); 
-        assert_eq!(0, mem.read_word(0x8001)); 
+        assert_eq!(0xFF, mem.read_word(0x8000));
+        assert_eq!(0xFF, mem.read_word(0x8010));
+        assert_eq!(0xFF, mem.read_word(0xbfff));
+        assert_eq!(0, mem.read_word(0x8001));
         // Upper bank
-        assert_eq!(0xFF, mem.read_word(0xc000)); 
-        assert_eq!(0xFF, mem.read_word(0xc010)); 
-        assert_eq!(0xFF, mem.read_word(0xffff)); 
-        assert_eq!(0, mem.read_word(0xc001)); 
+        assert_eq!(0xFF, mem.read_word(0xc000));
+        assert_eq!(0xFF, mem.read_word(0xc010));
+        assert_eq!(0xFF, mem.read_word(0xffff));
+        assert_eq!(0, mem.read_word(0xc001));
     }
 
     #[test]
     fn test_read_rom_double_bank() {
         let mut mock_rom = vec![0; 32*1024];
-        mock_rom[0]       = 0xFF;
+        mock_rom[0]      = 0xFF; // beginning of bank
         mock_rom[0x10]   = 0xFF;
         mock_rom[0xa0]   = 0xFF;
-        mock_rom[0x3FFF] = 0xFF;
+        mock_rom[0x3FFF] = 0xFF; // end of bank
 
-        mock_rom[0x4000] = 0xAA;
+        mock_rom[0x4000] = 0xAA; // beginning of bank
         mock_rom[0x4010] = 0xAA;
         mock_rom[0x40a0] = 0xAA;
-        mock_rom[0x7FFF] = 0xAA;
+        mock_rom[0x7FFF] = 0xAA; // end of bank
 
 
         let mem = Memory::new(&mock_rom[0..16*1024], &mock_rom[16*1024..]);
         // Lower bank
-        assert_eq!(0xFF, mem.read_word(0x8000)); 
-        assert_eq!(0xFF, mem.read_word(0x8010)); 
-        assert_eq!(0xFF, mem.read_word(0xbfff)); 
-        assert_eq!(0, mem.read_word(0x8001)); 
+        assert_eq!(0xFF, mem.read_word(0x8000));
+        assert_eq!(0xFF, mem.read_word(0x8010));
+        assert_eq!(0xFF, mem.read_word(0xbfff));
+        assert_eq!(0, mem.read_word(0x8001));
         // Upper bank
-        assert_eq!(0xAA, mem.read_word(0xc000)); 
-        assert_eq!(0xAA, mem.read_word(0xc010)); 
-        assert_eq!(0xAA, mem.read_word(0xffff)); 
-        assert_eq!(0, mem.read_word(0xc001)); 
+        assert_eq!(0xAA, mem.read_word(0xc000));
+        assert_eq!(0xAA, mem.read_word(0xc010));
+        assert_eq!(0xAA, mem.read_word(0xffff));
+        assert_eq!(0, mem.read_word(0xc001));
     }
 }
