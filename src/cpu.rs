@@ -158,6 +158,23 @@ impl<'a> Cpu<'a> {
             0xd8 => {
                 self.SR.Decimal = false;
             }
+            // TXS
+            0x9a => {
+                self.SP = self.X;
+            }
+            // LDX # immediate
+            0xa2 => {
+                let word = self.read_word_and_increment();
+                self.X = word;
+                self.zero_and_negative_status(word);
+            }
+            // LDA absolute
+            0xad => {
+                let dest = self.read_dword_and_increment();
+                let word = self.mem.read_word(dest);
+                self.AC = word;
+                self.zero_and_negative_status(word);
+            }
             // LDA # immediate
             0xa9 => {
                 let word = self.read_word_and_increment();
@@ -278,6 +295,40 @@ mod test {
         assert!(cpu.SR.Decimal == true, "expected true, got {:#?}", cpu.SR.Decimal);
         cpu.execute_instruction();
         assert!(cpu.SR.Decimal == false, "expected false, got {:#?}", cpu.SR.Decimal);
+    }
+
+    #[test]
+    fn test_txs() {
+        let mock_rom = rom_with_pc_at_start(&[0x9a]);
+        let mem = memory_from_rom(&mock_rom, true);
+        let mut cpu = Cpu::new(mem);
+
+        cpu.X = 0xff;
+        assert!(cpu.SP == 0, "expected 0x00, got {:#x}", cpu.SP);
+        cpu.execute_instruction();
+        assert!(cpu.SP == 0xff, "expected 0xff, got {:#x}", cpu.SP);
+    }
+
+    #[test]
+    fn test_ldx_imm() {
+        let mock_rom = rom_with_pc_at_start(&[0xa2,0xff]);
+        let mem = memory_from_rom(&mock_rom, true);
+        let mut cpu = Cpu::new(mem);
+
+        assert!(cpu.X == 0, "expected 0, got {:#x}", cpu.X);
+        cpu.execute_instruction();
+        assert!(cpu.X == 0xff, "expected 0xff, got {:#x}", cpu.X);
+    }
+
+    #[test]
+    fn test_lda_abs() {
+        let mock_rom = rom_with_pc_at_start(&[0xad,0x03,0x80,0xff]);
+        let mem = memory_from_rom(&mock_rom, true);
+        let mut cpu = Cpu::new(mem);
+
+        assert!(cpu.AC == 0, "expected 0, got {:#x}", cpu.AC);
+        cpu.execute_instruction();
+        assert!(cpu.AC == 0xff, "expected 0xff, got {:#x}", cpu.AC);
     }
 
     #[test]
