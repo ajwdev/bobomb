@@ -18,7 +18,9 @@ fn main() {
     }
 
     // TODO Handle multi banked roms
-    let memory = mem::Memory::new(&file_buf[16..16*1024], &file_buf[16..16*1024]);
+    let memory = mem::Memory::new(
+        &file_buf[16..16*1024+16], &file_buf[16..16*1024+16]
+    );
     let mut cpu = cpu::Cpu::new(memory);
     cpu.start();
 }
