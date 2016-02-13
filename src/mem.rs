@@ -1,13 +1,11 @@
-use std::ops::Index;
-
 const SYSTEM_RAM: usize = 2 * 1024;
-const PPU_SIZE: usize = 8;
 
 // http://wiki.nesdev.com/w/index.php/CPU_memory_map
 // These constants ignore mirrors
 const SYSTEM_RAM_START: u16 = 0x0;
 const SYSTEM_RAM_END: u16 = 0x07FF;
 
+const PPU_REGISTER_SIZE: usize = 8;
 const PPU_REGISTERS_START: u16 = 0x2000;
 const PPU_REGISTERS_END: u16 = 0x2007;
 
@@ -28,14 +26,12 @@ pub struct Memory<'a> {
 
     // TODO Look into a Cell<T> here
     ram: Vec<u8>,
-    ppu: Vec<u8>,
 }
 
 impl<'a> Memory<'a> {
     pub fn new(lower_rom: &'a [u8], upper_rom: &'a [u8]) -> Self {
         Memory {
             ram: vec![0; SYSTEM_RAM],
-            ppu: vec![0; PPU_SIZE],
             lower_rom: lower_rom,
             upper_rom: upper_rom,
         }
@@ -57,7 +53,8 @@ impl<'a> Memory<'a> {
                 self.ram[addr as usize]
             },
             0x2000...0x2007 => {
-                self.ppu[(addr-0x2000) as usize]
+                //self.ppu[(addr-0x2000) as usize]
+                panic!("ppu not implemented yet. access at {:#x}", addr);
             },
             _ => {
                 panic!("unknown address {:#x}", addr);
@@ -71,8 +68,9 @@ impl<'a> Memory<'a> {
                 self.ram[addr as usize] = value;
             }
             0x2000...0x2007 => {    // PPU
-                let offset: usize = (addr - 0x2000) as usize;
-                self.ppu[offset] = value;
+                //let offset: usize = (addr - 0x2000) as usize;
+                //self.ppu[offset] = value;
+                panic!("ppu not implemented yet. access at {:#x}", addr);
             }
             _ => { panic!("unimplemented write address {:#x}", addr); }
         }
