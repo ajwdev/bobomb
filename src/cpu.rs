@@ -1,7 +1,75 @@
 // See http://e-tradition.net/bytes/6502/6502_instruction_set.html
+//#[feature(clone_from_slice)]
+
 
 use super::mem::Memory;
 
+// TODO Fix this at some point
+#[allow(non_snake_case)]
+pub struct StatusRegister {
+    // bit 7
+    Negative: bool, // N
+
+    // bit 6
+    Overflow: bool, // V
+
+    // bit 5
+    // reserved
+
+    // bit 4
+    Break: bool, // B
+
+    // bit 3
+    // NOTE This apparently affects ADC/SBC instructions
+    Decimal: bool, // D
+
+    // bit 2
+    Interrupt: bool, // I
+
+    // bit 1
+    Zero: bool, // Z
+
+    // bit 0
+    Carry: bool, // C
+}
+
+impl StatusRegister {
+    pub fn new() -> Self {
+        StatusRegister {
+            Negative: false,
+            Overflow: false,
+            Break: false,
+            Decimal: false,
+            Interrupt: false,
+            Zero: false,
+            Carry: false,
+        }
+    }
+
+    #[inline]
+    pub fn reset_zero(&mut self) {
+        self.Zero = false;
+    }
+
+    #[inline]
+    pub fn set_zero(&mut self) {
+        self.Zero = true;
+    }
+
+    #[inline]
+    pub fn reset_negative(&mut self) {
+        self.Negative = false;
+    }
+
+    #[inline]
+    pub fn set_negative(&mut self) {
+        self.Negative = true;
+    }
+}
+
+
+// TODO Fix this at some point
+#[allow(non_snake_case)]
 pub struct Cpu<'a> {
     PC : u16, // Program counter
     X  : u8,  // General purpose register
@@ -56,10 +124,30 @@ impl<'a> Cpu<'a> {
         (hi as u16) << 8 | lo as u16
     }
 
+    // TODO This function needs tests
+    fn zero_and_negative_status(&mut self, word: u8) {
+        // Set the Zero bit in the status register if the word is zero.
+        // Else, reset it back to its default.
+        if word == 0 {
+            self.SR.set_zero();
+        } else {
+            self.SR.reset_zero();
+        }
+
+        // Set the Negative bit in the status register if the word is
+        // negative. Else, reset it back to its default.
+        if (word as i8) < 0 {
+            self.SR.set_negative();
+        } else {
+            self.SR.reset_negative();
+        }
+    }
+
     // TODO Ok to make this public? Should we only use start() ?
     fn execute_instruction(&mut self) {
         let instr = self.read_word_and_increment();
 
+        // See http://users.telenet.be/kim1-6502/6502/proman.html
         println!("Instruction: {:#x}", instr);
         match instr {
             // SEI
@@ -72,60 +160,22 @@ impl<'a> Cpu<'a> {
             }
             // LDA # immediate
             0xa9 => {
-                self.AC = self.read_word_and_increment();
+                let word = self.read_word_and_increment();
+                self.AC = word;
+                self.zero_and_negative_status(word);
             }
             // STA absolute
             0x8d => {
                let dest = self.read_dword_and_increment(); 
                self.mem.write_word(dest, self.AC);
             }
-
-            _ => panic!("unrecognized opcode {:#x}, {:#x} {:#x}", 
-                            instr, 
-                            self.mem.read_word(self.PC),
-                            self.mem.read_word(self.PC + 1),
-                        ),
-        }
-    }
-}
-
-
-pub struct StatusRegister {
-    // bit 7
-    Negative: bool, // N
-
-    // bit 6
-    Overflow: bool, // V
-   
-    // bit 5 
-    // reserved
-
-    // bit 4
-    Break: bool, // B
-
-    // bit 3
-    Decimal: bool, // D
-
-    // bit 2
-    Interrupt: bool, // I
-
-    // bit 1
-    Zero: bool, // Z
-
-    // bit 0
-    Carry: bool, // C
-}
-
-impl StatusRegister {
-    pub fn new() -> Self {
-        StatusRegister {
-            Negative: false,
-            Overflow: false,
-            Break: false,
-            Decimal: false,
-            Interrupt: false,
-            Zero: false,
-            Carry: false,
+            _ => {
+                panic!("unrecognized opcode {:#x}, {:#x} {:#x}",
+                    instr,
+                    self.mem.read_word(self.PC),
+                    self.mem.read_word(self.PC + 1),
+                )
+            }
         }
     }
 }
@@ -174,6 +224,8 @@ mod test {
         let result = Cpu::find_pc_addr(&mem);
         assert!(result == 0xbeef, "expected 0xbeef, got: {:#x}", result);
     }
+
+    // TODO Cleanup the repetive preamble in every test
 
     #[test]
     fn test_read_word_and_increment() {
