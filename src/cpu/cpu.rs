@@ -408,15 +408,15 @@ mod test {
 
     #[test]
     fn test_sta_abs() {
-        let mock_rom = rom_with_pc_at_start(&[0x8d,0x01,0x20]);
+        let mock_rom = rom_with_pc_at_start(&[0x8d,0x10,0x00]);
         let mem = memory_from_rom(&mock_rom, true);
         let mut cpu = Cpu::new(mem);
         cpu.AC = 0xff;
 
-        let mut result = cpu.mem.read_word(0x2001);
+        let mut result = cpu.mem.read_word(0x0010);
         assert!(result == 0x00, "expected 0x00, got {:#x}", result);
         cpu.execute_instruction();
-        result = cpu.mem.read_word(0x2001);
+        result = cpu.mem.read_word(0x0010);
         assert!(result == 0xff, "expected 0xff, got {:#x}", result);
     }
 }

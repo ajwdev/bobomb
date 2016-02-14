@@ -17,7 +17,6 @@ const ROM_UPPER_START: u16 = ROM_LOWER_START + ROM_BANK_SIZE; // 0xc000
 const ROM_UPPER_END: u16 = ROM_UPPER_START + 0x3FFF;
 
 
-// TODO Should we call this address space?
 #[derive(Debug)]
 pub struct AddressSpace<'a> {
     // TODO Look at this again once lifetimes make more sense
@@ -87,11 +86,11 @@ mod test {
         let mut mem = AddressSpace::new(&[], &[]);
         let mut result: u8;
 
-        result = mem.read_word(0x2001);
+        result = mem.read_word(0x0010);
         assert!(result == 0x00, "expected 0x00, got {:#x}", result);
 
-        mem.write_word(0x2001, 0xff);
-        result = mem.read_word(0x2001);
+        mem.write_word(0x0010, 0xff);
+        result = mem.read_word(0x0010);
         assert!(result == 0xff, "expected 0xff, got {:#x}", result);
     }
 
