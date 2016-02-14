@@ -4,7 +4,8 @@ use std::io::Read;
 
 // TODO Review Rust's module system
 mod cpu;
-mod mem;
+mod ppu;
+//mod mem;
 
 fn main() {
     let filename = env::args().nth(1).unwrap();
@@ -18,13 +19,13 @@ fn main() {
         panic!("header validation failed: {:?}", &header);
     }
 
-    let memory: mem::Memory;
+    let memory: cpu::AddressSpace;
     if rom_is_double_banked(&header) {
-        memory = mem::Memory::new(
+        memory = cpu::AddressSpace::new(
             &file_buf[16..16*1024+16], &file_buf[16*1024+16..]
         );
     } else {
-        memory = mem::Memory::new(
+        memory = cpu::AddressSpace::new(
             &file_buf[16..16*1024+16], &file_buf[16..16*1024+16]
         );
     }

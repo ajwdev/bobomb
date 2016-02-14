@@ -1,8 +1,8 @@
 // See http://e-tradition.net/bytes/6502/6502_instruction_set.html
 //#[feature(clone_from_slice)]
 
+use super::AddressSpace;
 
-use super::mem::Memory;
 
 // TODO Fix this at some point
 #[allow(non_snake_case)]
@@ -78,11 +78,11 @@ pub struct Cpu<'a> {
     SP : u8,  // Stack pointer
     SR : StatusRegister,  // Status register
 
-    mem: Memory<'a>,
+    mem: AddressSpace<'a>,
 }
 
 impl<'a> Cpu<'a> {
-    pub fn new(mem: Memory<'a>) -> Self {
+    pub fn new(mem: AddressSpace<'a>) -> Self {
         Cpu {
             X: 0,
             Y: 0,
@@ -101,7 +101,7 @@ impl<'a> Cpu<'a> {
         loop { self.execute_instruction(); }
     }
 
-    fn find_pc_addr(mem: &Memory) -> u16 {
+    fn find_pc_addr(mem: &AddressSpace) -> u16 {
         // http://forum.6502.org/viewtopic.php?t=1708
         (mem.read_word(0xFFFD) as u16) << 8 | mem.read_word(0xFFFC) as u16
     }
@@ -222,7 +222,8 @@ impl<'a> Cpu<'a> {
 #[cfg(test)]
 mod test {
     use super::Cpu;
-    use mem::Memory;
+    use super::super::address::AddressSpace;
+
 
     fn rom_with_pc_at_start(words: &[u8]) -> Vec<u8> {
         let mut mock_rom = vec![0; 1024*32];
@@ -241,15 +242,15 @@ mod test {
         return mock_rom;
     }
 
-    fn memory_from_rom(mem: &[u8], doublebank: bool) -> Memory {
+    fn memory_from_rom(mem: &[u8], doublebank: bool) -> AddressSpace {
         if doublebank {
             if mem.len() <= 0x4000 { //16k
                 panic!("rom not large enough for double banking");
             }
-            Memory::new(&mem[0..0x4000], &mem[0x4000..])
+            AddressSpace::new(&mem[0..0x4000], &mem[0x4000..])
         } else {
             // single banked
-            Memory::new(&mem, &mem)
+            AddressSpace::new(&mem, &mem)
         }
     }
 
@@ -259,7 +260,7 @@ mod test {
         mock_rom[0x3ffc] = 0xef;
         mock_rom[0x3ffd] = 0xbe;
 
-        let mem = Memory::new(&mock_rom, &mock_rom);
+        let mem = AddressSpace::new(&mock_rom, &mock_rom);
         let result = Cpu::find_pc_addr(&mem);
         assert!(result == 0xbeef, "expected 0xbeef, got: {:#x}", result);
     }

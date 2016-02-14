@@ -19,7 +19,7 @@ const ROM_UPPER_END: u16 = ROM_UPPER_START + 0x3FFF;
 
 // TODO Should we call this address space?
 #[derive(Debug)]
-pub struct Memory<'a> {
+pub struct AddressSpace<'a> {
     // TODO Look at this again once lifetimes make more sense
     lower_rom: &'a [u8],
     upper_rom: &'a [u8],
@@ -28,9 +28,9 @@ pub struct Memory<'a> {
     ram: Vec<u8>,
 }
 
-impl<'a> Memory<'a> {
+impl<'a> AddressSpace<'a> {
     pub fn new(lower_rom: &'a [u8], upper_rom: &'a [u8]) -> Self {
-        Memory {
+        AddressSpace {
             ram: vec![0; SYSTEM_RAM],
             lower_rom: lower_rom,
             upper_rom: upper_rom,
@@ -77,23 +77,14 @@ impl<'a> Memory<'a> {
     }
 }
 
-/*
-impl Index<'a,u16> for Memory<'a> {
-    fn index<'a>(&'a self, _index: u16) -> u8 {
-        self.read_word(_index)
-    }
-}
-*/
-
-
 #[cfg(test)]
 mod test {
-    use super::Memory;
+    use super::AddressSpace;
 
     #[test]
     fn test_write_word() {
         // TODO Adjust for every writable section of address space
-        let mut mem = Memory::new(&[], &[]);
+        let mut mem = AddressSpace::new(&[], &[]);
         let mut result: u8;
 
         result = mem.read_word(0x2001);
@@ -106,7 +97,7 @@ mod test {
 
     #[test]
     fn test_read_system_ram() {
-        let mut mem = Memory::new(&[], &[]);
+        let mut mem = AddressSpace::new(&[], &[]);
         mem.ram[0] = 0xFF;
         mem.ram[0x10] = 0xFF;
         mem.ram[0xa0] = 0xFF;
@@ -127,7 +118,7 @@ mod test {
         mock_rom[0x3FFF] = 0xFF;
 
 
-        let mem = Memory::new(&mock_rom, &mock_rom);
+        let mem = AddressSpace::new(&mock_rom, &mock_rom);
         // Lower bank
         assert_eq!(0xFF, mem.read_word(0x8000));
         assert_eq!(0xFF, mem.read_word(0x8010));
@@ -154,7 +145,7 @@ mod test {
         mock_rom[0x7FFF] = 0xAA; // end of bank
 
 
-        let mem = Memory::new(&mock_rom[0..16*1024], &mock_rom[16*1024..]);
+        let mem = AddressSpace::new(&mock_rom[0..16*1024], &mock_rom[16*1024..]);
         // Lower bank
         assert_eq!(0xFF, mem.read_word(0x8000));
         assert_eq!(0xFF, mem.read_word(0x8010));
