@@ -19,13 +19,12 @@ fn main() {
         panic!("header validation failed: {:?}", &header);
     }
 
-    let memory: cpu::AddressSpace;
-    if rom_is_double_banked(header) {
-        memory = cpu::AddressSpace::new(&file_buf[16..16 * 1024 + 16], &file_buf[16 * 1024 + 16..]);
+    let memory = if rom_is_double_banked(header) {
+        cpu::AddressSpace::new(&file_buf[16..16 * 1024 + 16], &file_buf[16 * 1024 + 16..])
     } else {
-        memory = cpu::AddressSpace::new(&file_buf[16..16 * 1024 + 16],
-                                        &file_buf[16..16 * 1024 + 16]);
-    }
+        cpu::AddressSpace::new(&file_buf[16..16 * 1024 + 16], &file_buf[16..16 * 1024 + 16])
+    };
+
     let mut cpu = cpu::Cpu::new(memory);
     cpu.start();
 }
