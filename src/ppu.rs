@@ -30,7 +30,7 @@ impl Ppu {
             // In docs, these are prefixed with PPU
             Ctrl: 0,
             Mask: 0,
-            Status: 0,  // TODO Determine the power up state of this register
+            Status: 0, // TODO Determine the power up state of this register
             Scroll: 0,
             Addr: 0,
             Data: 0,
@@ -39,9 +39,7 @@ impl Ppu {
 
     pub fn read_at(&self, address: u16) -> u8 {
         match address {
-            0x2002 => {
-                self.Status
-            }
+            0x2002 => self.Status,
             _ => {
                 panic!("ppu not implemented yet. access at {:#x}", address);
             }

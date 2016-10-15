@@ -5,7 +5,7 @@ use std::io::Read;
 // TODO Review Rust's module system
 mod cpu;
 mod ppu;
-//mod mem;
+// mod mem;
 
 fn main() {
     let filename = env::args().nth(1).unwrap();
@@ -21,13 +21,10 @@ fn main() {
 
     let memory: cpu::AddressSpace;
     if rom_is_double_banked(&header) {
-        memory = cpu::AddressSpace::new(
-            &file_buf[16..16*1024+16], &file_buf[16*1024+16..]
-        );
+        memory = cpu::AddressSpace::new(&file_buf[16..16 * 1024 + 16], &file_buf[16 * 1024 + 16..]);
     } else {
-        memory = cpu::AddressSpace::new(
-            &file_buf[16..16*1024+16], &file_buf[16..16*1024+16]
-        );
+        memory = cpu::AddressSpace::new(&file_buf[16..16 * 1024 + 16],
+                                        &file_buf[16..16 * 1024 + 16]);
     }
     let mut cpu = cpu::Cpu::new(memory);
     cpu.start();
@@ -36,12 +33,12 @@ fn main() {
 fn validate_header(rom: &[u8]) -> bool {
     // TODO Make this entire function better
     if rom.len() < 4 {
-        return false
+        return false;
     }
 
     let header: [u8; 4] = [0x4e, 0x45, 0x53, 0x1a]; // NES^Z
     if header != &rom[0..4] {
-        return false
+        return false;
     }
 
     true
@@ -60,23 +57,32 @@ fn validate_header(rom: &[u8]) -> bool {
 //
 fn rom_is_double_banked(rom: &[u8]) -> bool {
     if rom.len() < 16 {
-        panic!("rom header is too small. expected 16 bytes, got #{}", rom.len());
+        panic!("rom header is too small. expected 16 bytes, got #{}",
+               rom.len());
     }
 
     // The 5th byte indicates how large the ROM should be
     match rom[4] {
         // TODO Is this panic worthy or should we assume 1? Afterall, you can't
         // really have a ROM without any program data.
-        0 => { panic!("rom unit size cannot be zero"); }
+        0 => {
+            panic!("rom unit size cannot be zero");
+        }
 
         // Single bank
-        1 => { return false; }
+        1 => {
+            return false;
+        }
 
         // Double bank
-        2 => { return true; }
+        2 => {
+            return true;
+        }
 
         // If we get here then MMC's do affect the PRG ROM unit size. My
         // guess is that they do.
-        _ => { panic!("unrecognized rom unit size {}", rom[4]); }
+        _ => {
+            panic!("unrecognized rom unit size {}", rom[4]);
+        }
     }
 }

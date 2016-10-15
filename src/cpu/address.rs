@@ -48,18 +48,14 @@ impl<'a> AddressSpace<'a> {
                 // Lower bank
                 let reladdr: u16 = addr - ROM_LOWER_START;
                 return self.lower_rom[reladdr as usize];
-            },
+            }
             ROM_UPPER_START...ROM_UPPER_END => {
                 let reladdr: u16 = addr - (ROM_LOWER_START + ROM_BANK_SIZE);
                 return self.upper_rom[reladdr as usize];
-            },
+            }
             // TODO Review this as RAM technically starts 0x0200
-            0x00...0x07ff => {
-                self.ram[addr as usize]
-            },
-            0x2000...0x2007 => {
-                self.ppu.read_at(addr)
-            },
+            0x00...0x07ff => self.ram[addr as usize],
+            0x2000...0x2007 => self.ppu.read_at(addr),
             _ => {
                 panic!("unknown address {:#x}", addr);
             }
@@ -71,14 +67,18 @@ impl<'a> AddressSpace<'a> {
             0x00...0x07ff => {
                 self.ram[addr as usize] = value;
             }
-            0x2000 => {    // PPU
+            0x2000 => {
+                // PPU
                 self.ppu.write_ctrl(value);
             }
-            0x2001...0x2007 => {    // PPU
+            0x2001...0x2007 => {
+                // PPU
                 // TODO Should we do something similiar to what we did above?
                 panic!("ppu not implemented yet. access at {:#x}", addr);
             }
-            _ => { panic!("unimplemented write address {:#x}", addr); }
+            _ => {
+                panic!("unimplemented write address {:#x}", addr);
+            }
         }
     }
 }
@@ -118,9 +118,9 @@ mod test {
     #[test]
     fn test_read_rom_single_bank() {
         let mut mock_rom = vec![0; 16*1024];
-        mock_rom[0]      = 0xFF;
-        mock_rom[0x10]   = 0xFF;
-        mock_rom[0xa0]   = 0xFF;
+        mock_rom[0] = 0xFF;
+        mock_rom[0x10] = 0xFF;
+        mock_rom[0xa0] = 0xFF;
         mock_rom[0x3FFF] = 0xFF;
 
 
@@ -140,9 +140,9 @@ mod test {
     #[test]
     fn test_read_rom_double_bank() {
         let mut mock_rom = vec![0; 32*1024];
-        mock_rom[0]      = 0xFF; // beginning of bank
-        mock_rom[0x10]   = 0xFF;
-        mock_rom[0xa0]   = 0xFF;
+        mock_rom[0] = 0xFF; // beginning of bank
+        mock_rom[0x10] = 0xFF;
+        mock_rom[0xa0] = 0xFF;
         mock_rom[0x3FFF] = 0xFF; // end of bank
 
         mock_rom[0x4000] = 0xAA; // beginning of bank
@@ -151,7 +151,7 @@ mod test {
         mock_rom[0x7FFF] = 0xAA; // end of bank
 
 
-        let mem = AddressSpace::new(&mock_rom[0..16*1024], &mock_rom[16*1024..]);
+        let mem = AddressSpace::new(&mock_rom[0..16 * 1024], &mock_rom[16 * 1024..]);
         // Lower bank
         assert_eq!(0xFF, mem.read_word(0x8000));
         assert_eq!(0xFF, mem.read_word(0x8010));
