@@ -15,7 +15,7 @@ pub struct StatusRegister {
 
     // bit 5
     // reserved
-    //
+
     // bit 4
     Break: bool, // B
 
@@ -241,7 +241,7 @@ impl Cpu {
 #[cfg(test)]
 mod test {
     use super::Cpu;
-    use super::super::address::AddressSpace;
+    use super::super::address::{AddressSpace,Bank};
 
 
     fn rom_with_pc_at_start(words: &[u8]) -> Vec<u8> {
@@ -258,21 +258,28 @@ mod test {
             mock_rom[idx] = w;
         }
 
-        return mock_rom;
+        mock_rom
     }
 
-    fn memory_from_rom(mem: &[u8], doublebank: bool) -> AddressSpace {
+    fn memory_from_rom(mem: Vec<u8>, doublebank: bool) -> AddressSpace {
         if doublebank {
             if mem.len() <= 0x4000 {
                 // 16k
                 panic!("rom not large enough for double banking");
             }
-            AddressSpace::new(&mem[0..0x4000], &mem[0x4000..])
+            AddressSpace::new_double_bank(Bank::new(&mem[0..0x4000]), Bank::new(&mem[0x4000..]))
         } else {
             // single banked
-            AddressSpace::new(&mem, &mem)
+            AddressSpace::new_single_bank(Bank::new(&mem[0..0x4000]))
         }
     }
+
+    fn mock_cpu(words: &[u8]) -> Cpu {
+        let mock_rom = rom_with_pc_at_start(words);
+        let mem = memory_from_rom(mock_rom, true);
+        Cpu::new(mem)
+    }
+
 
     #[test]
     fn test_find_pc_addr() {
@@ -280,7 +287,7 @@ mod test {
         mock_rom[0x3ffc] = 0xef;
         mock_rom[0x3ffd] = 0xbe;
 
-        let mem = AddressSpace::new(&mock_rom, &mock_rom);
+        let mem = AddressSpace::new_single_bank(Bank::new(&mock_rom));
         let result = Cpu::find_pc_addr(&mem);
         assert!(result == 0xbeef, "expected 0xbeef, got: {:#x}", result);
     }
@@ -289,9 +296,7 @@ mod test {
 
     #[test]
     fn test_read_word_and_increment() {
-        let mock_rom = rom_with_pc_at_start(&[0xAA]);
-        let mem = memory_from_rom(&mock_rom, true);
-        let mut cpu = Cpu::new(mem);
+        let mut cpu = mock_cpu(&[0xAA]);
 
         assert!(cpu.PC == 0x8000, "expected 0x8000, got: {:#x}", cpu.PC);
         let word = cpu.read_word_and_increment();
@@ -302,9 +307,7 @@ mod test {
 
     #[test]
     fn test_read_dword_and_increment() {
-        let mock_rom = rom_with_pc_at_start(&[0xef, 0xbe]);
-        let mem = memory_from_rom(&mock_rom, true);
-        let mut cpu = Cpu::new(mem);
+        let mut cpu = mock_cpu(&[0xef, 0xbe]);
 
         assert!(cpu.PC == 0x8000, "expected 0x8000, got: {:#x}", cpu.PC);
         let dword = cpu.read_dword_and_increment();
@@ -318,9 +321,7 @@ mod test {
 
     #[test]
     fn test_bpl_skip() {
-        let mock_rom = rom_with_pc_at_start(&[0x10, 0xff]);
-        let mem = memory_from_rom(&mock_rom, true);
-        let mut cpu = Cpu::new(mem);
+        let mut cpu = mock_cpu(&[0x10, 0xff]);
 
         cpu.SR.Negative = true;
         assert!(cpu.PC == 0x8000, "expected 0x8000, got {:#x}", cpu.PC);
@@ -330,9 +331,7 @@ mod test {
 
     #[test]
     fn test_bpl_take_positive() {
-        let mock_rom = rom_with_pc_at_start(&[0x10, 0x2a]);
-        let mem = memory_from_rom(&mock_rom, true);
-        let mut cpu = Cpu::new(mem);
+        let mut cpu = mock_cpu(&[0x10, 0x2a]);
 
         cpu.SR.Negative = false;
         assert!(cpu.PC == 0x8000, "expected 0x8000, got {:#x}", cpu.PC);
@@ -342,9 +341,7 @@ mod test {
 
     #[test]
     fn test_bpl_take_negative() {
-        let mock_rom = rom_with_pc_at_start(&[0x10, 0x82]); // hex 0x82 is signed -126
-        let mem = memory_from_rom(&mock_rom, true);
-        let mut cpu = Cpu::new(mem);
+        let mut cpu = mock_cpu(&[0x10, 0x82]); // hex 0x82 is signed -126
 
         cpu.SR.Negative = false;
         assert!(cpu.PC == 0x8000, "expected 0x8000, got {:#x}", cpu.PC);
@@ -358,9 +355,7 @@ mod test {
 
     #[test]
     fn test_beq_skip() {
-        let mock_rom = rom_with_pc_at_start(&[0xf0, 0xff]);
-        let mem = memory_from_rom(&mock_rom, true);
-        let mut cpu = Cpu::new(mem);
+        let mut cpu = mock_cpu(&[0xf0, 0xff]);
 
         cpu.SR.Zero = false;
         assert!(cpu.PC == 0x8000, "expected 0x8000, got {:#x}", cpu.PC);
@@ -370,9 +365,7 @@ mod test {
 
     #[test]
     fn test_beq_take_positive() {
-        let mock_rom = rom_with_pc_at_start(&[0xf0, 0x2a]);
-        let mem = memory_from_rom(&mock_rom, true);
-        let mut cpu = Cpu::new(mem);
+        let mut cpu = mock_cpu(&[0xf0, 0x2a]);
 
         cpu.SR.Zero = true;
         assert!(cpu.PC == 0x8000, "expected 0x8000, got {:#x}", cpu.PC);
@@ -382,9 +375,7 @@ mod test {
 
     #[test]
     fn test_beq_take_negative() {
-        let mock_rom = rom_with_pc_at_start(&[0xf0, 0x82]); // hex 0x82 is signed -126
-        let mem = memory_from_rom(&mock_rom, true);
-        let mut cpu = Cpu::new(mem);
+        let mut cpu = mock_cpu(&[0xf0, 0x82]); // hex 0x82 is signed -126
 
         cpu.SR.Zero = true;
         assert!(cpu.PC == 0x8000, "expected 0x8000, got {:#x}", cpu.PC);
@@ -399,9 +390,7 @@ mod test {
 
     #[test]
     fn test_sei() {
-        let mock_rom = rom_with_pc_at_start(&[0x78]);
-        let mem = memory_from_rom(&mock_rom, true);
-        let mut cpu = Cpu::new(mem);
+        let mut cpu = mock_cpu(&[0x78]);
 
         assert!(cpu.SR.Interrupt == false,
                 "expected false, got {:#?}",
@@ -414,9 +403,7 @@ mod test {
 
     #[test]
     fn test_cld() {
-        let mock_rom = rom_with_pc_at_start(&[0xd8]);
-        let mem = memory_from_rom(&mock_rom, true);
-        let mut cpu = Cpu::new(mem);
+        let mut cpu = mock_cpu(&[0xd8]);
 
         cpu.SR.Decimal = true;
         assert!(cpu.SR.Decimal == true,
@@ -430,9 +417,7 @@ mod test {
 
     #[test]
     fn test_txs() {
-        let mock_rom = rom_with_pc_at_start(&[0x9a]);
-        let mem = memory_from_rom(&mock_rom, true);
-        let mut cpu = Cpu::new(mem);
+        let mut cpu = mock_cpu(&[0x9a]);
 
         cpu.X = 0xff;
         assert!(cpu.SP == 0, "expected 0x00, got {:#x}", cpu.SP);
@@ -442,9 +427,7 @@ mod test {
 
     #[test]
     fn test_ldx_imm() {
-        let mock_rom = rom_with_pc_at_start(&[0xa2, 0xff]);
-        let mem = memory_from_rom(&mock_rom, true);
-        let mut cpu = Cpu::new(mem);
+        let mut cpu = mock_cpu(&[0xa2, 0xff]);
 
         assert!(cpu.X == 0, "expected 0, got {:#x}", cpu.X);
         cpu.execute_instruction();
@@ -453,9 +436,7 @@ mod test {
 
     #[test]
     fn test_lda_abs() {
-        let mock_rom = rom_with_pc_at_start(&[0xad, 0x03, 0x80, 0xff]);
-        let mem = memory_from_rom(&mock_rom, true);
-        let mut cpu = Cpu::new(mem);
+        let mut cpu = mock_cpu(&[0xad, 0x03, 0x80, 0xff]);
 
         assert!(cpu.AC == 0, "expected 0, got {:#x}", cpu.AC);
         cpu.execute_instruction();
@@ -464,9 +445,7 @@ mod test {
 
     #[test]
     fn test_lda_imm() {
-        let mock_rom = rom_with_pc_at_start(&[0xa9, 0xff]);
-        let mem = memory_from_rom(&mock_rom, true);
-        let mut cpu = Cpu::new(mem);
+        let mut cpu = mock_cpu(&[0xa9, 0xff]);
 
         assert!(cpu.AC == 0, "expected 0, got {:#x}", cpu.AC);
         cpu.execute_instruction();
@@ -475,9 +454,7 @@ mod test {
 
     #[test]
     fn test_sta_abs() {
-        let mock_rom = rom_with_pc_at_start(&[0x8d, 0x10, 0x00]);
-        let mem = memory_from_rom(&mock_rom, true);
-        let mut cpu = Cpu::new(mem);
+        let mut cpu = mock_cpu(&[0x8d, 0x10, 0x00]);
         cpu.AC = 0xff;
 
         let mut result = cpu.mem.read_word(0x0010);
@@ -489,9 +466,7 @@ mod test {
 
     #[test]
     fn test_and_immediate() {
-        let mock_rom = rom_with_pc_at_start(&[0x29, 0x84]);
-        let mem = memory_from_rom(&mock_rom, true);
-        let mut cpu = Cpu::new(mem);
+        let mut cpu = mock_cpu(&[0x29, 0x84]);
         cpu.AC = 0xf0;
 
         assert!(cpu.AC == 0xf0, "expected 0xff, got {:#x}", cpu.AC);
