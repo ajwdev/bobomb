@@ -203,6 +203,12 @@ impl Cpu {
             0x9a => {
                 self.SP = self.X;
             }
+            // LDY # immediate
+            0xa0 => {
+                let word = self.read_word_and_increment();
+                self.Y = word;
+                self.zero_and_negative_status(word);
+            }
             // LDX # immediate
             0xa2 => {
                 let word = self.read_word_and_increment();
@@ -423,6 +429,15 @@ mod test {
         assert!(cpu.SP == 0, "expected 0x00, got {:#x}", cpu.SP);
         cpu.execute_instruction();
         assert!(cpu.SP == 0xff, "expected 0xff, got {:#x}", cpu.SP);
+    }
+
+    #[test]
+    fn test_ldy_imm() {
+        let mut cpu = mock_cpu(&[0xa0, 0xff]);
+
+        assert!(cpu.Y == 0, "expected 0, got {:#x}", cpu.Y);
+        cpu.execute_instruction();
+        assert!(cpu.Y == 0xff, "expected 0xff, got {:#x}", cpu.Y);
     }
 
     #[test]
