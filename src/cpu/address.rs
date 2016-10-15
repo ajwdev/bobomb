@@ -1,3 +1,5 @@
+use super::super::ppu;
+
 const SYSTEM_RAM: usize = 2 * 1024;
 
 // http://wiki.nesdev.com/w/index.php/CPU_memory_map
@@ -25,12 +27,16 @@ pub struct AddressSpace<'a> {
 
     // TODO Look into a Cell<T> here
     ram: Vec<u8>,
+    // TODO Move the PPU out this module and have an intermediary
+    // object between the cpu and ppu. Maybe a `bus` object?
+    ppu: ppu::Ppu,
 }
 
 impl<'a> AddressSpace<'a> {
     pub fn new(lower_rom: &'a [u8], upper_rom: &'a [u8]) -> Self {
         AddressSpace {
             ram: vec![0; SYSTEM_RAM],
+            ppu: ppu::Ppu::new(),
             lower_rom: lower_rom,
             upper_rom: upper_rom,
         }
@@ -52,8 +58,7 @@ impl<'a> AddressSpace<'a> {
                 self.ram[addr as usize]
             },
             0x2000...0x2007 => {
-                //self.ppu[(addr-0x2000) as usize]
-                panic!("ppu not implemented yet. access at {:#x}", addr);
+                self.ppu.read_at(addr)
             },
             _ => {
                 panic!("unknown address {:#x}", addr);
@@ -66,9 +71,11 @@ impl<'a> AddressSpace<'a> {
             0x00...0x07ff => {
                 self.ram[addr as usize] = value;
             }
-            0x2000...0x2007 => {    // PPU
-                //let offset: usize = (addr - 0x2000) as usize;
-                //self.ppu[offset] = value;
+            0x2000 => {    // PPU
+                self.ppu.write_ctrl(value);
+            }
+            0x2001...0x2007 => {    // PPU
+                // TODO Should we do something similiar to what we did above?
                 panic!("ppu not implemented yet. access at {:#x}", addr);
             }
             _ => { panic!("unimplemented write address {:#x}", addr); }
