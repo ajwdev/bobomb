@@ -440,4 +440,17 @@ mod test {
         result = cpu.mem.read_word(0x0010);
         assert!(result == 0xff, "expected 0xff, got {:#x}", result);
     }
+
+    #[test]
+    fn test_and_immediate() {
+        let mock_rom = rom_with_pc_at_start(&[0x29, 0x84]);
+        let mem = memory_from_rom(&mock_rom, true);
+        let mut cpu = Cpu::new(mem);
+        cpu.AC = 0xf0;
+
+        assert!(cpu.AC == 0xf0, "expected 0xff, got {:#x}", cpu.AC);
+        cpu.execute_instruction();
+        assert!(cpu.AC == 0x80, "expected 0x80, got {:#x}", cpu.AC);
+        //TODO Make assertions on status registers
+    }
 }
