@@ -1,3 +1,4 @@
+use std::ops::{Index,IndexMut};
 use super::super::ppu;
 
 const SYSTEM_RAM: usize = 2 * 1024;
@@ -18,27 +19,62 @@ const ROM_LOWER_END: u16 = ROM_LOWER_START + 0x3FFF;
 const ROM_UPPER_START: u16 = ROM_LOWER_START + ROM_BANK_SIZE; // 0xc000
 const ROM_UPPER_END: u16 = ROM_UPPER_START + 0x3FFF;
 
+pub struct Bank {
+    pub data: [u8; ROM_BANK_SIZE as usize]
+}
 
-#[derive(Debug)]
-pub struct AddressSpace<'a> {
-    // TODO Look at this again once lifetimes make more sense
-    lower_rom: &'a [u8],
-    upper_rom: &'a [u8],
+impl Bank {
+    pub fn new(src: &[u8]) -> Self {
+        let mut b = Bank{
+            data: [0; ROM_BANK_SIZE as usize],
+        };
+        b.data.clone_from_slice(src);
+        b
+    }
+}
 
-    // TODO Look into a Cell<T> here
+impl Index<usize> for Bank {
+    type Output = u8;
+
+    fn index(&self, idx: usize) -> &u8 {
+        &self.data[idx]
+    }
+}
+
+impl IndexMut<usize> for Bank {
+    fn index_mut(&mut self, idx: usize) -> &mut u8 {
+        &mut self.data[idx]
+    }
+}
+
+
+
+pub struct AddressSpace {
+    lower_rom: Option<Bank>,
+    upper_rom: Option<Bank>,
+
     ram: Vec<u8>,
     // TODO Move the PPU out this module and have an intermediary
     // object between the cpu and ppu. Maybe a `bus` object?
     ppu: ppu::Ppu,
 }
 
-impl<'a> AddressSpace<'a> {
-    pub fn new(lower_rom: &'a [u8], upper_rom: &'a [u8]) -> Self {
+impl AddressSpace {
+    pub fn new_double_bank(lower_rom: Bank, upper_rom: Bank) -> Self {
         AddressSpace {
             ram: vec![0; SYSTEM_RAM],
             ppu: ppu::Ppu::new(),
-            lower_rom: lower_rom,
-            upper_rom: upper_rom,
+            lower_rom: Some(lower_rom),
+            upper_rom: Some(upper_rom),
+        }
+    }
+
+    pub fn new_single_bank(rom: Bank) -> Self {
+        AddressSpace {
+            ram: vec![0; SYSTEM_RAM],
+            ppu: ppu::Ppu::new(),
+            lower_rom: Some(rom),
+            upper_rom: None,
         }
     }
 
@@ -47,11 +83,15 @@ impl<'a> AddressSpace<'a> {
             ROM_LOWER_START...ROM_LOWER_END => {
                 // Lower bank
                 let reladdr: u16 = addr - ROM_LOWER_START;
-                return self.lower_rom[reladdr as usize];
+                self.lower_rom.as_ref().unwrap()[reladdr as usize]
             }
             ROM_UPPER_START...ROM_UPPER_END => {
                 let reladdr: u16 = addr - (ROM_LOWER_START + ROM_BANK_SIZE);
-                return self.upper_rom[reladdr as usize];
+                if self.upper_rom.is_some() {
+                    self.upper_rom.as_ref().unwrap()[reladdr as usize]
+                } else {
+                    self.lower_rom.as_ref().unwrap()[reladdr as usize]
+                }
             }
             // TODO Review this as RAM technically starts 0x0200
             0x00...0x07ff => self.ram[addr as usize],
@@ -86,11 +126,12 @@ impl<'a> AddressSpace<'a> {
 #[cfg(test)]
 mod test {
     use super::AddressSpace;
+    use super::Bank;
 
     #[test]
     fn test_write_word() {
         // TODO Adjust for every writable section of address space
-        let mut mem = AddressSpace::new(&[], &[]);
+        let mut mem = AddressSpace::new_double_bank(Bank::new(&[0; 16384]), Bank::new(&[0; 16384]));
         let mut result: u8;
 
         result = mem.read_word(0x0010);
@@ -103,7 +144,8 @@ mod test {
 
     #[test]
     fn test_read_system_ram() {
-        let mut mem = AddressSpace::new(&[], &[]);
+        // let mut mem = AddressSpace::new([], []);
+        let mut mem = AddressSpace::new_double_bank(Bank::new(&[0; 16384]), Bank::new(&[0; 16384]));
         mem.ram[0] = 0xFF;
         mem.ram[0x10] = 0xFF;
         mem.ram[0xa0] = 0xFF;
@@ -124,7 +166,7 @@ mod test {
         mock_rom[0x3FFF] = 0xFF;
 
 
-        let mem = AddressSpace::new(&mock_rom, &mock_rom);
+        let mem = AddressSpace::new_single_bank(Bank::new(&mock_rom));
         // Lower bank
         assert_eq!(0xFF, mem.read_word(0x8000));
         assert_eq!(0xFF, mem.read_word(0x8010));
@@ -151,7 +193,7 @@ mod test {
         mock_rom[0x7FFF] = 0xAA; // end of bank
 
 
-        let mem = AddressSpace::new(&mock_rom[0..16 * 1024], &mock_rom[16 * 1024..]);
+        let mem = AddressSpace::new_double_bank(Bank::new(&mock_rom[0..16 * 1024]), Bank::new(&mock_rom[16 * 1024..]));
         // Lower bank
         assert_eq!(0xFF, mem.read_word(0x8000));
         assert_eq!(0xFF, mem.read_word(0x8010));

@@ -1,7 +1,7 @@
 // See http://e-tradition.net/bytes/6502/6502_instruction_set.html
 // #[feature(clone_from_slice)]
 
-use super::AddressSpace;
+use super::{AddressSpace,Bank};
 
 
 // TODO Fix this at some point
@@ -70,7 +70,7 @@ impl StatusRegister {
 
 // TODO Fix this at some point
 #[allow(non_snake_case)]
-pub struct Cpu<'a> {
+pub struct Cpu {
     PC: u16, // Program counter
     X: u8, // General purpose register
     Y: u8, // General purpose register
@@ -78,11 +78,11 @@ pub struct Cpu<'a> {
     SP: u8, // Stack pointer
     SR: StatusRegister, // Status register
 
-    mem: AddressSpace<'a>,
+    mem: AddressSpace,
 }
 
-impl<'a> Cpu<'a> {
-    pub fn new(mem: AddressSpace<'a>) -> Self {
+impl Cpu {
+    pub fn new(mem: AddressSpace) -> Self {
         Cpu {
             X: 0,
             Y: 0,
