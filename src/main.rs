@@ -20,7 +20,7 @@ fn main() {
     }
 
     let memory: cpu::AddressSpace;
-    if rom_is_double_banked(&header) {
+    if rom_is_double_banked(header) {
         memory = cpu::AddressSpace::new(&file_buf[16..16 * 1024 + 16], &file_buf[16 * 1024 + 16..]);
     } else {
         memory = cpu::AddressSpace::new(&file_buf[16..16 * 1024 + 16],
