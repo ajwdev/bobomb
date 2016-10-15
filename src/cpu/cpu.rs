@@ -146,7 +146,7 @@ impl<'a> Cpu<'a> {
         let instr = self.read_word_and_increment();
 
         // See http://users.telenet.be/kim1-6502/6502/proman.html
-        println!("Instruction: {:#x}", instr);
+        println!("Instruction: {:#x} {:#x} {:#x}", instr, self.mem.read_word(self.PC), self.mem.read_word(self.PC + 1));
         // TODO This inline match logic is obviously not going to scale.
         // Eventually we should move decoding and execution into an
         // instruction struct (or something like that).
