@@ -2,6 +2,7 @@ const VRAM_SIZE: usize = 16 * 1024;
 
 // http://wiki.nesdev.com/w/index.php/PPU
 // http://wiki.nesdev.com/w/index.php/PPU_programmer_reference
+#[allow(non_snake_case)]
 #[derive(Debug)]
 pub struct Ppu {
     vram: Vec<u8>,
