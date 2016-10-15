@@ -125,6 +125,7 @@ impl<'a> Cpu<'a> {
     }
 
     // TODO This function needs tests
+    // TODO I think this may only ever evaluate self.AC which makes the arg useless. Review this
     fn zero_and_negative_status(&mut self, word: u8) {
         // Set the Zero bit in the status register if the word is zero.
         // Else, reset it back to its default.
@@ -177,13 +178,11 @@ impl<'a> Cpu<'a> {
                     }
                 }
             }
-            // AND #
+            // AND # immediate
             0x29 => {
                 let word = self.read_word_and_increment();
                 self.AC &= word;
-                self.SR.Zero = (self.AC == 0);
-                // TODO Implement the Negative status register here
-                // and down in LDA (maybe others?)
+                self.zero_and_negative_status(word);
             }
             // SEI
             0x78 => {
