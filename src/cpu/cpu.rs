@@ -144,6 +144,24 @@ impl<'a> Cpu<'a> {
         }
     }
 
+    fn move_pc_relative(&mut self, word: u8) {
+        // NOTE This can either move the PC register forward
+        // or backwards. I.E we should treat `word` here as
+        // if it were signed.
+        if word < 128 {
+            self.PC = self.PC.wrapping_add(word as u16);
+        } else {
+            // We're actually negative here so get the
+            // inverse and add one to it. This is for
+            // converting with two's completement since Rust
+            // wont allow us to add signed and unsigned
+            // numerals together.
+
+            // NOTE '!' is used in Rust like '~' is used in C.
+            self.PC = self.PC.wrapping_sub((!word + 1) as u16);
+        }
+    }
+
     // TODO Ok to make this public? Should we only use start() ?
     fn execute_instruction(&mut self) {
         let instr = self.read_word_and_increment();
@@ -160,23 +178,12 @@ impl<'a> Cpu<'a> {
             // BPL (branch on result plus)
             0x10 => {
                 let word = self.read_word_and_increment();
-                if !self.SR.Negative {
-                    // NOTE This can either move the PC register forward
-                    // or backwards. I.E we should treat `word` here as
-                    // if it were signed.
-                    if word < 128 {
-                        self.PC = self.PC.wrapping_add(word as u16);
-                    } else {
-                        // We're actually negative here so get the
-                        // inverse and add one to it. This is for
-                        // converting with two's completement since Rust
-                        // wont allow us to add signed and unsigned
-                        // numerals together.
-
-                        // NOTE '!' is used in Rust like '~' is used in C.
-                        self.PC = self.PC.wrapping_sub((!word + 1) as u16);
-                    }
-                }
+                if !self.SR.Negative { self.move_pc_relative(word); }
+            }
+            // BEQ (branch on zero result)
+            0xf0 => {
+                let word = self.read_word_and_increment();
+                if self.SR.Zero { self.move_pc_relative(word); }
             }
             // AND # immediate
             0x29 => {
@@ -340,6 +347,46 @@ mod test {
         let mut cpu = Cpu::new(mem);
 
         cpu.SR.Negative = false;
+        assert!(cpu.PC == 0x8000, "expected 0x8000, got {:#x}", cpu.PC);
+        cpu.execute_instruction(); // Two byte instruction so *substract* two bytes below
+
+        // NOTE For posterity, this actually drops us below the ROM
+        // start range which I dont think will happen with real ROMs.
+        // This should be fine for our test though.
+        assert!(cpu.PC == 0x7f84, "expected 0x7f82, got {:#x}", cpu.PC);
+    }
+
+    #[test]
+    fn test_beq_skip() {
+        let mock_rom = rom_with_pc_at_start(&[0xf0, 0xff]);
+        let mem = memory_from_rom(&mock_rom, true);
+        let mut cpu = Cpu::new(mem);
+
+        cpu.SR.Zero = false;
+        assert!(cpu.PC == 0x8000, "expected 0x8000, got {:#x}", cpu.PC);
+        cpu.execute_instruction();
+        assert!(cpu.PC == 0x8002, "expected 0x8002, got {:#x}", cpu.PC);
+    }
+
+    #[test]
+    fn test_beq_take_positive() {
+        let mock_rom = rom_with_pc_at_start(&[0xf0, 0x2a]);
+        let mem = memory_from_rom(&mock_rom, true);
+        let mut cpu = Cpu::new(mem);
+
+        cpu.SR.Zero = true;
+        assert!(cpu.PC == 0x8000, "expected 0x8000, got {:#x}", cpu.PC);
+        cpu.execute_instruction(); // Two byte instruction so *add* two below
+        assert!(cpu.PC == 0x802c, "expected 0x802a, got {:#x}", cpu.PC);
+    }
+
+    #[test]
+    fn test_beq_take_negative() {
+        let mock_rom = rom_with_pc_at_start(&[0xf0, 0x82]); // hex 0x82 is signed -126
+        let mem = memory_from_rom(&mock_rom, true);
+        let mut cpu = Cpu::new(mem);
+
+        cpu.SR.Zero = true;
         assert!(cpu.PC == 0x8000, "expected 0x8000, got {:#x}", cpu.PC);
         cpu.execute_instruction(); // Two byte instruction so *substract* two bytes below
 
