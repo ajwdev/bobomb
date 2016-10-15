@@ -172,6 +172,14 @@ impl<'a> Cpu<'a> {
                     }
                 }
             }
+           // AND #
+           0x29 => {
+               let word = self.read_word_and_increment();
+               self.AC &= word;
+               self.SR.Zero = (self.AC == 0);
+               // TODO Implement the Negative status register here
+               // and down in LDA (maybe others?)
+           }
             // SEI
             0x78 => {
                 self.SR.Interrupt = true;
