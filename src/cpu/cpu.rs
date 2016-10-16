@@ -1,7 +1,6 @@
-// See http://e-tradition.net/bytes/6502/6502_instruction_set.html
-// #[feature(clone_from_slice)]
-
 use super::{AddressSpace,Bank};
+
+// Power on state is defined here: https://wiki.nesdev.com/w/index.php/CPU_power_up_state
 
 
 // TODO Fix this at some point
@@ -17,7 +16,7 @@ pub struct StatusRegister {
     // reserved
 
     // bit 4
-    Break: bool, // B
+    Break: bool, // B This may not actually get used
 
     // bit 3
     // NOTE This apparently affects ADC/SBC instructions
@@ -35,12 +34,13 @@ pub struct StatusRegister {
 
 impl StatusRegister {
     pub fn new() -> Self {
+        // Power on state == 00110100 (0x34). See comment at top of file
         StatusRegister {
             Negative: false,
             Overflow: false,
-            Break: false,
+            Break: true,
             Decimal: false,
-            Interrupt: false,
+            Interrupt: true,
             Zero: false,
             Carry: false,
         }
@@ -84,13 +84,14 @@ pub struct Cpu {
 
 impl Cpu {
     pub fn new(mem: AddressSpace) -> Self {
+        // See comment at top of file for power on state
         Cpu {
             X: 0,
             Y: 0,
             AC: 0,
             // TODO Do we want to do this on startup?
             PC: Cpu::find_pc_addr(&mem),
-            SP: 0,
+            SP: 0xfd,
             SR: StatusRegister::new(),
 
             mem: mem,
@@ -480,10 +481,8 @@ mod test {
     #[test]
     fn test_sei() {
         let mut cpu = mock_cpu(&[0x78]);
+        cpu.SR.Interrupt = false;
 
-        assert!(cpu.SR.Interrupt == false,
-                "expected false, got {:#?}",
-                cpu.SR.Interrupt);
         cpu.execute_instruction();
         assert!(cpu.SR.Interrupt == true,
                 "expected true, got {:#?}",
@@ -507,9 +506,10 @@ mod test {
     #[test]
     fn test_txs() {
         let mut cpu = mock_cpu(&[0x9a]);
-
+        cpu.SP = 0xfd;
         cpu.X = 0xff;
-        assert!(cpu.SP == 0, "expected 0x00, got {:#x}", cpu.SP);
+
+        assert!(cpu.SP == 0xFD, "expected 0xFD, got {:#x}", cpu.SP);
         cpu.execute_instruction();
         assert!(cpu.SP == 0xff, "expected 0xff, got {:#x}", cpu.SP);
     }

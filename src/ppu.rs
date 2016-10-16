@@ -28,10 +28,10 @@ impl Ppu {
             Oamdata: 0,
             Oamdma: 0,
 
-            // In docs, these are prefixed with PPU
+            // https://wiki.nesdev.com/w/index.php/PPU_power_up_state
             Ctrl: 0,
             Mask: 0,
-            Status: 0, // TODO Determine the power up state of this register
+            Status: 0xa0, // Docs aren't clear if this should be 0x80 or 0xa0 on start
             Scroll: 0,
             Addr: 0,
             Data: 0,
