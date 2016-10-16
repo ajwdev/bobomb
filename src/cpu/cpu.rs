@@ -133,6 +133,7 @@ impl Cpu {
     }
 
     // TODO This function needs tests
+    #[inline]
     fn zero_and_negative_status(&mut self, word: u8) {
         // Set the Zero bit in the status register if the word is zero.
         // Else, reset it back to its default.
@@ -251,9 +252,17 @@ impl Cpu {
                 let dest = self.read_dword_and_increment();
                 self.mem.write_word(dest, self.AC);
             }
+            // DEC
+            0xc6 => {
+                let addr = Cpu::zero_page_address(self.read_word_and_increment());
+                let mut word = self.mem.read_word(addr);
+
+                word = word.wrapping_sub(1);
+                self.mem.write_word(addr, word);
+                self.zero_and_negative_status(word);
+            }
             // DEY
             0x88 => {
-                // self.Y = (self.Y as i8 - 1) as u8;
                 self.Y = self.Y.wrapping_sub(1);
                 // TODO The reason we create `word` here is because we can't pass self.Y to
                 // `zero_and_negative_status` as it's already mutably borrowed by the function
@@ -598,6 +607,19 @@ mod test {
         assert!(cpu.Y == 0xff, "expected 0xff, got {:#x}", cpu.Y);
         cpu.execute_instruction();
         assert!(cpu.Y == 0xfe, "expected 0xfe, got {:#x}", cpu.Y);
+        //TODO Make assertions on status registers
+    }
+
+    #[test]
+    fn test_dec_zero() {
+        let mut cpu = mock_cpu(&[0xc6, 0x10]);
+        cpu.mem.write_word(0x10, 0xff);
+
+        let mut result = cpu.mem.read_word(0x10);
+        assert!(result == 0xff, "expected 0xff, got {:#x}", result);
+        cpu.execute_instruction();
+        result = cpu.mem.read_word(0x10);
+        assert!(result == 0xfe, "expected 0xfe, got {:#x}", result);
         //TODO Make assertions on status registers
     }
 }
