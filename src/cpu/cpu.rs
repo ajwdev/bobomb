@@ -133,7 +133,6 @@ impl Cpu {
     }
 
     // TODO This function needs tests
-    // TODO I think this may only ever evaluate self.AC which makes the arg useless. Review this
     fn zero_and_negative_status(&mut self, word: u8) {
         // Set the Zero bit in the status register if the word is zero.
         // Else, reset it back to its default.
@@ -254,8 +253,9 @@ impl Cpu {
             }
             // DEY
             0x88 => {
-                self.Y = (self.Y as i8 - 1) as u8;
-                // TODO The reeason we create `word` here is because we can't pass self.Y to
+                // self.Y = (self.Y as i8 - 1) as u8;
+                self.Y = self.Y.wrapping_sub(1);
+                // TODO The reason we create `word` here is because we can't pass self.Y to
                 // `zero_and_negative_status` as it's already mutably borrowed by the function
                 // itself. Consider a better way to do this.
                 let word = self.Y;
