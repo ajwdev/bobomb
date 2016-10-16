@@ -243,6 +243,15 @@ impl Cpu {
                 let dest = self.read_dword_and_increment();
                 self.mem.write_word(dest, self.AC);
             }
+            // DEY
+            0x88 => {
+                self.Y = (self.Y as i8 - 1) as u8;
+                // TODO The reeason we create `word` here is because we can't pass self.Y to
+                // `zero_and_negative_status` as it's already mutably borrowed by the function
+                // itself. Consider a better way to do this.
+                let word = self.Y;
+                self.zero_and_negative_status(word);
+            }
             // STA (Indrect), Y
             0x91 => {
                 let word = self.read_word_and_increment();
@@ -534,6 +543,17 @@ mod test {
         assert!(cpu.AC == 0xf0, "expected 0xff, got {:#x}", cpu.AC);
         cpu.execute_instruction();
         assert!(cpu.AC == 0x80, "expected 0x80, got {:#x}", cpu.AC);
+        //TODO Make assertions on status registers
+    }
+
+    #[test]
+    fn test_dey() {
+        let mut cpu = mock_cpu(&[0x88]);
+        cpu.Y = 0xff;
+
+        assert!(cpu.Y == 0xff, "expected 0xff, got {:#x}", cpu.Y);
+        cpu.execute_instruction();
+        assert!(cpu.Y == 0xfe, "expected 0xfe, got {:#x}", cpu.Y);
         //TODO Make assertions on status registers
     }
 }
