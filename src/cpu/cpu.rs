@@ -79,6 +79,7 @@ pub struct Cpu {
     SR: StatusRegister, // Status register
 
     mem: AddressSpace,
+    counter: i64,
 }
 
 impl Cpu {
@@ -93,6 +94,7 @@ impl Cpu {
             SR: StatusRegister::new(),
 
             mem: mem,
+            counter: 0,
         }
     }
 
@@ -100,6 +102,7 @@ impl Cpu {
         println!("PC: {:#x}", self.PC);
         loop {
             self.execute_instruction();
+            self.counter += 1;
         }
     }
 
@@ -265,10 +268,11 @@ impl Cpu {
                 self.mem.write_word((indirect_addr + self.Y) as u16, self.AC);
             }
             _ => {
-                panic!("unrecognized opcode {:#x}, {:#x} {:#x}",
+                panic!("unrecognized opcode {:#x}, {:#x} {:#x}, count: {}",
                    instr,
                    self.mem.read_word(self.PC),
                    self.mem.read_word(self.PC + 1),
+                   self.counter,
               )
             }
         }
