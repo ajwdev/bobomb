@@ -2,6 +2,7 @@ use super::{AddressSpace,Bank};
 
 // Power on state is defined here: https://wiki.nesdev.com/w/index.php/CPU_power_up_state
 
+pub const STACK_START: u16 = 0x100;
 
 // TODO Fix this at some point
 #[allow(non_snake_case)]
@@ -168,6 +169,27 @@ impl Cpu {
 
             // NOTE '!' is used in Rust like '~' is used in C.
             self.PC = self.PC.wrapping_sub((!word + 1) as u16);
+        }
+    }
+
+    // NOTE 6502 stack grows downward
+    fn push_stack(&mut self, word: u8) {
+        let ptr = STACK_START + self.SP as u16;
+        self.mem.write_word(ptr, word);
+        self.SP -= 1;
+    }
+
+    fn pop_stack(&mut self) -> u8 {
+        self.SP += 1;
+        let ptr = STACK_START + self.SP as u16;
+        self.mem.read_word(ptr)
+    }
+
+    fn debug_stack(&self) {
+        println!("Addr  | Value");
+        println!("-------------");
+        for idx in (STACK_START..STACK_START + 0x100).rev() {
+            println!("{:#06x} | {:#06x}", idx as u16, self.mem.read_word(idx as u16));
         }
     }
 
@@ -370,6 +392,35 @@ mod test {
 
         assert!(cpu.PC == 0x8002, "expected 0x8002, got: {:#x}", cpu.PC);
         assert!(dword == 0xbeef, "expected 0xbeef, got {:#x}", dword);
+    }
+
+
+    // Stack tests
+    //
+    #[test]
+    fn test_stack() {
+        let mut cpu = mock_cpu(&[]);
+        cpu.SP = 0xFF;
+
+        cpu.push_stack(0x10);
+        let mut result = cpu.mem.read_word(0x01FF);
+
+        assert!(cpu.SP == 0xFE, "expected 0xFE, got {:#x}", cpu.SP);
+        assert!(result == 0x10, "expected 0x10, got {:#x}", result);
+
+        cpu.push_stack(0x11);
+        result = cpu.mem.read_word(0x01FE);
+
+        assert!(cpu.SP == 0xFD, "expected 0xFD, got {:#x}", cpu.SP);
+        assert!(result == 0x11, "expected 0x11, got {:#x}", result);
+
+        result = cpu.pop_stack();
+        assert!(result == 0x11, "expected 0x11, got {:#x}", result);
+        assert!(cpu.SP == 0xFE, "expected 0xFE, got {:#x}", cpu.SP);
+
+        result = cpu.pop_stack();
+        assert!(result == 0x10, "expected 0x10, got {:#x}", result);
+        assert!(cpu.SP == 0xFF, "expected 0xFF, got {:#x}", cpu.SP);
     }
 
     // Instruction tests
