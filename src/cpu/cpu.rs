@@ -109,6 +109,11 @@ impl Cpu {
     }
 
     #[inline]
+    fn zero_page_address(low: u8) -> u16 {
+        0x0000 + low as u16
+    }
+
+    #[inline]
     fn read_word_and_increment(&mut self) -> u8 {
         let word = self.mem.read_word(self.PC);
         self.PC += 1;    // 1 byte forward
@@ -230,14 +235,19 @@ impl Cpu {
             }
             // STY zero page
             0x84 => {
-                let dest = 0x0000 + self.read_word_and_increment() as u16;
-                self.mem.write_word(dest, self.Y);
-
+                let word = self.read_word_and_increment();
+                self.mem.write_word(Cpu::zero_page_address(word), self.Y);
             }
             // STA absolute
             0x8d => {
                 let dest = self.read_dword_and_increment();
                 self.mem.write_word(dest, self.AC);
+            }
+            // STA (Indrect), Y
+            0x91 => {
+                let word = self.read_word_and_increment();
+                let indirect_addr = self.mem.read_word(Cpu::zero_page_address(word));
+                self.mem.write_word((indirect_addr + self.Y) as u16, self.AC);
             }
             _ => {
                 panic!("unrecognized opcode {:#x}, {:#x} {:#x}",
@@ -304,7 +314,12 @@ mod test {
         assert!(result == 0xbeef, "expected 0xbeef, got: {:#x}", result);
     }
 
-    // TODO Cleanup the repetive preamble in every test
+    #[test]
+    fn test_zero_page_address() {
+        assert!(Cpu::zero_page_address(0xff) == 0x00ff);
+        assert!(Cpu::zero_page_address(0x00) == 0x0000);
+        assert!(Cpu::zero_page_address(0x12) == 0x0012);
+    }
 
     #[test]
     fn test_read_word_and_increment() {
@@ -482,6 +497,20 @@ mod test {
         assert!(result == 0x00, "expected 0x00, got {:#x}", result);
         cpu.execute_instruction();
         result = cpu.mem.read_word(0x0010);
+        assert!(result == 0xff, "expected 0xff, got {:#x}", result);
+    }
+
+    #[test]
+    fn test_sta_indirect_y() {
+        let mut cpu = mock_cpu(&[0x91, 0x10]);
+        cpu.mem.write_word(0x0010, 0xaa);
+        cpu.Y = 0x10;
+        cpu.AC = 0xff;
+
+        let mut result = cpu.mem.read_word(0x00ba);
+        assert!(result == 0x00, "expected 0x00, got {:#x}", result);
+        cpu.execute_instruction();
+        result = cpu.mem.read_word(0x00ba);
         assert!(result == 0xff, "expected 0xff, got {:#x}", result);
     }
 
