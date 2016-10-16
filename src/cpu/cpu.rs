@@ -228,6 +228,12 @@ impl Cpu {
                 self.AC = word;
                 self.zero_and_negative_status(word);
             }
+            // STY zero page
+            0x84 => {
+                let dest = 0x0000 + self.read_word_and_increment() as u16;
+                self.mem.write_word(dest, self.Y);
+
+            }
             // STA absolute
             0x8d => {
                 let dest = self.read_dword_and_increment();
@@ -471,6 +477,18 @@ mod test {
     fn test_sta_abs() {
         let mut cpu = mock_cpu(&[0x8d, 0x10, 0x00]);
         cpu.AC = 0xff;
+
+        let mut result = cpu.mem.read_word(0x0010);
+        assert!(result == 0x00, "expected 0x00, got {:#x}", result);
+        cpu.execute_instruction();
+        result = cpu.mem.read_word(0x0010);
+        assert!(result == 0xff, "expected 0xff, got {:#x}", result);
+    }
+
+    #[test]
+    fn test_sty_zero() {
+        let mut cpu = mock_cpu(&[0x84, 0x10]);
+        cpu.Y = 0xff;
 
         let mut result = cpu.mem.read_word(0x0010);
         assert!(result == 0x00, "expected 0x00, got {:#x}", result);
