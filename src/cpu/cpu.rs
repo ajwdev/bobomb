@@ -80,7 +80,10 @@ pub struct Cpu {
     SR: StatusRegister, // Status register
 
     mem: AddressSpace,
-    counter: i64,
+
+    // These are only used for debugging purposes
+    instruction_counter: i64,
+    stack_depth: i16
 }
 
 impl Cpu {
@@ -96,7 +99,8 @@ impl Cpu {
             SR: StatusRegister::new(),
 
             mem: mem,
-            counter: 0,
+            instruction_counter: 0,
+            stack_depth: 0,
         }
     }
 
@@ -104,7 +108,7 @@ impl Cpu {
         println!("PC: {:#x}", self.PC);
         loop {
             self.execute_instruction();
-            self.counter += 1;
+            self.instruction_counter += 1;
         }
     }
 
@@ -177,18 +181,23 @@ impl Cpu {
         let ptr = STACK_START + self.SP as u16;
         self.mem.write_word(ptr, word);
         self.SP -= 1;
+        self.stack_depth += 1;
     }
 
     fn pop_stack(&mut self) -> u8 {
         self.SP += 1;
+        self.stack_depth -= 1;
         let ptr = STACK_START + self.SP as u16;
         self.mem.read_word(ptr)
     }
 
     fn debug_stack(&self) {
-        println!("Addr  | Value");
+        println!("Stack");
+        println!(" Addr  | Value");
         println!("-------------");
-        for idx in (STACK_START..STACK_START + 0x100).rev() {
+        let start = self.SP as u16 + STACK_START + 1; // Add 1 to not display the current "slot"
+        let end = start + self.stack_depth as u16;
+        for idx in (start..end).rev() {
             println!("{:#06x} | {:#06x}", idx as u16, self.mem.read_word(idx as u16));
         }
     }
@@ -239,6 +248,8 @@ impl Cpu {
             // TXS
             0x9a => {
                 self.SP = self.X;
+                println!("Stack pointer changed: {:#06x}", self.SP as u16 + STACK_START);
+                self.stack_depth = 0;
             }
             // LDY # immediate
             0xa0 => {
@@ -300,11 +311,12 @@ impl Cpu {
                 self.mem.write_word((indirect_addr + self.Y) as u16, self.AC);
             }
             _ => {
+                self.debug_stack();
                 panic!("unrecognized opcode {:#x}, {:#x} {:#x}, count: {}",
                    instr,
                    self.mem.read_word(self.PC),
                    self.mem.read_word(self.PC + 1),
-                   self.counter,
+                   self.instruction_counter,
               )
             }
         }
