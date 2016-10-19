@@ -1,10 +1,11 @@
+mod nes;
+
 use std::env;
 use std::fs;
 use std::io::Read;
 
-// TODO Review Rust's module system
-mod cpu;
-mod ppu;
+use nes::cpu;
+use nes::address;
 
 fn main() {
     let filename = env::args().nth(1).unwrap();
@@ -19,12 +20,12 @@ fn main() {
     }
 
     let memory = if rom_is_double_banked(header) {
-        let bank0 = cpu::Bank::new(&file_buf[16..16 * 1024 + 16]);
-        let bank1 = cpu::Bank::new(&file_buf[16 * 1024 + 16..]);
-        cpu::AddressSpace::new_double_bank(bank0, bank1)
+        let bank0 = address::Bank::new(&file_buf[16..16 * 1024 + 16]);
+        let bank1 = address::Bank::new(&file_buf[16 * 1024 + 16..]);
+        address::AddressSpace::new_double_bank(bank0, bank1)
     } else {
-        let bank = cpu::Bank::new(&file_buf[16..16 * 1024 + 16]);
-        cpu::AddressSpace::new_single_bank(bank)
+        let bank = address::Bank::new(&file_buf[16..16 * 1024 + 16]);
+        address::AddressSpace::new_single_bank(bank)
     };
 
     let mut cpu = cpu::Cpu::new(memory);

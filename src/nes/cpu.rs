@@ -1,4 +1,4 @@
-use super::{AddressSpace,Bank};
+use nes::address::{AddressSpace,Bank};
 
 // Power on state is defined here: https://wiki.nesdev.com/w/index.php/CPU_power_up_state
 

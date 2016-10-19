@@ -1,5 +1,6 @@
 use std::ops::{Index,IndexMut};
-use super::super::ppu;
+
+use nes::ppu;
 
 const SYSTEM_RAM: usize = 2 * 1024;
 
