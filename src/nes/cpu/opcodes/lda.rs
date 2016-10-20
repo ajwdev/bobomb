@@ -17,9 +17,7 @@ impl Absolute for Lda {
 }
 
 mod test {
-    use nes::cpu::Cpu;
     use nes::cpu::test::*;
-    use nes::address::{AddressSpace,Bank};
 
     #[test]
     fn test_lda_abs() {

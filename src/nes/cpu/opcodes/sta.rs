@@ -18,9 +18,7 @@ impl IndirectY for Sta {
 }
 
 mod test {
-    use nes::cpu::Cpu;
     use nes::cpu::test::*;
-    use nes::address::{AddressSpace,Bank};
 
     #[test]
     fn test_sta_abs() {

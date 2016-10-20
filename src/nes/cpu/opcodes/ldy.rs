@@ -10,9 +10,7 @@ impl Immediate for Ldy {
 }
 
 mod test {
-    use nes::cpu::Cpu;
     use nes::cpu::test::*;
-    use nes::address::{AddressSpace,Bank};
 
     #[test]
     fn test_ldy_imm() {

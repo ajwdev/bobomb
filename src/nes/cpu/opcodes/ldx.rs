@@ -10,9 +10,7 @@ impl Immediate for Ldx {
 }
 
 mod test {
-    use nes::cpu::Cpu;
     use nes::cpu::test::*;
-    use nes::address::{AddressSpace,Bank};
 
     #[test]
     fn test_ldx_imm() {

@@ -14,9 +14,7 @@ impl Immediate for And {
 }
 
 mod test {
-    use nes::cpu::Cpu;
     use nes::cpu::test::*;
-    use nes::address::{AddressSpace,Bank};
 
     #[test]
     fn test_and_immediate() {
