@@ -7,6 +7,10 @@ use nes::cpu::opcodes::*;
 
 pub const STACK_START: u16 = 0x100;
 
+pub trait Implied {
+    fn implied(&mut Cpu) -> usize;
+}
+
 pub trait Relative {
     fn relative(&mut Cpu) -> usize;
 }
@@ -276,13 +280,11 @@ impl Cpu {
             0x29 => {
                 And::immediate(self);
             }
-            // SEI
             0x78 => {
-                self.SR.Interrupt = true;
+                Sei::implied(self);
             }
-            // CLD
             0xd8 => {
-                self.SR.Decimal = false;
+                Cld::implied(self);
             }
             // TXS
             0x9a => {
@@ -472,31 +474,6 @@ mod test {
         assert!(result == 0x02, "expected 0x02, got {:#x}", result);
         result = cpu.pop_stack();
         assert!(result == 0x80, "expected 0x80, got {:#x}", result);
-    }
-
-    #[test]
-    fn test_sei() {
-        let mut cpu = mock_cpu(&[0x78]);
-        cpu.SR.Interrupt = false;
-
-        cpu.execute_instruction();
-        assert!(cpu.SR.Interrupt == true,
-                "expected true, got {:#?}",
-                cpu.SR.Interrupt);
-    }
-
-    #[test]
-    fn test_cld() {
-        let mut cpu = mock_cpu(&[0xd8]);
-
-        cpu.SR.Decimal = true;
-        assert!(cpu.SR.Decimal == true,
-                "expected true, got {:#?}",
-                cpu.SR.Decimal);
-        cpu.execute_instruction();
-        assert!(cpu.SR.Decimal == false,
-                "expected false, got {:#?}",
-                cpu.SR.Decimal);
     }
 
     #[test]

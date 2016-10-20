@@ -23,3 +23,8 @@ mod bpl;
 pub use self::beq::Beq;
 pub use self::bne::Bne;
 pub use self::bpl::Bpl;
+
+mod sei;
+mod cld;
+pub use self::sei::Sei;
+pub use self::cld::Cld;
