@@ -1,17 +1,17 @@
-use nes::cpu::{Cpu,Destination,Immediate,Absolute};
+use nes::cpu::{Cpu,Registers,Immediate,Absolute};
 use super::load::Load;
 
 pub struct Lda { }
 
 impl Immediate for Lda {
     fn immediate(cpu: &mut Cpu) -> usize {
-        Load::immediate(cpu, Destination::RegAC)
+        Load::immediate(cpu, Registers::AC)
     }
 }
 
 impl Absolute for Lda {
     fn absolute(cpu: &mut Cpu) -> usize {
-        Load::absolute(cpu, Destination::RegAC);
+        Load::absolute(cpu, Registers::AC);
         4
     }
 }

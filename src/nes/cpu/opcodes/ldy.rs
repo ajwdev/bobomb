@@ -1,11 +1,11 @@
-use nes::cpu::{Cpu,Destination,Immediate};
+use nes::cpu::{Cpu,Registers,Immediate};
 use super::load::Load;
 
 pub struct Ldy { }
 
 impl Immediate for Ldy {
     fn immediate(cpu: &mut Cpu) -> usize {
-        Load::immediate(cpu, Destination::RegY)
+        Load::immediate(cpu, Registers::Y)
     }
 }
 

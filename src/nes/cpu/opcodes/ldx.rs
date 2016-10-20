@@ -1,11 +1,11 @@
-use nes::cpu::{Cpu,Destination,Immediate};
+use nes::cpu::{Cpu,Registers,Immediate};
 use super::load::Load;
 
 pub struct Ldx { }
 
 impl Immediate for Ldx {
     fn immediate(cpu: &mut Cpu) -> usize {
-        Load::immediate(cpu, Destination::RegX)
+        Load::immediate(cpu, Registers::X)
     }
 }
 

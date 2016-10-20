@@ -15,11 +15,10 @@ pub trait Absolute {
     fn absolute(&mut Cpu) -> usize;
 }
 
-pub enum Destination {
-    RegX,
-    RegY,
-    RegAC,
-    Mem(u16),
+pub enum Registers {
+    X,
+    Y,
+    AC,
 }
 
 // TODO Fix this at some point
