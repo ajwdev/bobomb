@@ -15,6 +15,14 @@ pub trait Absolute {
     fn absolute(&mut Cpu) -> usize;
 }
 
+pub trait ZeroPage {
+    fn zero_page(&mut Cpu) -> usize;
+}
+
+pub trait IndirectY {
+    fn indirect_y(&mut Cpu) -> usize;
+}
+
 pub enum Registers {
     X,
     Y,
@@ -297,15 +305,14 @@ impl Cpu {
             0xa9 => {
                 Lda::immediate(self);
             }
-            // STY zero page
             0x84 => {
-                let word = self.read_word_and_increment();
-                self.mem.write_word(Cpu::zero_page_address(word), self.Y);
+                Sty::zero_page(self);
             }
-            // STA absolute
             0x8d => {
-                let dest = self.read_dword_and_increment();
-                self.mem.write_word(dest, self.AC);
+                Sta::absolute(self);
+            }
+            0x91 => {
+                Sta::indirect_y(self);
             }
             // DEC
             0xc6 => {
@@ -324,12 +331,6 @@ impl Cpu {
                 // itself. Consider a better way to do this.
                 let word = self.Y;
                 self.zero_and_negative_status(word);
-            }
-            // STA (Indrect), Y
-            0x91 => {
-                let word = self.read_word_and_increment();
-                let indirect_addr = self.mem.read_word(Cpu::zero_page_address(word));
-                self.mem.write_word((indirect_addr + self.Y) as u16, self.AC);
             }
             _ => {
                 self.debug_stack();
@@ -613,44 +614,6 @@ mod test {
         assert!(cpu.SP == 0xFD, "expected 0xFD, got {:#x}", cpu.SP);
         cpu.execute_instruction();
         assert!(cpu.SP == 0xff, "expected 0xff, got {:#x}", cpu.SP);
-    }
-
-    #[test]
-    fn test_sta_abs() {
-        let mut cpu = mock_cpu(&[0x8d, 0x10, 0x00]);
-        cpu.AC = 0xff;
-
-        let mut result = cpu.mem.read_word(0x0010);
-        assert!(result == 0x00, "expected 0x00, got {:#x}", result);
-        cpu.execute_instruction();
-        result = cpu.mem.read_word(0x0010);
-        assert!(result == 0xff, "expected 0xff, got {:#x}", result);
-    }
-
-    #[test]
-    fn test_sta_indirect_y() {
-        let mut cpu = mock_cpu(&[0x91, 0x10]);
-        cpu.mem.write_word(0x0010, 0xaa);
-        cpu.Y = 0x10;
-        cpu.AC = 0xff;
-
-        let mut result = cpu.mem.read_word(0x00ba);
-        assert!(result == 0x00, "expected 0x00, got {:#x}", result);
-        cpu.execute_instruction();
-        result = cpu.mem.read_word(0x00ba);
-        assert!(result == 0xff, "expected 0xff, got {:#x}", result);
-    }
-
-    #[test]
-    fn test_sty_zero() {
-        let mut cpu = mock_cpu(&[0x84, 0x10]);
-        cpu.Y = 0xff;
-
-        let mut result = cpu.mem.read_word(0x0010);
-        assert!(result == 0x00, "expected 0x00, got {:#x}", result);
-        cpu.execute_instruction();
-        result = cpu.mem.read_word(0x0010);
-        assert!(result == 0xff, "expected 0xff, got {:#x}", result);
     }
 
     #[test]
