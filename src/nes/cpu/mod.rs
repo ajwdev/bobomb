@@ -7,6 +7,10 @@ use nes::cpu::opcodes::*;
 
 pub const STACK_START: u16 = 0x100;
 
+pub trait Relative {
+    fn relative(&mut Cpu) -> usize;
+}
+
 pub trait Immediate {
     fn immediate(&mut Cpu) -> usize;
 }
@@ -242,21 +246,17 @@ impl Cpu {
         // Eventually we should move decoding and execution into an
         // instruction struct (or something like that).
         match instr {
-            // BPL (branch on result plus)
             0x10 => {
-                let word = self.read_word_and_increment();
-                if !self.SR.Negative { self.move_pc_relative(word); }
+                // branch on result plus
+                Bpl::relative(self);
             }
-            // BEQ (branch on zero result)
             0xf0 => {
-                let word = self.read_word_and_increment();
-                if self.SR.Zero { self.move_pc_relative(word); }
+                // branch on zero result
+                Beq::relative(self);
             }
-            // BNE (branch on non zero result)
             0xd0 => {
-                // TODO Dry this up with beq
-                let word = self.read_word_and_increment();
-                if !self.SR.Zero { self.move_pc_relative(word); }
+                // branch on non zero result
+                Bne::relative(self);
             }
             0x20 => {
                 // https://wiki.nesdev.com/w/index.php/RTS_Trick#About_JSR_and_RTS
@@ -473,109 +473,6 @@ mod test {
         result = cpu.pop_stack();
         assert!(result == 0x80, "expected 0x80, got {:#x}", result);
     }
-
-    #[test]
-    fn test_bpl_skip() {
-        let mut cpu = mock_cpu(&[0x10, 0xff]);
-
-        cpu.SR.Negative = true;
-        assert!(cpu.PC == 0x8000, "expected 0x8000, got {:#x}", cpu.PC);
-        cpu.execute_instruction();
-        assert!(cpu.PC == 0x8002, "expected 0x8002, got {:#x}", cpu.PC);
-    }
-
-    #[test]
-    fn test_bpl_take_positive() {
-        let mut cpu = mock_cpu(&[0x10, 0x2a]);
-
-        cpu.SR.Negative = false;
-        assert!(cpu.PC == 0x8000, "expected 0x8000, got {:#x}", cpu.PC);
-        cpu.execute_instruction(); // Two byte instruction so *add* two below
-        assert!(cpu.PC == 0x802c, "expected 0x802a, got {:#x}", cpu.PC);
-    }
-
-    #[test]
-    fn test_bpl_take_negative() {
-        let mut cpu = mock_cpu(&[0x10, 0x82]); // hex 0x82 is signed -126
-
-        cpu.SR.Negative = false;
-        assert!(cpu.PC == 0x8000, "expected 0x8000, got {:#x}", cpu.PC);
-        cpu.execute_instruction(); // Two byte instruction so *substract* two bytes below
-
-        // NOTE For posterity, this actually drops us below the ROM
-        // start range which I dont think will happen with real ROMs.
-        // This should be fine for our test though.
-        assert!(cpu.PC == 0x7f84, "expected 0x7f82, got {:#x}", cpu.PC);
-    }
-
-    #[test]
-    fn test_beq_skip() {
-        let mut cpu = mock_cpu(&[0xf0, 0xff]);
-
-        cpu.SR.Zero = false;
-        assert!(cpu.PC == 0x8000, "expected 0x8000, got {:#x}", cpu.PC);
-        cpu.execute_instruction();
-        assert!(cpu.PC == 0x8002, "expected 0x8002, got {:#x}", cpu.PC);
-    }
-
-    #[test]
-    fn test_beq_take_positive() {
-        let mut cpu = mock_cpu(&[0xf0, 0x2a]);
-
-        cpu.SR.Zero = true;
-        assert!(cpu.PC == 0x8000, "expected 0x8000, got {:#x}", cpu.PC);
-        cpu.execute_instruction(); // Two byte instruction so *add* two below
-        assert!(cpu.PC == 0x802c, "expected 0x802a, got {:#x}", cpu.PC);
-    }
-
-    #[test]
-    fn test_beq_take_negative() {
-        let mut cpu = mock_cpu(&[0xf0, 0x82]); // hex 0x82 is signed -126
-
-        cpu.SR.Zero = true;
-        assert!(cpu.PC == 0x8000, "expected 0x8000, got {:#x}", cpu.PC);
-        cpu.execute_instruction(); // Two byte instruction so *substract* two bytes below
-
-        // NOTE For posterity, this actually drops us below the ROM
-        // start range which I dont think will happen with real ROMs.
-        // This should be fine for our test though.
-        assert!(cpu.PC == 0x7f84, "expected 0x7f82, got {:#x}", cpu.PC);
-    }
-
-    #[test]
-    fn test_bne_skip() {
-        let mut cpu = mock_cpu(&[0xd0, 0xff]);
-
-        cpu.SR.Zero = true;
-        assert!(cpu.PC == 0x8000, "expected 0x8000, got {:#x}", cpu.PC);
-        cpu.execute_instruction();
-        assert!(cpu.PC == 0x8002, "expected 0x8002, got {:#x}", cpu.PC);
-    }
-
-    #[test]
-    fn test_bne_take_positive() {
-        let mut cpu = mock_cpu(&[0xd0, 0x2a]);
-
-        cpu.SR.Zero = false;
-        assert!(cpu.PC == 0x8000, "expected 0x8000, got {:#x}", cpu.PC);
-        cpu.execute_instruction(); // Two byte instruction so *add* two below
-        assert!(cpu.PC == 0x802c, "expected 0x802a, got {:#x}", cpu.PC);
-    }
-
-    #[test]
-    fn test_bne_take_negative() {
-        let mut cpu = mock_cpu(&[0xd0, 0x82]); // hex 0x82 is signed -126
-
-        cpu.SR.Zero = false;
-        assert!(cpu.PC == 0x8000, "expected 0x8000, got {:#x}", cpu.PC);
-        cpu.execute_instruction(); // Two byte instruction so *substract* two bytes below
-
-        // NOTE For posterity, this actually drops us below the ROM
-        // start range which I dont think will happen with real ROMs.
-        // This should be fine for our test though.
-        assert!(cpu.PC == 0x7f84, "expected 0x7f82, got {:#x}", cpu.PC);
-    }
-
 
     #[test]
     fn test_sei() {
