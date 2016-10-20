@@ -9,6 +9,7 @@ impl Immediate for Ldy {
     }
 }
 
+#[cfg(test)]
 mod test {
     use nes::cpu::test::*;
 

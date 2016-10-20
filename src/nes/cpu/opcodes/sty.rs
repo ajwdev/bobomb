@@ -10,6 +10,7 @@ impl ZeroPage for Sty {
     }
 }
 
+#[cfg(test)]
 mod test {
     use nes::cpu::test::*;
 

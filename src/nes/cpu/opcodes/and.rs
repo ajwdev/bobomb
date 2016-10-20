@@ -13,6 +13,7 @@ impl Immediate for And {
     }
 }
 
+#[cfg(test)]
 mod test {
     use nes::cpu::test::*;
 

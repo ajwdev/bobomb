@@ -16,6 +16,7 @@ impl Absolute for Lda {
     }
 }
 
+#[cfg(test)]
 mod test {
     use nes::cpu::test::*;
 

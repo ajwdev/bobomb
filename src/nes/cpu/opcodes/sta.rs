@@ -17,6 +17,7 @@ impl IndirectY for Sta {
     }
 }
 
+#[cfg(test)]
 mod test {
     use nes::cpu::test::*;
 
