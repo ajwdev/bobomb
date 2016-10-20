@@ -1,8 +1,26 @@
+mod opcodes;
+
 use nes::address::{AddressSpace,Bank};
+use nes::cpu::opcodes::*;
 
 // Power on state is defined here: https://wiki.nesdev.com/w/index.php/CPU_power_up_state
 
 pub const STACK_START: u16 = 0x100;
+
+pub trait Immediate {
+    fn immediate(&mut Cpu) -> usize;
+}
+
+pub trait Absolute {
+    fn absolute(&mut Cpu) -> usize;
+}
+
+pub enum Destination {
+    RegX,
+    RegY,
+    RegAC,
+    Mem(u16),
+}
 
 // TODO Fix this at some point
 #[allow(non_snake_case)]
@@ -268,30 +286,17 @@ impl Cpu {
                 println!("Stack pointer changed: {:#06x}", self.SP as u16 + STACK_START);
                 self.stack_depth = 0;
             }
-            // LDY # immediate
             0xa0 => {
-                let word = self.read_word_and_increment();
-                self.Y = word;
-                self.zero_and_negative_status(word);
+                Ldy::immediate(self);
             }
-            // LDX # immediate
             0xa2 => {
-                let word = self.read_word_and_increment();
-                self.X = word;
-                self.zero_and_negative_status(word);
+                Ldx::immediate(self);
             }
-            // LDA absolute
             0xad => {
-                let dest = self.read_dword_and_increment();
-                let word = self.mem.read_word(dest);
-                self.AC = word;
-                self.zero_and_negative_status(word);
+                Lda::absolute(self);
             }
-            // LDA # immediate
             0xa9 => {
-                let word = self.read_word_and_increment();
-                self.AC = word;
-                self.zero_and_negative_status(word);
+                Lda::immediate(self);
             }
             // STY zero page
             0x84 => {
@@ -343,10 +348,10 @@ impl Cpu {
 #[cfg(test)]
 mod test {
     use super::Cpu;
-    use super::super::address::{AddressSpace,Bank};
+    use nes::address::{AddressSpace,Bank};
 
 
-    fn rom_with_pc_at_start(words: &[u8]) -> Vec<u8> {
+    pub fn rom_with_pc_at_start(words: &[u8]) -> Vec<u8> {
         let mut mock_rom = vec![0; 1024*32];
         // Just set PC to the beginning of the rom
         // in each of the banks
@@ -363,7 +368,7 @@ mod test {
         mock_rom
     }
 
-    fn memory_from_rom(mem: Vec<u8>, doublebank: bool) -> AddressSpace {
+    pub fn memory_from_rom(mem: Vec<u8>, doublebank: bool) -> AddressSpace {
         if doublebank {
             if mem.len() <= 0x4000 {
                 // 16k
@@ -376,7 +381,7 @@ mod test {
         }
     }
 
-    fn mock_cpu(words: &[u8]) -> Cpu {
+    pub fn mock_cpu(words: &[u8]) -> Cpu {
         let mock_rom = rom_with_pc_at_start(words);
         let mem = memory_from_rom(mock_rom, true);
         Cpu::new(mem)
@@ -609,42 +614,6 @@ mod test {
         assert!(cpu.SP == 0xFD, "expected 0xFD, got {:#x}", cpu.SP);
         cpu.execute_instruction();
         assert!(cpu.SP == 0xff, "expected 0xff, got {:#x}", cpu.SP);
-    }
-
-    #[test]
-    fn test_ldy_imm() {
-        let mut cpu = mock_cpu(&[0xa0, 0xff]);
-
-        assert!(cpu.Y == 0, "expected 0, got {:#x}", cpu.Y);
-        cpu.execute_instruction();
-        assert!(cpu.Y == 0xff, "expected 0xff, got {:#x}", cpu.Y);
-    }
-
-    #[test]
-    fn test_ldx_imm() {
-        let mut cpu = mock_cpu(&[0xa2, 0xff]);
-
-        assert!(cpu.X == 0, "expected 0, got {:#x}", cpu.X);
-        cpu.execute_instruction();
-        assert!(cpu.X == 0xff, "expected 0xff, got {:#x}", cpu.X);
-    }
-
-    #[test]
-    fn test_lda_abs() {
-        let mut cpu = mock_cpu(&[0xad, 0x03, 0x80, 0xff]);
-
-        assert!(cpu.AC == 0, "expected 0, got {:#x}", cpu.AC);
-        cpu.execute_instruction();
-        assert!(cpu.AC == 0xff, "expected 0xff, got {:#x}", cpu.AC);
-    }
-
-    #[test]
-    fn test_lda_imm() {
-        let mut cpu = mock_cpu(&[0xa9, 0xff]);
-
-        assert!(cpu.AC == 0, "expected 0, got {:#x}", cpu.AC);
-        cpu.execute_instruction();
-        assert!(cpu.AC == 0xff, "expected 0xff, got {:#x}", cpu.AC);
     }
 
     #[test]
