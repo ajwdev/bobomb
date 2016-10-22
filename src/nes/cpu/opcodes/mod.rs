@@ -28,6 +28,9 @@ pub use self::beq::Beq;
 pub use self::bne::Bne;
 pub use self::bpl::Bpl;
 
+mod jsr;
+pub use self::jsr::Jsr;
+
 mod txs;
 pub use self::txs::Txs;
 
