@@ -1,11 +1,12 @@
 use nes::cpu::{Cpu,Implied};
+use nes::cpu::status::Flags;
 use super::store::Store;
 
 pub struct Cld { }
 
 impl Implied for Cld {
     fn implied(cpu: &mut Cpu) -> usize {
-        cpu.SR.Decimal = false;
+        cpu.SR.reset_decimal();
         2
     }
 }
@@ -13,18 +14,19 @@ impl Implied for Cld {
 #[cfg(test)]
 mod test {
     use nes::cpu::test::*;
+    use nes::cpu::status::Flags;
 
     #[test]
     fn test_cld() {
         let mut cpu = mock_cpu(&[0xd8]);
 
-        cpu.SR.Decimal = true;
-        assert!(cpu.SR.Decimal == true,
+        cpu.SR.set_decimal();
+        assert!(cpu.SR.is_set(Flags::Decimal),
                 "expected true, got {:#?}",
-                cpu.SR.Decimal);
+                cpu.SR.is_set(Flags::Decimal));
         cpu.execute_instruction();
-        assert!(cpu.SR.Decimal == false,
+        assert!(!cpu.SR.is_set(Flags::Decimal),
                 "expected false, got {:#?}",
-                cpu.SR.Decimal);
+                cpu.SR.is_set(Flags::Decimal));
     }
 }

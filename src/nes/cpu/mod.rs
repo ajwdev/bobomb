@@ -1,6 +1,8 @@
+mod status;
 mod opcodes;
 
 use nes::address::{AddressSpace,Bank};
+use nes::cpu::status::{StatusRegister};
 use nes::cpu::opcodes::*;
 
 // Power on state is defined here: https://wiki.nesdev.com/w/index.php/CPU_power_up_state
@@ -36,71 +38,6 @@ pub enum Registers {
     Y,
     AC,
 }
-
-// TODO Fix this at some point
-#[allow(non_snake_case)]
-pub struct StatusRegister {
-    // bit 7
-    Negative: bool, // N
-
-    // bit 6
-    Overflow: bool, // V
-
-    // bit 5
-    // reserved
-
-    // bit 4
-    Break: bool, // B This may not actually get used
-
-    // bit 3
-    // NOTE This apparently affects ADC/SBC instructions
-    Decimal: bool, // D
-
-    // bit 2
-    Interrupt: bool, // I
-
-    // bit 1
-    Zero: bool, // Z
-
-    // bit 0
-    Carry: bool, // C
-}
-
-impl StatusRegister {
-    pub fn new() -> Self {
-        // Power on state == 00110100 (0x34). See comment at top of file
-        StatusRegister {
-            Negative: false,
-            Overflow: false,
-            Break: true,
-            Decimal: false,
-            Interrupt: true,
-            Zero: false,
-            Carry: false,
-        }
-    }
-
-    #[inline]
-    pub fn reset_zero(&mut self) {
-        self.Zero = false;
-    }
-
-    #[inline]
-    pub fn set_zero(&mut self) {
-        self.Zero = true;
-    }
-
-    #[inline]
-    pub fn reset_negative(&mut self) {
-        self.Negative = false;
-    }
-
-    #[inline]
-    pub fn set_negative(&mut self) {
-        self.Negative = true;
-    }
-}
-
 
 // TODO Fix this at some point
 #[allow(non_snake_case)]
