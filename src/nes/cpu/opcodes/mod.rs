@@ -16,6 +16,10 @@ pub use self::sty::Sty;
 
 mod and;
 pub use self::and::And;
+mod dec;
+mod dey;
+pub use self::dec::Dec;
+pub use self::dey::Dey;
 
 mod beq;
 mod bne;

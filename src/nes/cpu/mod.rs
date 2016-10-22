@@ -315,21 +315,11 @@ impl Cpu {
             }
             // DEC
             0xc6 => {
-                let addr = Cpu::zero_page_address(self.read_word_and_increment());
-                let mut word = self.mem.read_word(addr);
-
-                word = word.wrapping_sub(1);
-                self.mem.write_word(addr, word);
-                self.zero_and_negative_status(word);
+                Dec::zero_page(self);
             }
             // DEY
             0x88 => {
-                self.Y = self.Y.wrapping_sub(1);
-                // TODO The reason we create `word` here is because we can't pass self.Y to
-                // `zero_and_negative_status` as it's already mutably borrowed by the function
-                // itself. Consider a better way to do this.
-                let word = self.Y;
-                self.zero_and_negative_status(word);
+                Dey::implied(self);
             }
             _ => {
                 self.debug_stack();
@@ -474,40 +464,5 @@ mod test {
         assert!(result == 0x02, "expected 0x02, got {:#x}", result);
         result = cpu.pop_stack();
         assert!(result == 0x80, "expected 0x80, got {:#x}", result);
-    }
-
-    #[test]
-    fn test_txs() {
-        let mut cpu = mock_cpu(&[0x9a]);
-        cpu.SP = 0xfd;
-        cpu.X = 0xff;
-
-        assert!(cpu.SP == 0xFD, "expected 0xFD, got {:#x}", cpu.SP);
-        cpu.execute_instruction();
-        assert!(cpu.SP == 0xff, "expected 0xff, got {:#x}", cpu.SP);
-    }
-
-    #[test]
-    fn test_dey() {
-        let mut cpu = mock_cpu(&[0x88]);
-        cpu.Y = 0xff;
-
-        assert!(cpu.Y == 0xff, "expected 0xff, got {:#x}", cpu.Y);
-        cpu.execute_instruction();
-        assert!(cpu.Y == 0xfe, "expected 0xfe, got {:#x}", cpu.Y);
-        //TODO Make assertions on status registers
-    }
-
-    #[test]
-    fn test_dec_zero() {
-        let mut cpu = mock_cpu(&[0xc6, 0x10]);
-        cpu.mem.write_word(0x10, 0xff);
-
-        let mut result = cpu.mem.read_word(0x10);
-        assert!(result == 0xff, "expected 0xff, got {:#x}", result);
-        cpu.execute_instruction();
-        result = cpu.mem.read_word(0x10);
-        assert!(result == 0xfe, "expected 0xfe, got {:#x}", result);
-        //TODO Make assertions on status registers
     }
 }
