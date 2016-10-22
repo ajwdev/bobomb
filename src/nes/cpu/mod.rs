@@ -242,40 +242,25 @@ impl Cpu {
         let instr = self.read_word_and_increment();
 
         // See http://users.telenet.be/kim1-6502/6502/proman.html
-        println!("Instruction: {:#x} {:#x} {:#x}",
-                 instr,
-                 self.mem.read_word(self.PC),
-                 self.mem.read_word(self.PC + 1));
-        // TODO This inline match logic is obviously not going to scale.
-        // Eventually we should move decoding and execution into an
-        // instruction struct (or something like that).
+        println!(
+            "Instruction: {:#x} {:#x} {:#x}",
+            instr,
+            self.mem.read_word(self.PC),
+            self.mem.read_word(self.PC + 1)
+        );
+
+        // TODO How does this perform? Possibly look into a perfect hash table
         match instr {
             0x10 => {
-                // branch on result plus
                 Bpl::relative(self);
             }
             0xf0 => {
-                // branch on zero result
                 Beq::relative(self);
             }
             0xd0 => {
-                // branch on non zero result
                 Bne::relative(self);
             }
             0x20 => {
-                // // https://wiki.nesdev.com/w/index.php/RTS_Trick#About_JSR_and_RTS
-                // let addr = self.read_dword_and_increment();
-                // // PC is now at the next instruction. According to the doc above we are to
-                // // take this value and subtract one from it, THEN push it on the stack. On pop
-                // // we then add 1 to the address. I'm not sure why we just cant push the current PC
-                // // but there is probably a reason.
-                // let ret = self.PC - 1;
-
-                // // push the high byte and then the low byte
-                // self.push_stack(((ret & 0xFF00) >> 8) as u8);
-                // self.push_stack((ret & 0x00FF) as u8);
-
-                // self.PC = addr;
                 Jsr::absolute(self);
             }
             0x29 => {
@@ -287,7 +272,6 @@ impl Cpu {
             0xd8 => {
                 Cld::implied(self);
             }
-            // TXS
             0x9a => {
                 Txs::implied(self);
             }
@@ -312,11 +296,9 @@ impl Cpu {
             0x91 => {
                 Sta::indirect_y(self);
             }
-            // DEC
             0xc6 => {
                 Dec::zero_page(self);
             }
-            // DEY
             0x88 => {
                 Dey::implied(self);
             }
