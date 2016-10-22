@@ -288,9 +288,7 @@ impl Cpu {
             }
             // TXS
             0x9a => {
-                self.SP = self.X;
-                println!("Stack pointer changed: {:#06x}", self.SP as u16 + STACK_START);
-                self.stack_depth = 0;
+                Txs::implied(self);
             }
             0xa0 => {
                 Ldy::immediate(self);
@@ -328,7 +326,7 @@ impl Cpu {
                    self.mem.read_word(self.PC),
                    self.mem.read_word(self.PC + 1),
                    self.instruction_counter,
-              )
+                )
             }
         }
     }

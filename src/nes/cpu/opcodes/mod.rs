@@ -28,6 +28,9 @@ pub use self::beq::Beq;
 pub use self::bne::Bne;
 pub use self::bpl::Bpl;
 
+mod txs;
+pub use self::txs::Txs;
+
 mod sei;
 mod cld;
 pub use self::sei::Sei;
