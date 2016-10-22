@@ -8,6 +8,9 @@ use nes::address::{AddressSpace,Bank};
 use nes::cpu::status::{StatusRegister};
 use nes::cpu::opcodes::*;
 
+// TODO Consider breaking the CPU logic out into its own private module and re-exporting it. This
+// will require adjusting the visibility on a lot of methods.
+
 // Power on state is defined here: https://wiki.nesdev.com/w/index.php/CPU_power_up_state
 
 pub const STACK_START: u16 = 0x100;
