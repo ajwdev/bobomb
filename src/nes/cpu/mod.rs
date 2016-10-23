@@ -209,6 +209,9 @@ impl Cpu {
             0x84 => {
                 Sty::zero_page(self);
             }
+            0x85 => {
+                Sta::zero_page(self);
+            }
             0x8d => {
                 Sta::absolute(self);
             }

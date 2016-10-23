@@ -1,4 +1,4 @@
-use nes::cpu::{Cpu,Registers,Absolute,IndirectY};
+use nes::cpu::{Cpu,Registers,Absolute,IndirectY,ZeroPage};
 use super::store::Store;
 
 pub struct Sta { }
@@ -17,9 +17,28 @@ impl IndirectY for Sta {
     }
 }
 
+impl ZeroPage for Sta {
+    fn zero_page(cpu: &mut Cpu) -> usize {
+        Store::zero_page(cpu, Registers::AC);
+        3
+    }
+}
+
 #[cfg(test)]
 mod test {
     use nes::cpu::test::*;
+
+    #[test]
+    fn test_sta_zeropage() {
+        let mut cpu = mock_cpu(&[0x85, 0x10]);
+        cpu.AC = 0xff;
+
+        let mut result = cpu.mem.read_word(0x0010);
+        assert!(result == 0x00, "expected 0x00, got {:#x}", result);
+        cpu.execute_instruction();
+        result = cpu.mem.read_word(0x0010);
+        assert!(result == 0xff, "expected 0xff, got {:#x}", result);
+    }
 
     #[test]
     fn test_sta_abs() {
