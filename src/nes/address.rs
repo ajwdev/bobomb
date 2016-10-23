@@ -109,10 +109,15 @@ impl AddressSpace {
                 self.ram[addr as usize] = value;
             }
             0x2000 => {
-                // PPU
                 self.ppu.write_ctrl(value);
             }
-            0x2001...0x2007 => {
+            0x2001 => {
+                self.ppu.write_mask(value);
+            }
+            0x2005 => {
+                self.ppu.write_scroll(value);
+            }
+            0x2002...0x2004|0x2006...0x2007 => {
                 // PPU
                 // TODO Should we do something similiar to what we did above?
                 panic!("ppu not implemented yet. access at {:#x}", addr);

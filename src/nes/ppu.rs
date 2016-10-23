@@ -47,6 +47,15 @@ impl Ppu {
         }
     }
 
+    // TODO Replace these methods with something less terrible
+    pub fn write_scroll(&mut self, value: u8) {
+        self.Scroll = value;
+    }
+
+    pub fn write_mask(&mut self, value: u8) {
+        self.Mask = value;
+    }
+
     pub fn write_ctrl(&mut self, value: u8) {
         self.Ctrl = value;
     }
