@@ -191,6 +191,9 @@ impl Cpu {
             0x48 => {
                 Pha::implied(self);
             }
+            0x25 => {
+                And::zero_page(self);
+            }
             0x29 => {
                 And::immediate(self);
             }
