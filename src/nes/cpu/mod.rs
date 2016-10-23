@@ -197,6 +197,12 @@ impl Cpu {
             0xd8 => {
                 Cld::implied(self);
             }
+            0x8a => {
+                Txa::implied(self);
+            }
+            0x98 => {
+                Tya::implied(self);
+            }
             0x9a => {
                 Txs::implied(self);
             }

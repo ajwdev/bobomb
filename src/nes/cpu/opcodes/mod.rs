@@ -36,7 +36,11 @@ pub use self::jmp::Jmp;
 mod pha;
 pub use self::pha::Pha;
 
+mod txa;
+mod tya;
 mod txs;
+pub use self::txa::Txa;
+pub use self::tya::Tya;
 pub use self::txs::Txs;
 
 mod sei;
