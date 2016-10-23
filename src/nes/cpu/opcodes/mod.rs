@@ -33,6 +33,9 @@ mod jmp;
 pub use self::jsr::Jsr;
 pub use self::jmp::Jmp;
 
+mod pha;
+pub use self::pha::Pha;
+
 mod txs;
 pub use self::txs::Txs;
 

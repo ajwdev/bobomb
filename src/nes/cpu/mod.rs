@@ -185,6 +185,9 @@ impl Cpu {
             0x4c => {
                 Jmp::absolute(self);
             }
+            0x48 => {
+                Pha::implied(self);
+            }
             0x29 => {
                 And::immediate(self);
             }
