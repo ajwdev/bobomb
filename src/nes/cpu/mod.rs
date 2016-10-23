@@ -182,6 +182,9 @@ impl Cpu {
             0x20 => {
                 Jsr::absolute(self);
             }
+            0x4c => {
+                Jmp::absolute(self);
+            }
             0x29 => {
                 And::immediate(self);
             }

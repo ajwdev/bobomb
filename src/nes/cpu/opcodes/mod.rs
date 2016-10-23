@@ -29,7 +29,9 @@ pub use self::bne::Bne;
 pub use self::bpl::Bpl;
 
 mod jsr;
+mod jmp;
 pub use self::jsr::Jsr;
+pub use self::jmp::Jmp;
 
 mod txs;
 pub use self::txs::Txs;
