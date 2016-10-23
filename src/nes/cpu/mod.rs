@@ -179,6 +179,9 @@ impl Cpu {
             0xd0 => {
                 Bne::relative(self);
             }
+            0xc9 => {
+                Cmp::immediate(self);
+            }
             0x20 => {
                 Jsr::absolute(self);
             }
