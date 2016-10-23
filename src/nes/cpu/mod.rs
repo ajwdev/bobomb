@@ -215,6 +215,9 @@ impl Cpu {
             0xad => {
                 Lda::absolute(self);
             }
+            0xa5 => {
+                Lda::zero_page(self);
+            }
             0xa9 => {
                 Lda::immediate(self);
             }

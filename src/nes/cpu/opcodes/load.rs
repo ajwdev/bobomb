@@ -19,6 +19,13 @@ impl Load {
         cpu.zero_and_negative_status(word);
     }
 
+    pub fn zero_page(cpu: &mut Cpu, dst: Registers) {
+        let src = cpu.read_word_and_increment();
+        let word = cpu.mem.read_word(Cpu::zero_page_address(src));
+        Self::save_destination(cpu, dst, word);
+        cpu.zero_and_negative_status(word);
+    }
+
     fn save_destination(cpu: &mut Cpu, dest: Registers, value: u8) {
         match dest {
             Registers::X => { cpu.X = value },

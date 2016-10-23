@@ -1,4 +1,4 @@
-use nes::cpu::{Cpu,Registers,Immediate,Absolute};
+use nes::cpu::{Cpu,Registers,ZeroPage,Immediate,Absolute};
 use super::load::Load;
 
 pub struct Lda { }
@@ -13,6 +13,13 @@ impl Absolute for Lda {
     fn absolute(cpu: &mut Cpu) -> usize {
         Load::absolute(cpu, Registers::AC);
         4
+    }
+}
+
+impl ZeroPage for Lda {
+    fn zero_page(cpu: &mut Cpu) -> usize {
+        Load::zero_page(cpu, Registers::AC);
+        3
     }
 }
 
@@ -36,5 +43,15 @@ mod test {
         assert!(cpu.AC == 0, "expected 0, got {:#x}", cpu.AC);
         cpu.execute_instruction();
         assert!(cpu.AC == 0xff, "expected 0xff, got {:#x}", cpu.AC);
+    }
+
+    #[test]
+    fn test_lda_zeropage() {
+        let mut cpu = mock_cpu(&[0xa5, 0xff]);
+        cpu.mem.write_word(0x00ff, 0xbe);
+
+        assert!(cpu.AC == 0, "expected 0, got {:#x}", cpu.AC);
+        cpu.execute_instruction();
+        assert!(cpu.AC == 0xbe, "expected 0xbe, got {:#x}", cpu.AC);
     }
 }
