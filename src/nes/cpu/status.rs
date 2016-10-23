@@ -1,3 +1,6 @@
+use std::clone::Clone;
+
+#[derive(Debug,Copy,Clone)]
 pub enum Flags {
     Negative,
     Overflow,
@@ -139,5 +142,25 @@ impl StatusRegister {
     #[deprecated(note="please use `set(T)` instead")]
     pub fn set_decimal(&mut self) {
         self.decimal = true;
+    }
+}
+
+#[cfg(test)]
+pub mod test {
+    use nes::cpu::Cpu;
+    pub use super::Flags;
+
+    pub fn assert_status_set(cpu: &Cpu, flag: Flags) {
+        assert!(
+            cpu.SR.is_set(flag),
+            "expected '{:?}' status register to be set", flag
+        );
+    }
+
+    pub fn assert_status_reset(cpu: &Cpu, flag: Flags) {
+        assert!(
+            !cpu.SR.is_set(flag),
+            "expected '{:?}' status register to be reset", flag
+        );
     }
 }
