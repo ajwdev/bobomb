@@ -144,23 +144,3 @@ impl StatusRegister {
         self.decimal = true;
     }
 }
-
-#[cfg(test)]
-pub mod test {
-    use nes::cpu::Cpu;
-    pub use super::Flags;
-
-    pub fn assert_status_set(cpu: &Cpu, flag: Flags) {
-        assert!(
-            cpu.SR.is_set(flag),
-            "expected '{:?}' status register to be set", flag
-        );
-    }
-
-    pub fn assert_status_reset(cpu: &Cpu, flag: Flags) {
-        assert!(
-            !cpu.SR.is_set(flag),
-            "expected '{:?}' status register to be reset", flag
-        );
-    }
-}

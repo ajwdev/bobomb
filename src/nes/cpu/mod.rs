@@ -1,3 +1,6 @@
+#[macro_use]
+mod macros;
+
 mod status;
 mod opcodes;
 mod address_modes;
