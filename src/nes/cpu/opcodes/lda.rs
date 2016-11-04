@@ -26,23 +26,24 @@ impl ZeroPage for Lda {
 #[cfg(test)]
 mod test {
     use nes::cpu::test::*;
+    use nes::cpu::Registers;
 
     #[test]
     fn test_lda_abs() {
         let mut cpu = mock_cpu(&[0xad, 0x03, 0x80, 0xff]);
 
-        assert!(cpu.AC == 0, "expected 0, got {:#x}", cpu.AC);
+        assert_cpu_register!(cpu, Registers::AC, 0);
         cpu.execute_instruction();
-        assert!(cpu.AC == 0xff, "expected 0xff, got {:#x}", cpu.AC);
+        assert_cpu_register!(cpu, Registers::AC, 0xff);
     }
 
     #[test]
     fn test_lda_imm() {
         let mut cpu = mock_cpu(&[0xa9, 0xff]);
 
-        assert!(cpu.AC == 0, "expected 0, got {:#x}", cpu.AC);
+        assert_cpu_register!(cpu, Registers::AC, 0);
         cpu.execute_instruction();
-        assert!(cpu.AC == 0xff, "expected 0xff, got {:#x}", cpu.AC);
+        assert_cpu_register!(cpu, Registers::AC, 0xff);
     }
 
     #[test]
@@ -50,8 +51,8 @@ mod test {
         let mut cpu = mock_cpu(&[0xa5, 0xff]);
         cpu.mem.write_word(0x00ff, 0xbe);
 
-        assert!(cpu.AC == 0, "expected 0, got {:#x}", cpu.AC);
+        assert_cpu_register!(cpu, Registers::AC, 0);
         cpu.execute_instruction();
-        assert!(cpu.AC == 0xbe, "expected 0xbe, got {:#x}", cpu.AC);
+        assert_cpu_register!(cpu, Registers::AC, 0xbe);
     }
 }

@@ -30,15 +30,16 @@ impl ZeroPage for And {
 #[cfg(test)]
 mod test {
     use nes::cpu::test::*;
+    use nes::cpu::Registers;
 
     #[test]
     fn test_and_immediate() {
         let mut cpu = mock_cpu(&[0x29, 0x84]);
         cpu.AC = 0xf0;
 
-        assert!(cpu.AC == 0xf0, "expected 0xff, got {:#x}", cpu.AC);
+        assert_cpu_register!(cpu, Registers::AC, 0xf0);
         cpu.execute_instruction();
-        assert!(cpu.AC == 0x80, "expected 0x80, got {:#x}", cpu.AC);
+        assert_cpu_register!(cpu, Registers::AC, 0x80);
         //TODO Make assertions on status registers
     }
 
@@ -48,9 +49,9 @@ mod test {
         cpu.mem.write_word(0xff, 0x84);
         cpu.AC = 0xf0;
 
-        assert!(cpu.AC == 0xf0, "expected 0xff, got {:#x}", cpu.AC);
+        assert_cpu_register!(cpu, Registers::AC, 0xf0);
         cpu.execute_instruction();
-        assert!(cpu.AC == 0x80, "expected 0x80, got {:#x}", cpu.AC);
+        assert_cpu_register!(cpu, Registers::AC, 0x80);
         //TODO Make assertions on status registers
     }
 }

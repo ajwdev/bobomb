@@ -12,13 +12,14 @@ impl Immediate for Ldy {
 #[cfg(test)]
 mod test {
     use nes::cpu::test::*;
+    use nes::cpu::Registers;
 
     #[test]
     fn test_ldy_imm() {
         let mut cpu = mock_cpu(&[0xa0, 0xff]);
 
-        assert!(cpu.Y == 0, "expected 0, got {:#x}", cpu.Y);
+        assert_cpu_register!(cpu, Registers::Y, 0);
         cpu.execute_instruction();
-        assert!(cpu.Y == 0xff, "expected 0xff, got {:#x}", cpu.Y);
+        assert_cpu_register!(cpu, Registers::Y, 0xff);
     }
 }

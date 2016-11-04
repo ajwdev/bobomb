@@ -31,6 +31,8 @@ impl Load {
             Registers::X => { cpu.X = value },
             Registers::Y => { cpu.Y = value },
             Registers::AC => { cpu.AC = value },
+            Registers::SP => { cpu.SP = value },
+            Registers::PC => { panic!("PC is not supported here!") },
         }
     }
 }

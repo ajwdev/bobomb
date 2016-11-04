@@ -25,6 +25,8 @@ impl Store {
             Registers::X => { cpu.mem.write_word(dest, cpu.X); },
             Registers::Y => { cpu.mem.write_word(dest, cpu.Y); },
             Registers::AC => { cpu.mem.write_word(dest, cpu.AC); },
+            Registers::SP => { cpu.mem.write_word(dest, cpu.SP); },
+            Registers::PC => { panic!("PC is not supported here!") },
         }
     }
 }

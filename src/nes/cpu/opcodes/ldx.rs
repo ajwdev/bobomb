@@ -12,13 +12,14 @@ impl Immediate for Ldx {
 #[cfg(test)]
 mod test {
     use nes::cpu::test::*;
+    use nes::cpu::Registers;
 
     #[test]
     fn test_ldx_imm() {
         let mut cpu = mock_cpu(&[0xa2, 0xff]);
 
-        assert!(cpu.X == 0, "expected 0, got {:#x}", cpu.X);
+        assert_cpu_register!(cpu, Registers::X, 0);
         cpu.execute_instruction();
-        assert!(cpu.X == 0xff, "expected 0xff, got {:#x}", cpu.X);
+        assert_cpu_register!(cpu, Registers::X, 0xff);
     }
 }

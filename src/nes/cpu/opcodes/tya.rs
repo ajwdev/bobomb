@@ -13,6 +13,7 @@ impl Implied for Tya {
 #[cfg(test)]
 mod test {
     use nes::cpu::test::*;
+    use nes::cpu::Registers;
 
     #[test]
     fn test_tya() {
@@ -20,10 +21,10 @@ mod test {
         cpu.Y = 0xf0;
         cpu.AC = 0x00;
 
-        assert!(cpu.Y == 0xf0, "expected 0xf0, got {:#x}", cpu.Y);
-        assert!(cpu.AC == 0x00, "expected 0x00, got {:#x}", cpu.AC);
+        assert_cpu_register!(cpu, Registers::Y, 0xf0);
+        assert_cpu_register!(cpu, Registers::AC, 0x00);
         cpu.execute_instruction();
-        assert!(cpu.AC == 0xf0, "expected 0xf0, got {:#x}", cpu.AC);
+        assert_cpu_register!(cpu, Registers::AC, 0xf0);
         //TODO Make assertions on status registers
     }
 }

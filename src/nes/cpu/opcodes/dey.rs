@@ -18,15 +18,16 @@ impl Implied for Dey {
 #[cfg(test)]
 mod test {
     use nes::cpu::test::*;
+    use nes::cpu::Registers;
 
     #[test]
     fn test_dey() {
         let mut cpu = mock_cpu(&[0x88]);
         cpu.Y = 0xff;
 
-        assert!(cpu.Y == 0xff, "expected 0xff, got {:#x}", cpu.Y);
+        assert_cpu_register!(cpu, Registers::Y, 0xff);
         cpu.execute_instruction();
-        assert!(cpu.Y == 0xfe, "expected 0xfe, got {:#x}", cpu.Y);
+        assert_cpu_register!(cpu, Registers::Y, 0xfe);
         //TODO Make assertions on status registers
     }
 }

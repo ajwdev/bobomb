@@ -18,10 +18,13 @@ use nes::cpu::opcodes::*;
 
 pub const STACK_START: u16 = 0x100;
 
+#[derive(Debug)]
 pub enum Registers {
     X,
     Y,
     AC,
+    SP,
+    PC,
 }
 
 // TODO Fix this at some point
@@ -70,6 +73,16 @@ impl Cpu {
     fn find_pc_addr(mem: &AddressSpace) -> u16 {
         // http://forum.6502.org/viewtopic.php?t=1708
         (mem.read_word(0xFFFD) as u16) << 8 | mem.read_word(0xFFFC) as u16
+    }
+
+    pub fn register_value(&self, reg: Registers) -> u8 {
+        match reg {
+            Registers::X => { self.X },
+            Registers::Y => { self.Y },
+            Registers::AC => { self.AC },
+            Registers::SP => { self.SP },
+            Registers::PC => { panic!("Register PC is too wide. FIX") },
+        }
     }
 
     #[inline]

@@ -26,6 +26,7 @@ impl Immediate for Cmp {
 mod test {
     use nes::cpu::test::*;
     use nes::cpu::status::Flags;
+    use nes::cpu::Registers;
 
     #[test]
     fn test_cmp_equal() {
@@ -33,7 +34,7 @@ mod test {
         cpu.AC = 0xAA;
         cpu.execute_instruction();
 
-        assert!(cpu.AC == 0xAA, "expected 0xAA, got {:#x}", cpu.AC);
+        assert_cpu_register!(cpu, Registers::AC, 0xAA);
         assert_status_set!(cpu, Flags::Zero);
         assert_status_set!(cpu, Flags::Carry);
         assert_status_reset!(cpu, Flags::Negative);
@@ -45,7 +46,7 @@ mod test {
         cpu.AC = 0xAA;
         cpu.execute_instruction();
 
-        assert!(cpu.AC == 0xAA, "expected 0xAA, got {:#x}", cpu.AC);
+        assert_cpu_register!(cpu, Registers::AC, 0xAA);
         assert_status_reset!(cpu, Flags::Zero);
         assert_status_set!(cpu, Flags::Carry);
         assert_status_reset!(cpu, Flags::Negative);
@@ -57,7 +58,7 @@ mod test {
         cpu.AC = 0xAA;
         cpu.execute_instruction();
 
-        assert!(cpu.AC == 0xAA, "expected 0xAA, got {:#x}", cpu.AC);
+        assert_cpu_register!(cpu, Registers::AC, 0xAA);
         assert_status_reset!(cpu, Flags::Zero);
         assert_status_set!(cpu, Flags::Carry);
         // Negative here because 0xAA - 0x10 has the 7th bit set
@@ -70,7 +71,7 @@ mod test {
         cpu.AC = 0xAA;
         cpu.execute_instruction();
 
-        assert!(cpu.AC == 0xAA, "expected 0xAA, got {:#x}", cpu.AC);
+        assert_cpu_register!(cpu, Registers::AC, 0xAA);
         assert_status_reset!(cpu, Flags::Zero);
         assert_status_reset!(cpu, Flags::Carry);
         assert_status_set!(cpu, Flags::Negative);
@@ -82,7 +83,7 @@ mod test {
         cpu.AC = 0x10;
         cpu.execute_instruction();
 
-        assert!(cpu.AC == 0x10, "expected 0x10, got {:#x}", cpu.AC);
+        assert_cpu_register!(cpu, Registers::AC, 0x10);
         assert_status_reset!(cpu, Flags::Zero);
         assert_status_reset!(cpu, Flags::Carry);
         // Not negative here because 0x10 - 0xBB does not have the 7th bit set

@@ -15,6 +15,7 @@ impl Implied for Txs {
 #[cfg(test)]
 mod test {
     use nes::cpu::test::*;
+    use nes::cpu::Registers;
 
     #[test]
     fn test_txs() {
@@ -22,10 +23,10 @@ mod test {
         cpu.X = 0xf0;
         cpu.SP = 0x00;
 
-        assert!(cpu.X == 0xf0, "expected 0xf0, got {:#x}", cpu.X);
-        assert!(cpu.SP == 0x00, "expected 0x00, got {:#x}", cpu.SP);
+        assert_cpu_register!(cpu, Registers::X, 0xf0);
+        assert_cpu_register!(cpu, Registers::SP, 0x00);
         cpu.execute_instruction();
-        assert!(cpu.SP == 0xf0, "expected 0xf0, got {:#x}", cpu.SP);
+        assert_cpu_register!(cpu, Registers::SP, 0xf0);
         //TODO Make assertions on status registers
     }
 }
