@@ -18,3 +18,9 @@ macro_rules! assert_cpu_register {
         assert!(z == $v, "expected '{:?}', got {:?} in register {:?}", $v, z, $r);
     }
 }
+
+macro_rules! assert_equalx {
+    ($l:expr, $r:expr) => {
+        assert!($l == $r, "expected {:#x} got {:#x}", $r, $l);
+    }
+}

@@ -26,10 +26,10 @@ mod test {
         cpu.mem.write_word(0x10, 0xff);
 
         let mut result = cpu.mem.read_word(0x10);
-        assert!(result == 0xff, "expected 0xff, got {:#x}", result);
+        assert_equalx!(result, 0xff);
         cpu.execute_instruction();
         result = cpu.mem.read_word(0x10);
-        assert!(result == 0xfe, "expected 0xfe, got {:#x}", result);
+        assert_equalx!(result, 0xfe);
         //TODO Make assertions on status registers
     }
 }
