@@ -222,6 +222,9 @@ impl Cpu {
             0xd8 => {
                 Cld::implied(self);
             }
+            0xaa => {
+                Tax::implied(self);
+            }
             0x8a => {
                 Txa::implied(self);
             }

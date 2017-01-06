@@ -40,9 +40,11 @@ mod cmp;
 pub use self::cmp::Cmp;
 
 mod txa;
+mod tax;
 mod tya;
 mod txs;
 pub use self::txa::Txa;
+pub use self::tax::Tax;
 pub use self::tya::Tya;
 pub use self::txs::Txs;
 
