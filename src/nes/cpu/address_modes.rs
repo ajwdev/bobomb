@@ -23,3 +23,7 @@ pub trait ZeroPage {
 pub trait IndirectY {
     fn indirect_y(&mut Cpu) -> usize;
 }
+
+pub trait Accumulator {
+    fn accumulator(&mut Cpu) -> usize;
+}

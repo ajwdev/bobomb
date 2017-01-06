@@ -201,6 +201,9 @@ impl Cpu {
             0x20 => {
                 Jsr::absolute(self);
             }
+            0x4a => {
+                Lsr::accumulator(self);
+            }
             0x4c => {
                 Jmp::absolute(self);
             }
