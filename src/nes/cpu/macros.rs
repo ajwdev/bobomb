@@ -15,7 +15,7 @@ macro_rules! assert_status_reset {
 macro_rules! assert_cpu_register {
     ($c:expr, $r:expr, $v:expr) => {
         let z = $c.register_value($r);
-        assert!(z == $v, "expected '{:?}', got {:?} in register {:?}", $v, z, $r);
+        assert!(z == $v, "expected '{:#x}', got {:#x} in register {:?}", $v, z, $r);
     }
 }
 
