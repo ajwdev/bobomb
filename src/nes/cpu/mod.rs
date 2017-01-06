@@ -219,6 +219,9 @@ impl Cpu {
             0x78 => {
                 Sei::implied(self);
             }
+            0x18 => {
+                Clc::implied(self);
+            }
             0xd8 => {
                 Cld::implied(self);
             }

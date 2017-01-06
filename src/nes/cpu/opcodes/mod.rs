@@ -50,8 +50,10 @@ pub use self::txs::Txs;
 
 mod sei;
 mod cld;
+mod clc;
 pub use self::sei::Sei;
 pub use self::cld::Cld;
+pub use self::clc::Clc;
 
 mod lsr;
 pub use self::lsr::Lsr;
