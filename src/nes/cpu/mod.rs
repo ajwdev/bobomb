@@ -243,6 +243,9 @@ impl Cpu {
             0x65 => {
                 Adc::from_address(self, AddressMode::ZeroPage);
             }
+            0x69 => {
+                Adc::from_immediate(self);
+            }
             0x78 => {
                 Sei::implied(self);
             }

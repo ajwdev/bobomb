@@ -1,13 +1,10 @@
-use nes::cpu::{Cpu,AddressMode,FromAddress};
+use nes::cpu::{Cpu,AddressMode,FromAddress,FromImmediate};
 use nes::cpu::status::Flags;
 
 pub struct Adc { }
 
-impl FromAddress for Adc {
-    fn from_address(cpu: &mut Cpu, mode: AddressMode) -> usize {
-        let src = cpu.translate_address(mode);
-        let word = cpu.mem.read_word(src.to_u16());
-
+impl Adc {
+    fn add_with_carry(cpu: &mut Cpu, word: u8) {
         // We ignore the Decimal status register because on the NES
         // it is unused. Consider adding support in the future.
         let tmp = word.wrapping_add(cpu.SR.is_set(Flags::Carry) as u8);
@@ -28,8 +25,25 @@ impl FromAddress for Adc {
             cpu.SR.reset(Flags::Overflow);
         }
 
-
         cpu.AC = result;
+    }
+}
+
+impl FromImmediate for Adc {
+    fn from_immediate(cpu: &mut Cpu) -> usize {
+        let word = cpu.read_word_and_increment();
+        Adc::add_with_carry(cpu, word);
+
+        2
+    }
+}
+
+impl FromAddress for Adc {
+    fn from_address(cpu: &mut Cpu, mode: AddressMode) -> usize {
+        let src = cpu.translate_address(mode);
+        let word = cpu.mem.read_word(src.to_u16());
+
+        Adc::add_with_carry(cpu, word);
 
         match mode {
             AddressMode::ZeroPage => 3,
