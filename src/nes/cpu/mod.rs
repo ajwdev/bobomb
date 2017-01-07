@@ -315,12 +315,23 @@ impl Cpu {
             0xc8 => {
                 Iny::from_implied(self);
             }
-            _ => {
+            0x00 => {
                 self.debug_stack();
-                panic!("unrecognized opcode {:#x}, {:#x} {:#x}, count: {}",
+                panic!("Hit a BRK instruction which is probably wrong: {:#x}, {:#x} {:#x}, PC: {:#x}, count: {}",
                    instr,
                    self.mem.read_word(self.PC),
                    self.mem.read_word(self.PC + 1),
+                   self.PC,
+                   self.instruction_counter,
+                )
+            }
+            _ => {
+                self.debug_stack();
+                panic!("unrecognized opcode {:#x}, {:#x} {:#x}, PC: {:#x}, count: {}",
+                   instr,
+                   self.mem.read_word(self.PC),
+                   self.mem.read_word(self.PC + 1),
+                   self.PC,
                    self.instruction_counter,
                 )
             }
