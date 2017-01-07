@@ -19,9 +19,11 @@ pub use self::and::And;
 mod dec;
 mod dex;
 mod dey;
+mod iny;
 pub use self::dec::Dec;
 pub use self::dex::Dex;
 pub use self::dey::Dey;
+pub use self::iny::Iny;
 
 mod adc;
 pub use self::adc::Adc;

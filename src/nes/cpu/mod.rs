@@ -268,7 +268,10 @@ impl Cpu {
                 Ldy::immediate(self);
             }
             0xa2 => {
-                Ldx::immediate(self);
+                Ldx::from_immediate(self);
+            }
+            0xa6 => {
+                Ldx::from_address(self, AddressMode::ZeroPage);
             }
             0xad => {
                 Lda::absolute(self);
@@ -299,6 +302,9 @@ impl Cpu {
             }
             0xca => {
                 Dex::from_implied(self);
+            }
+            0xc8 => {
+                Iny::from_implied(self);
             }
             _ => {
                 self.debug_stack();
