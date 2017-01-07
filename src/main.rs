@@ -19,12 +19,20 @@ fn main() {
         panic!("header validation failed: {:?}", &header);
     }
 
+    // TODO const these
+    let bank0_start = 16;
+    let bank0_end = 16 * 1024 + bank0_start;
+    let bank1_start = bank0_end;
+    let bank1_end = 16 * 1024 + bank1_start;
+
     let memory = if rom_is_double_banked(header) {
-        let bank0 = address::Bank::new(&file_buf[16..16 * 1024 + 16]);
-        let bank1 = address::Bank::new(&file_buf[16 * 1024 + 16..]);
+        println!("ROM is double banked");
+        let bank0 = address::Bank::new(&file_buf[bank0_start..bank0_end]);
+        let bank1 = address::Bank::new(&file_buf[bank1_start..bank1_end]);
         address::AddressSpace::new_double_bank(bank0, bank1)
     } else {
-        let bank = address::Bank::new(&file_buf[16..16 * 1024 + 16]);
+        println!("ROM is single banked");
+        let bank = address::Bank::new(&file_buf[bank0_start..bank0_end]);
         address::AddressSpace::new_single_bank(bank)
     };
 
