@@ -47,6 +47,7 @@ impl FromAddress for Adc {
 
         match mode {
             AddressMode::ZeroPage => 3,
+            AddressMode::Absolute => 4,
             _ => { panic!("unimplemented address mode {:?} for ADC", mode); }
         }
     }
