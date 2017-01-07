@@ -185,7 +185,7 @@ impl Cpu {
                 let word = self.read_word_and_increment();
                 let indirect_addr = self.mem.read_word(Cpu::zero_page_address(word));
                 let offset = self.Y;
-                result = (indirect_addr + offset) as u16;
+                result = (indirect_addr.wrapping_add(offset)) as u16;
             },
             AddressMode::Absolute => {
                 result = self.read_dword_and_increment();
