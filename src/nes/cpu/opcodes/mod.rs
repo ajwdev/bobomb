@@ -21,6 +21,9 @@ mod dey;
 pub use self::dec::Dec;
 pub use self::dey::Dey;
 
+mod adc;
+pub use self::adc::Adc;
+
 mod beq;
 mod bne;
 mod bpl;

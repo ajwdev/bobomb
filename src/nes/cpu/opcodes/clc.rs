@@ -1,6 +1,5 @@
 use nes::cpu::{Cpu,Implied};
 use nes::cpu::status::Flags;
-// use super::store::Store;
 
 pub struct Clc { }
 
@@ -26,4 +25,3 @@ mod test {
         assert_status_reset!(cpu, Flags::Carry);
     }
 }
-

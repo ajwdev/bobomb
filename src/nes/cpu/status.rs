@@ -57,7 +57,7 @@ impl StatusRegister {
         match flag {
             Flags::Negative => { &mut self.negative }
             Flags::Overflow => { &mut self.overflow }
-            Flags::Decimal => { &mut self.decimal }
+            Flags::Decimal => { &mut self.decimal } // TODO Log if this is changed
             Flags::Interrupt => { &mut self.interrupt }
             Flags::Zero => { &mut self.zero }
             Flags::Carry => { &mut self.carry }

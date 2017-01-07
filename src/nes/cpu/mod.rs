@@ -172,8 +172,9 @@ impl Cpu {
         }
     }
 
+    // TODO Add some tests
     pub fn translate_address(&mut self, mode: AddressMode) -> Address {
-        let mut result: u16;
+        let result: u16;
 
         match mode {
             AddressMode::ZeroPage => {
@@ -238,6 +239,9 @@ impl Cpu {
             }
             0x29 => {
                 And::immediate(self);
+            }
+            0x65 => {
+                Adc::from_address(self, AddressMode::ZeroPage);
             }
             0x78 => {
                 Sei::implied(self);
