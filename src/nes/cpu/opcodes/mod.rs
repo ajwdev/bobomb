@@ -17,8 +17,10 @@ pub use self::sty::Sty;
 mod and;
 pub use self::and::And;
 mod dec;
+mod dex;
 mod dey;
 pub use self::dec::Dec;
+pub use self::dex::Dex;
 pub use self::dey::Dey;
 
 mod adc;

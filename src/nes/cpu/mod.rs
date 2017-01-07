@@ -297,6 +297,9 @@ impl Cpu {
             0x88 => {
                 Dey::implied(self);
             }
+            0xca => {
+                Dex::from_implied(self);
+            }
             _ => {
                 self.debug_stack();
                 panic!("unrecognized opcode {:#x}, {:#x} {:#x}, count: {}",
