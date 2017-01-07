@@ -1,6 +1,7 @@
 #[macro_use]
 mod macros;
 
+mod disassemble;
 mod status;
 mod opcodes;
 mod address_modes;
@@ -10,6 +11,7 @@ pub use nes::cpu::address_modes::*;
 use nes::address::{AddressSpace,Bank};
 use nes::cpu::status::{StatusRegister};
 use nes::cpu::opcodes::*;
+use nes::cpu::disassemble::Disassembler;
 
 // TODO Consider breaking the CPU logic out into its own private module and re-exporting it. This
 // will require adjusting the visibility on a lot of methods.
@@ -173,6 +175,7 @@ impl Cpu {
     }
 
     // TODO Add some tests
+    // https://wiki.nesdev.com/w/index.php/CPU_addressing_modes
     pub fn translate_address(&mut self, mode: AddressMode) -> Address {
         let result: u16;
 
@@ -203,15 +206,15 @@ impl Cpu {
     fn execute_instruction(&mut self) {
         let instr = self.read_word_and_increment();
 
-        // See http://users.telenet.be/kim1-6502/6502/proman.html
-        println!(
-            "Instruction: {:#x} {:#x} {:#x}",
-            instr,
-            self.mem.read_word(self.PC),
-            self.mem.read_word(self.PC + 1)
-        );
+        // XXX Make this less terrible. It'd be nice we could expose
+        // memory as a byte stream and/or get a slice out of memory
+        // with the mapping all working correctly
+        println!("{}", Disassembler::disassemble(
+            self.PC, instr, &[self.mem.read_word(self.PC+1),self.mem.read_word(self.PC+2)]
+        ));
 
-        // TODO How does this perform? Look into an array of opcodes
+
+        // TODO How does this perform? Look into an array of opcodes like in the disassembler
         match instr {
             0x10 => {
                 Bpl::relative(self);
