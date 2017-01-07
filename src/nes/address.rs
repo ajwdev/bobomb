@@ -94,8 +94,18 @@ impl AddressSpace {
                     self.lower_rom.as_ref().unwrap()[reladdr as usize]
                 }
             }
-            // TODO Review this as RAM technically starts 0x0200
-            0x00...0x07ff => self.ram[addr as usize],
+            0x0000...0x07ff => {
+                self.ram[addr as usize] // Includes zero page, stack, and ram
+            }
+            0x0800...0x0fff => {
+                self.ram[(addr-0x0800) as usize] // Mirror 1
+            }
+            0x1000...0x17ff => {
+                self.ram[(addr-0x1000) as usize] // Mirror 2
+            }
+            0x1800...0x1fff => {
+                self.ram[(addr-0x1800) as usize] // Mirror 3
+            }
             0x2000...0x2007 => self.ppu.read_at(addr),
             _ => {
                 panic!("unknown address {:#x}", addr);
@@ -107,6 +117,15 @@ impl AddressSpace {
         match addr {
             0x00...0x07ff => {
                 self.ram[addr as usize] = value;
+            }
+            0x0800...0x0fff => {
+                self.ram[(addr-0x0800) as usize] = value; // Mirror 1
+            }
+            0x1000...0x17ff => {
+                self.ram[(addr-0x1000) as usize] = value; // Mirror 2
+            }
+            0x1800...0x1fff => {
+                self.ram[(addr-0x1800) as usize] = value; // Mirror 3
             }
             0x2000 => {
                 self.ppu.write_ctrl(value);
