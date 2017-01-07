@@ -1,26 +1,20 @@
-use nes::cpu::{Cpu,Registers,Absolute,IndirectY,ZeroPage};
+use nes::cpu::{Cpu,Registers,FromAddress,AddressMode};
 use super::store::Store;
 
 pub struct Sta { }
 
-impl Absolute for Sta {
-    fn absolute(cpu: &mut Cpu) -> usize {
-        Store::absolute(cpu, Registers::AC);
-        4
-    }
-}
+impl FromAddress for Sta {
+    fn from_address(cpu: &mut Cpu, mode: AddressMode) -> usize {
+        let dest = cpu.translate_address(mode);
+        Store::save_destination(cpu, Registers::AC, dest.to_u16());
 
-impl IndirectY for Sta {
-    fn indirect_y(cpu: &mut Cpu) -> usize {
-        Store::indirect_y(cpu, Registers::AC);
-        6
-    }
-}
-
-impl ZeroPage for Sta {
-    fn zero_page(cpu: &mut Cpu) -> usize {
-        Store::zero_page(cpu, Registers::AC);
-        3
+        match mode {
+            AddressMode::ZeroPage => 3,
+            AddressMode::IndirectY => 6,
+            AddressMode::Absolute => 4,
+            // TODO Make a macro for this
+            _ => { panic!("unimplemented address mode {:?} for STA", mode); }
+        }
     }
 }
 

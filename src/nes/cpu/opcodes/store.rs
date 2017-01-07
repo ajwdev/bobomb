@@ -20,7 +20,7 @@ impl Store {
         Self::save_destination(cpu, src, (indirect_addr + offset) as u16);
     }
 
-    fn save_destination(cpu: &mut Cpu, src: Registers, dest: u16) {
+    pub fn save_destination(cpu: &mut Cpu, src: Registers, dest: u16) {
         match src {
             Registers::X => { cpu.mem.write_word(dest, cpu.X); },
             Registers::Y => { cpu.mem.write_word(dest, cpu.Y); },

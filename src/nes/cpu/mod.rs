@@ -172,6 +172,29 @@ impl Cpu {
         }
     }
 
+    pub fn translate_address(&mut self, mode: AddressMode) -> Address {
+        let mut result: u16;
+
+        match mode {
+            AddressMode::ZeroPage => {
+                let word = self.read_word_and_increment();
+                result = Cpu::zero_page_address(word);
+            },
+            AddressMode::IndirectY => {
+                let word = self.read_word_and_increment();
+                let indirect_addr = self.mem.read_word(Cpu::zero_page_address(word));
+                let offset = self.Y;
+                result = (indirect_addr + offset) as u16;
+            },
+            AddressMode::Absolute => {
+                result = self.read_dword_and_increment();
+            },
+            _ => { panic!("unimplemented {:?} for translate_address", mode); }
+        }
+
+        Address(result)
+    }
+
     // TODO Ok to make this public? Should we only use start() ?
     fn execute_instruction(&mut self) {
         let instr = self.read_word_and_increment();
@@ -226,7 +249,7 @@ impl Cpu {
                 Cld::implied(self);
             }
             0xaa => {
-                Tax::implied(self);
+                Tax::from_implied(self);
             }
             0x8a => {
                 Txa::implied(self);
@@ -256,13 +279,13 @@ impl Cpu {
                 Sty::zero_page(self);
             }
             0x85 => {
-                Sta::zero_page(self);
+                Sta::from_address(self, AddressMode::ZeroPage);
             }
             0x8d => {
-                Sta::absolute(self);
+                Sta::from_address(self, AddressMode::Absolute);
             }
             0x91 => {
-                Sta::indirect_y(self);
+                Sta::from_address(self, AddressMode::IndirectY);
             }
             0xc6 => {
                 Dec::zero_page(self);
