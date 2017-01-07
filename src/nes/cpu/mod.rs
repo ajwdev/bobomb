@@ -181,11 +181,14 @@ impl Cpu {
                 let word = self.read_word_and_increment();
                 result = Cpu::zero_page_address(word);
             },
+            // Also known as Indirect Indexed Addressing
             AddressMode::IndirectY => {
                 let word = self.read_word_and_increment();
-                let indirect_addr = self.mem.read_word(Cpu::zero_page_address(word));
-                let offset = self.Y;
-                result = (indirect_addr.wrapping_add(offset)) as u16;
+                let indirect_addr =
+                    (self.mem.read_word(Cpu::zero_page_address(word+1)) as u16) << 8 |
+                        (self.mem.read_word(Cpu::zero_page_address(word)) as u16);
+                // Not sure what happens here in case of overflows. Needs research
+                result = indirect_addr + self.Y as u16;
             },
             AddressMode::Absolute => {
                 result = self.read_dword_and_increment();
@@ -208,7 +211,7 @@ impl Cpu {
             self.mem.read_word(self.PC + 1)
         );
 
-        // TODO How does this perform? Possibly look into a perfect hash table
+        // TODO How does this perform? Look into an array of opcodes
         match instr {
             0x10 => {
                 Bpl::relative(self);
@@ -431,5 +434,10 @@ mod test {
         result = cpu.pop_stack();
         assert!(result == 0x10, "expected 0x10, got {:#x}", result);
         assert!(cpu.SP == 0xFF, "expected 0xFF, got {:#x}", cpu.SP);
+    }
+
+    #[test]
+    fn test_translate_address_indirect_y() {
+        // TODO Write these tests
     }
 }
