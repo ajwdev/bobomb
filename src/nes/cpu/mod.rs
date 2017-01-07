@@ -277,13 +277,13 @@ impl Cpu {
                 Ldx::from_address(self, AddressMode::ZeroPage);
             }
             0xad => {
-                Lda::absolute(self);
+                Lda::from_address(self, AddressMode::Absolute);
             }
             0xa5 => {
-                Lda::zero_page(self);
+                Lda::from_address(self, AddressMode::ZeroPage);
             }
             0xa9 => {
-                Lda::immediate(self);
+                Lda::from_immediate(self);
             }
             0x84 => {
                 Sty::zero_page(self);

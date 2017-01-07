@@ -1,25 +1,36 @@
-use nes::cpu::{Cpu,Registers,ZeroPage,Immediate,Absolute};
-use super::load::Load;
+use nes::cpu::{Cpu,Registers,AddressMode,FromImmediate,FromAddress};
 
 pub struct Lda { }
 
-impl Immediate for Lda {
-    fn immediate(cpu: &mut Cpu) -> usize {
-        Load::immediate(cpu, Registers::AC)
+impl Lda {
+    #[inline]
+    fn load_accumulator(cpu: &mut Cpu, word: u8) {
+        cpu.AC = word;
+        cpu.zero_and_negative_status(word);
     }
 }
 
-impl Absolute for Lda {
-    fn absolute(cpu: &mut Cpu) -> usize {
-        Load::absolute(cpu, Registers::AC);
-        4
+impl FromImmediate for Lda {
+    fn from_immediate(cpu: &mut Cpu) -> usize {
+        let word = cpu.read_word_and_increment();
+        Lda::load_accumulator(cpu, word);
+
+        2
     }
 }
 
-impl ZeroPage for Lda {
-    fn zero_page(cpu: &mut Cpu) -> usize {
-        Load::zero_page(cpu, Registers::AC);
-        3
+impl FromAddress for Lda {
+    fn from_address(cpu: &mut Cpu, mode: AddressMode) -> usize {
+        let src = cpu.translate_address(mode);
+        let word = cpu.mem.read_word(src.to_u16());
+
+        Lda::load_accumulator(cpu, word);
+
+        match mode {
+            AddressMode::ZeroPage => 3,
+            AddressMode::Absolute => 4,
+            _ => { panic!("unimplemented address mode {:?} for LDX", mode); }
+        }
     }
 }
 
