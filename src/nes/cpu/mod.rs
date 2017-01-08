@@ -356,6 +356,9 @@ impl Cpu {
             0xca => {
                 Dex::from_implied(self);
             }
+            0xc0 => {
+                Cpy::from_immediate(self);
+            }
             0xc8 => {
                 Iny::from_implied(self);
             }

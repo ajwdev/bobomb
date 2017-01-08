@@ -29,6 +29,9 @@ pub use self::dey::Dey;
 pub use self::iny::Iny;
 pub use self::inx::Inx;
 
+mod cpy;
+pub use self::cpy::Cpy;
+
 mod adc;
 pub use self::adc::Adc;
 
