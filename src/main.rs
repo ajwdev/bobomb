@@ -5,7 +5,8 @@ use std::fs;
 use std::io::Read;
 
 use nes::cpu;
-use nes::address;
+use nes::rom;
+// use nes::address;
 use nes::interconnect::Interconnect;
 
 fn main() {
@@ -28,12 +29,12 @@ fn main() {
 
     let memory = if rom_is_double_banked(header) {
         println!("ROM is double banked");
-        let bank0 = address::Bank::new(&file_buf[bank0_start..bank0_end]);
-        let bank1 = address::Bank::new(&file_buf[bank1_start..bank1_end]);
+        let bank0 = rom::Bank::new(&file_buf[bank0_start..bank0_end]);
+        let bank1 = rom::Bank::new(&file_buf[bank1_start..bank1_end]);
         Interconnect::new_double_bank(bank0, bank1)
     } else {
         println!("ROM is single banked");
-        let bank = address::Bank::new(&file_buf[bank0_start..bank0_end]);
+        let bank = rom::Bank::new(&file_buf[bank0_start..bank0_end]);
         Interconnect::new_single_bank(bank)
     };
 

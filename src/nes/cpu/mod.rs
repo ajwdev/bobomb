@@ -8,7 +8,7 @@ mod address_modes;
 
 pub use nes::cpu::address_modes::*;
 
-use nes::address::{Address,Bank};
+use nes::address::Address;
 use nes::interconnect::Interconnect;
 use nes::cpu::status::{StatusRegister};
 use nes::cpu::opcodes::*;
@@ -411,7 +411,7 @@ impl Cpu {
 #[cfg(test)]
 mod test {
     use super::Cpu;
-    use nes::address::Bank;
+    use nes::rom::Bank;
     use nes::interconnect::Interconnect;
 
 

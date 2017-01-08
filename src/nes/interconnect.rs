@@ -1,7 +1,7 @@
 use std::ops::{Index,IndexMut};
 
 use nes::ppu;
-use nes::address::{Bank};
+use nes::rom::Bank;
 
 const SYSTEM_RAM: usize = 2 * 1024;
 
@@ -152,7 +152,7 @@ impl Interconnect {
 #[cfg(test)]
 mod test {
     use super::Interconnect;
-    use nes::address::Bank;
+    use nes::rom::Bank;
 
     #[test]
     fn test_write_word() {
