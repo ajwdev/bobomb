@@ -53,10 +53,12 @@ pub use self::cmp::Cmp;
 mod txa;
 mod tax;
 mod tya;
+mod tay;
 mod txs;
 pub use self::txa::Txa;
 pub use self::tax::Tax;
 pub use self::tya::Tya;
+pub use self::tay::Tay;
 pub use self::txs::Txs;
 
 mod sei;
