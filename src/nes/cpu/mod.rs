@@ -274,6 +274,9 @@ impl Cpu {
             0xaa => {
                 Tax::from_implied(self);
             }
+            0xa8 => {
+                Tay::from_implied(self);
+            }
             0x8a => {
                 Txa::implied(self);
             }

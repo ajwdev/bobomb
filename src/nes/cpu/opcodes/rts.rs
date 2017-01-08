@@ -4,11 +4,9 @@ pub struct Rts { }
 
 impl FromImplied for Rts {
     fn from_implied(cpu: &mut Cpu) -> usize {
-        cpu.debug_stack();
         let lo = cpu.pop_stack();
         let hi = cpu.pop_stack();
         let addr = Address::new(hi, lo);
-        cpu.debug_stack();
 
         // See JSR for an explanation of why we add one
         cpu.PC = addr.to_u16().wrapping_add(1);
