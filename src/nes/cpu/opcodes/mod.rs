@@ -73,3 +73,6 @@ pub use self::lsr::Lsr;
 
 mod eor;
 pub use self::eor::Eor;
+
+mod ror;
+pub use self::ror::Ror;
