@@ -129,7 +129,7 @@ impl Cpu {
     }
 
     fn move_pc_relative(&mut self, word: u8) {
-        // NOTE This can either move the PC register forward
+        // This can either move the PC register forward
         // or backwards. I.E we should treat `word` here as
         // if it were signed.
         if word < 128 {
@@ -141,12 +141,12 @@ impl Cpu {
             // wont allow us to add signed and unsigned
             // numerals together.
 
-            // NOTE '!' is used in Rust like '~' is used in C.
+            // '!' is used in Rust like '~' is used in C.
             self.PC = self.PC.wrapping_sub((!word + 1) as u16);
         }
     }
 
-    // NOTE 6502 stack grows downward
+    // 6502 stack grows downward
     pub fn push_stack(&mut self, word: u8) {
         // TODO Panic if pointer ends up in a page besides page 1
         let ptr = STACK_START + self.SP as u16;
@@ -166,12 +166,13 @@ impl Cpu {
     fn debug_stack(&self) {
         println!("Stack");
         println!(" Addr  | Value");
-        println!("-------------");
+        println!("---------------");
         let start = self.SP as u16 + STACK_START + 1; // Add 1 to not display the current "slot"
         let end = start + self.stack_depth as u16;
         for idx in (start..end).rev() {
-            println!("{:#06x} | {:#06x}", idx as u16, self.mem.read_word(idx as u16));
+            println!("{:#06x} | {:02X}", idx as u16, self.mem.read_word(idx as u16));
         }
+        println!("---------------");
     }
 
     // TODO Add some tests
