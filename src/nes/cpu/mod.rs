@@ -177,11 +177,11 @@ impl Cpu {
         println!("---------------");
     }
 
-    // TODO Add some tests
     // https://wiki.nesdev.com/w/index.php/CPU_addressing_modes
     pub fn translate_address(&mut self, mode: AddressMode) -> Address {
         let result: u16;
 
+        // TODO Not sure what happens here in case of overflows. Needs research. Add tests
         match mode {
             AddressMode::ZeroPage => {
                 let word = self.read_word_and_increment();
@@ -193,11 +193,16 @@ impl Cpu {
                 let indirect_addr =
                     (self.mem.read_word(Cpu::zero_page_address(word+1)) as u16) << 8 |
                         (self.mem.read_word(Cpu::zero_page_address(word)) as u16);
-                // Not sure what happens here in case of overflows. Needs research
                 result = indirect_addr + self.Y as u16;
             },
             AddressMode::Absolute => {
                 result = self.read_dword_and_increment();
+            },
+            AddressMode::AbsoluteX => {
+                result = self.read_dword_and_increment() + self.X as u16;
+            },
+            AddressMode::AbsoluteY => {
+                result = self.read_dword_and_increment() + self.Y as u16;
             },
             _ => { panic!("unimplemented {:?} for translate_address", mode); }
         }
