@@ -8,7 +8,7 @@ mod address_modes;
 
 pub use nes::cpu::address_modes::*;
 
-use nes::address::{AddressSpace,Bank};
+use nes::address::{AddressSpace,Address,Bank};
 use nes::cpu::status::{StatusRegister};
 use nes::cpu::opcodes::*;
 use nes::cpu::disassemble::Disassembler;

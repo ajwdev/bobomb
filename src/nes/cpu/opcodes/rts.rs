@@ -1,4 +1,5 @@
-use nes::cpu::{Cpu,FromImplied,Address};
+use nes::cpu::{Cpu,FromImplied};
+use nes::address::Address;
 
 pub struct Rts { }
 

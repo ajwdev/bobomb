@@ -1,5 +1,6 @@
 use nes::cpu::{Cpu,AddressMode,FromAddress,FromImmediate};
 use nes::cpu::status::Flags;
+use nes::address::Address;
 
 pub struct Adc { }
 

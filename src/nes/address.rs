@@ -20,6 +20,31 @@ const ROM_LOWER_END: u16 = ROM_LOWER_START + 0x3FFF;
 const ROM_UPPER_START: u16 = ROM_LOWER_START + ROM_BANK_SIZE; // 0xc000
 const ROM_UPPER_END: u16 = ROM_UPPER_START + 0x3FFF;
 
+
+#[derive(Debug,Copy,Clone)]
+pub struct Address(pub u16);
+
+impl Address {
+    pub fn new(hi: u8, lo: u8) -> Address {
+        Address((hi as u16) << 8 | lo as u16)
+    }
+
+    pub fn new_zeropage(lo: u8) -> Address {
+        Address(lo as u16)
+    }
+
+    pub fn from_bytes(buf: &[u8]) -> Address {
+        // Assert the correct length
+        Address((buf[1] as u16) << 8 | buf[0] as u16)
+    }
+
+
+    pub fn to_u16(&self) -> u16 {
+        self.0
+    }
+}
+
+
 pub struct Bank {
     pub data: [u8; ROM_BANK_SIZE as usize]
 }

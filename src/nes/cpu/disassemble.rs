@@ -1,5 +1,6 @@
-use nes::cpu::{AddressMode,Address};
+use nes::cpu::AddressMode;
 use nes::cpu::opcodes;
+use nes::address::Address;
 
 pub struct Disassembler { }
 
