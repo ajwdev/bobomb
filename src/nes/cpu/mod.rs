@@ -8,7 +8,8 @@ mod address_modes;
 
 pub use nes::cpu::address_modes::*;
 
-use nes::address::{AddressSpace,Address,Bank};
+use nes::address::{Address,Bank};
+use nes::interconnect::Interconnect;
 use nes::cpu::status::{StatusRegister};
 use nes::cpu::opcodes::*;
 use nes::cpu::disassemble::Disassembler;
@@ -39,7 +40,7 @@ pub struct Cpu {
     SP: u8, // Stack pointer
     SR: StatusRegister, // Status register
 
-    mem: AddressSpace,
+    interconnect: Interconnect,
 
     // Maybe make this something smaller so we can catch overflows and raise timer interrupts?
     cycles: usize,
@@ -52,17 +53,17 @@ pub struct Cpu {
 }
 
 impl Cpu {
-    pub fn new(mem: AddressSpace) -> Self {
+    pub fn new(interconnect: Interconnect) -> Self {
         // See comment at top of file for power on state
         Cpu {
             X: 0,
             Y: 0,
             AC: 0,
-            PC: Cpu::find_pc_addr(&mem),
+            PC: Cpu::find_pc_addr(&interconnect),
             SP: 0xfd,
             SR: StatusRegister::new(),
 
-            mem: mem,
+            interconnect: interconnect,
             cycles: 0,
 
             instruction_counter: 0,
@@ -74,14 +75,14 @@ impl Cpu {
     pub fn start(&mut self) {
         println!("PC: {:#x}", self.PC);
         loop {
-            self.execute_instruction();
+            let cycles = self.execute_instruction();
             self.instruction_counter += 1;
         }
     }
 
-    fn find_pc_addr(mem: &AddressSpace) -> u16 {
+    fn find_pc_addr(interconnect: &Interconnect) -> u16 {
         // http://forum.6502.org/viewtopic.php?t=1708
-        (mem.read_word(0xFFFD) as u16) << 8 | mem.read_word(0xFFFC) as u16
+        (interconnect.read_word(0xFFFD) as u16) << 8 | interconnect.read_word(0xFFFC) as u16
     }
 
     pub fn register_value(&self, reg: Registers) -> u8 {
@@ -101,15 +102,15 @@ impl Cpu {
 
     #[inline]
     fn read_word_and_increment(&mut self) -> u8 {
-        let word = self.mem.read_word(self.PC);
+        let word = self.interconnect.read_word(self.PC);
         self.PC += 1;    // 1 byte forward
         word
     }
 
     #[inline]
     fn read_dword_and_increment(&mut self) -> u16 {
-        let lo = self.mem.read_word(self.PC);
-        let hi = self.mem.read_word(self.PC + 1);
+        let lo = self.interconnect.read_word(self.PC);
+        let hi = self.interconnect.read_word(self.PC + 1);
         self.PC += 2;    // 2 bytes forward
 
         (hi as u16) << 8 | lo as u16
@@ -157,7 +158,7 @@ impl Cpu {
     pub fn push_stack(&mut self, word: u8) {
         // TODO Panic if pointer ends up in a page besides page 1
         let ptr = STACK_START + self.SP as u16;
-        self.mem.write_word(ptr, word);
+        self.interconnect.write_word(ptr, word);
         self.SP -= 1;
         self.stack_depth += 1;
     }
@@ -167,7 +168,7 @@ impl Cpu {
         self.SP += 1;
         self.stack_depth -= 1;
         let ptr = STACK_START + self.SP as u16;
-        self.mem.read_word(ptr)
+        self.interconnect.read_word(ptr)
     }
 
     fn debug_stack(&self) {
@@ -177,7 +178,7 @@ impl Cpu {
         let start = self.SP as u16 + STACK_START + 1; // Add 1 to not display the current "slot"
         let end = start + self.stack_depth as u16;
         for idx in (start..end).rev() {
-            println!("{:#06x} | {:02X}", idx as u16, self.mem.read_word(idx as u16));
+            println!("{:#06x} | {:02X}", idx as u16, self.interconnect.read_word(idx as u16));
         }
         println!("---------------");
     }
@@ -193,11 +194,12 @@ impl Cpu {
                 result = Cpu::zero_page_address(word);
             },
             // Also known as Indirect Indexed Addressing
+            // TODO Watch out for the wraparound bug here and eventually in indirect and indirectX
             AddressMode::IndirectY => {
                 let word = self.read_word_and_increment();
                 let indirect_addr =
-                    (self.mem.read_word(Cpu::zero_page_address(word+1)) as u16) << 8 |
-                        (self.mem.read_word(Cpu::zero_page_address(word)) as u16);
+                    (self.interconnect.read_word(Cpu::zero_page_address(word+1)) as u16) << 8 |
+                        (self.interconnect.read_word(Cpu::zero_page_address(word)) as u16);
                 result = indirect_addr + self.Y as u16;
             },
             AddressMode::Absolute => {
@@ -232,7 +234,7 @@ impl Cpu {
         // memory as a byte stream and/or get a slice out of memory
         // with the mapping all working correctly
         println!("{}", Disassembler::disassemble(
-            self.PC-1, instr, &[self.mem.read_word(self.PC),self.mem.read_word(self.PC+1)]
+            self.PC-1, instr, &[self.interconnect.read_word(self.PC),self.interconnect.read_word(self.PC+1)]
         ));
 
 
@@ -383,8 +385,8 @@ impl Cpu {
                 self.debug_stack();
                 panic!("Hit a BRK instruction which is probably wrong: {:#x}, {:#x} {:#x}, PC: {:#x}, count: {}",
                    instr,
-                   self.mem.read_word(self.PC),
-                   self.mem.read_word(self.PC + 1),
+                   self.interconnect.read_word(self.PC),
+                   self.interconnect.read_word(self.PC + 1),
                    self.PC,
                    self.instruction_counter,
                 );
@@ -393,8 +395,8 @@ impl Cpu {
                 self.debug_stack();
                 panic!("unrecognized opcode {:#x}, {:#x} {:#x}, PC: {:#x}, count: {}",
                    instr,
-                   self.mem.read_word(self.PC),
-                   self.mem.read_word(self.PC + 1),
+                   self.interconnect.read_word(self.PC),
+                   self.interconnect.read_word(self.PC + 1),
                    self.PC,
                    self.instruction_counter,
                 );
@@ -409,7 +411,8 @@ impl Cpu {
 #[cfg(test)]
 mod test {
     use super::Cpu;
-    use nes::address::{AddressSpace,Bank};
+    use nes::address::Bank;
+    use nes::interconnect::Interconnect;
 
 
     pub fn rom_with_pc_at_start(words: &[u8]) -> Vec<u8> {
@@ -429,23 +432,23 @@ mod test {
         mock_rom
     }
 
-    pub fn memory_from_rom(mem: Vec<u8>, doublebank: bool) -> AddressSpace {
+    pub fn memory_from_rom(interconnect: Vec<u8>, doublebank: bool) -> Interconnect {
         if doublebank {
-            if mem.len() <= 0x4000 {
+            if interconnect.len() <= 0x4000 {
                 // 16k
                 panic!("rom not large enough for double banking");
             }
-            AddressSpace::new_double_bank(Bank::new(&mem[0..0x4000]), Bank::new(&mem[0x4000..]))
+            Interconnect::new_double_bank(Bank::new(&interconnect[0..0x4000]), Bank::new(&interconnect[0x4000..]))
         } else {
             // single banked
-            AddressSpace::new_single_bank(Bank::new(&mem[0..0x4000]))
+            Interconnect::new_single_bank(Bank::new(&interconnect[0..0x4000]))
         }
     }
 
     pub fn mock_cpu(words: &[u8]) -> Cpu {
         let mock_rom = rom_with_pc_at_start(words);
-        let mem = memory_from_rom(mock_rom, true);
-        Cpu::new(mem)
+        let interconnect = memory_from_rom(mock_rom, true);
+        Cpu::new(interconnect)
     }
 
 
@@ -455,8 +458,8 @@ mod test {
         mock_rom[0x3ffc] = 0xef;
         mock_rom[0x3ffd] = 0xbe;
 
-        let mem = AddressSpace::new_single_bank(Bank::new(&mock_rom));
-        let result = Cpu::find_pc_addr(&mem);
+        let interconnect = Interconnect::new_single_bank(Bank::new(&mock_rom));
+        let result = Cpu::find_pc_addr(&interconnect);
         assert!(result == 0xbeef, "expected 0xbeef, got: {:#x}", result);
     }
 
@@ -497,13 +500,13 @@ mod test {
         cpu.SP = 0xFF;
 
         cpu.push_stack(0x10);
-        let mut result = cpu.mem.read_word(0x01FF);
+        let mut result = cpu.interconnect.read_word(0x01FF);
 
         assert!(cpu.SP == 0xFE, "expected 0xFE, got {:#x}", cpu.SP);
         assert!(result == 0x10, "expected 0x10, got {:#x}", result);
 
         cpu.push_stack(0x11);
-        result = cpu.mem.read_word(0x01FE);
+        result = cpu.interconnect.read_word(0x01FE);
 
         assert!(cpu.SP == 0xFD, "expected 0xFD, got {:#x}", cpu.SP);
         assert!(result == 0x11, "expected 0x11, got {:#x}", result);

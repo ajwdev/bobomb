@@ -24,7 +24,7 @@ impl FromImmediate for And {
 impl FromAddress for And {
     fn from_address(cpu: &mut Cpu, mode: AddressMode) -> usize {
         let src = cpu.translate_address(mode);
-        let word = cpu.mem.read_word(src.to_u16());
+        let word = cpu.interconnect.read_word(src.to_u16());
 
         Self::and(cpu, word);
 
@@ -54,7 +54,7 @@ mod test {
     #[test]
     fn test_and_zero_page() {
         let mut cpu = mock_cpu(&[0x25, 0xff]);
-        cpu.mem.write_word(0xff, 0x84);
+        cpu.interconnect.write_word(0xff, 0x84);
         cpu.AC = 0xf0;
 
         assert_cpu_register!(cpu, Registers::AC, 0xf0);

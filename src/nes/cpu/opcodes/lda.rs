@@ -22,7 +22,7 @@ impl FromImmediate for Lda {
 impl FromAddress for Lda {
     fn from_address(cpu: &mut Cpu, mode: AddressMode) -> usize {
         let src = cpu.translate_address(mode);
-        let word = cpu.mem.read_word(src.to_u16());
+        let word = cpu.interconnect.read_word(src.to_u16());
 
         Lda::load_accumulator(cpu, word);
 
@@ -61,7 +61,7 @@ mod test {
     #[test]
     fn test_lda_zeropage() {
         let mut cpu = mock_cpu(&[0xa5, 0xff]);
-        cpu.mem.write_word(0x00ff, 0xbe);
+        cpu.interconnect.write_word(0x00ff, 0xbe);
 
         assert_cpu_register!(cpu, Registers::AC, 0);
         cpu.execute_instruction();

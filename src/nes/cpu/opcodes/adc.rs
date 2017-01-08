@@ -42,7 +42,7 @@ impl FromImmediate for Adc {
 impl FromAddress for Adc {
     fn from_address(cpu: &mut Cpu, mode: AddressMode) -> usize {
         let src = cpu.translate_address(mode);
-        let word = cpu.mem.read_word(src.to_u16());
+        let word = cpu.interconnect.read_word(src.to_u16());
 
         Adc::add_with_carry(cpu, word);
 

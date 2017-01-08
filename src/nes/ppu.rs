@@ -108,6 +108,7 @@ impl Ppu {
     }
 
     fn write_reg_data(&mut self, value: u8) {
+        println!("VRAM write: {:#x}", self.vram_address);
         match self.vram_address {
             0x00...0x3fff => {
                 self.vram[self.vram_address as usize] = value;

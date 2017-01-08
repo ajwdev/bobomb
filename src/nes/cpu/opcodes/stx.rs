@@ -26,10 +26,10 @@ mod test {
         let mut cpu = mock_cpu(&[0x86, 0x10]);
         cpu.X = 0xff;
 
-        let mut result = cpu.mem.read_word(0x0010);
+        let mut result = cpu.interconnect.read_word(0x0010);
         assert!(result == 0x00, "expected 0x00, got {:#x}", result);
         cpu.execute_instruction();
-        result = cpu.mem.read_word(0x0010);
+        result = cpu.interconnect.read_word(0x0010);
         assert!(result == 0xff, "expected 0xff, got {:#x}", result);
     }
 
@@ -38,10 +38,10 @@ mod test {
         let mut cpu = mock_cpu(&[0x8e, 0x10, 0x00]);
         cpu.X = 0xff;
 
-        let mut result = cpu.mem.read_word(0x0010);
+        let mut result = cpu.interconnect.read_word(0x0010);
         assert!(result == 0x00, "expected 0x00, got {:#x}", result);
         cpu.execute_instruction();
-        result = cpu.mem.read_word(0x0010);
+        result = cpu.interconnect.read_word(0x0010);
         assert!(result == 0xff, "expected 0xff, got {:#x}", result);
     }
 }
