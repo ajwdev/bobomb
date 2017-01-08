@@ -8,6 +8,7 @@ impl FromImplied for Rts {
         let hi = cpu.pop_stack();
         let addr = Address::new(hi, lo);
 
+        // See JSR for an explanation of why we add one
         cpu.PC = addr.to_u16().wrapping_add(1);
 
         6
