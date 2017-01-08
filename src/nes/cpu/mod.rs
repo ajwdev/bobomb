@@ -210,7 +210,7 @@ impl Cpu {
         // memory as a byte stream and/or get a slice out of memory
         // with the mapping all working correctly
         println!("{}", Disassembler::disassemble(
-            self.PC, instr, &[self.mem.read_word(self.PC+1),self.mem.read_word(self.PC+2)]
+            self.PC-1, instr, &[self.mem.read_word(self.PC),self.mem.read_word(self.PC+1)]
         ));
 
 
