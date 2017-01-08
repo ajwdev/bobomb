@@ -41,6 +41,9 @@ pub struct Cpu {
 
     mem: AddressSpace,
 
+    // Maybe make this something smaller so we can catch overflows and raise timer interrupts?
+    cycles: usize,
+
     // These are only used for debugging purposes
     instruction_counter: i64,
     stack_depth: i16,
@@ -60,6 +63,8 @@ impl Cpu {
             SR: StatusRegister::new(),
 
             mem: mem,
+            cycles: 0,
+
             instruction_counter: 0,
             stack_depth: 0,
             last_pc: 0,
@@ -219,7 +224,7 @@ impl Cpu {
     }
 
     // TODO Ok to make this public? Should we only use start() ?
-    fn execute_instruction(&mut self) {
+    fn execute_instruction(&mut self) -> usize {
         self.last_pc = self.PC;
         let instr = self.read_word_and_increment();
 
@@ -232,147 +237,147 @@ impl Cpu {
 
 
         // TODO How does this perform? Look into an array of opcodes like in the disassembler
-        match instr {
+        let burned_cycles = match instr {
             0x10 => {
-                Bpl::relative(self);
+                Bpl::relative(self)
             }
             0xf0 => {
-                Beq::relative(self);
+                Beq::relative(self)
             }
             0xd0 => {
-                Bne::relative(self);
+                Bne::relative(self)
             }
             0xc9 => {
-                Cmp::immediate(self);
+                Cmp::immediate(self)
             }
             0x20 => {
-                Jsr::absolute(self);
+                Jsr::absolute(self)
             }
             0x60 => {
-                Rts::from_implied(self);
+                Rts::from_implied(self)
             }
             0x4a => {
-                Lsr::accumulator(self);
+                Lsr::accumulator(self)
             }
             0x4c => {
-                Jmp::absolute(self);
+                Jmp::absolute(self)
             }
             0x48 => {
-                Pha::implied(self);
+                Pha::implied(self)
             }
             0x45 => {
-                Eor::from_address(self, AddressMode::ZeroPage);
+                Eor::from_address(self, AddressMode::ZeroPage)
             }
             0x49 => {
-                Eor::from_immediate(self);
+                Eor::from_immediate(self)
             }
             0x68 => {
-                Pla::from_implied(self);
+                Pla::from_implied(self)
             }
             0x25 => {
-                And::from_address(self, AddressMode::ZeroPage);
+                And::from_address(self, AddressMode::ZeroPage)
             }
             0x29 => {
-                And::from_immediate(self);
+                And::from_immediate(self)
             }
             0x6d => {
-                Adc::from_address(self, AddressMode::Absolute);
+                Adc::from_address(self, AddressMode::Absolute)
             }
             0x65 => {
-                Adc::from_address(self, AddressMode::ZeroPage);
+                Adc::from_address(self, AddressMode::ZeroPage)
             }
             0x66 => {
-                Ror::from_address(self, AddressMode::ZeroPage);
+                Ror::from_address(self, AddressMode::ZeroPage)
             }
             0x69 => {
-                Adc::from_immediate(self);
+                Adc::from_immediate(self)
             }
             0x78 => {
-                Sei::implied(self);
+                Sei::implied(self)
             }
             0x18 => {
-                Clc::implied(self);
+                Clc::implied(self)
             }
             0xd8 => {
-                Cld::implied(self);
+                Cld::implied(self)
             }
             0xaa => {
-                Tax::from_implied(self);
+                Tax::from_implied(self)
             }
             0xa8 => {
-                Tay::from_implied(self);
+                Tay::from_implied(self)
             }
             0x8a => {
-                Txa::implied(self);
+                Txa::implied(self)
             }
             0x98 => {
-                Tya::implied(self);
+                Tya::implied(self)
             }
             0x9a => {
-                Txs::implied(self);
+                Txs::implied(self)
             }
             0xa0 => {
-                Ldy::immediate(self);
+                Ldy::immediate(self)
             }
             0xa2 => {
-                Ldx::from_immediate(self);
+                Ldx::from_immediate(self)
             }
             0xa6 => {
-                Ldx::from_address(self, AddressMode::ZeroPage);
+                Ldx::from_address(self, AddressMode::ZeroPage)
             }
             0xad => {
-                Lda::from_address(self, AddressMode::Absolute);
+                Lda::from_address(self, AddressMode::Absolute)
             }
             0xa5 => {
-                Lda::from_address(self, AddressMode::ZeroPage);
+                Lda::from_address(self, AddressMode::ZeroPage)
             }
             0xa9 => {
-                Lda::from_immediate(self);
+                Lda::from_immediate(self)
             }
             0xb9 => {
-                Lda::from_address(self, AddressMode::AbsoluteY);
+                Lda::from_address(self, AddressMode::AbsoluteY)
             }
             0x84 => {
-                Sty::zero_page(self);
+                Sty::zero_page(self)
             }
             0x85 => {
-                Sta::from_address(self, AddressMode::ZeroPage);
+                Sta::from_address(self, AddressMode::ZeroPage)
             }
             0x86 => {
-                Stx::from_address(self, AddressMode::ZeroPage);
+                Stx::from_address(self, AddressMode::ZeroPage)
             }
             0x8d => {
-                Sta::from_address(self, AddressMode::Absolute);
+                Sta::from_address(self, AddressMode::Absolute)
             }
             0x8e => {
-                Stx::from_address(self, AddressMode::Absolute);
+                Stx::from_address(self, AddressMode::Absolute)
             }
             0x9d => {
-                Sta::from_address(self, AddressMode::AbsoluteX);
+                Sta::from_address(self, AddressMode::AbsoluteX)
             }
             0x91 => {
-                Sta::from_address(self, AddressMode::IndirectY);
+                Sta::from_address(self, AddressMode::IndirectY)
             }
             0x99 => {
-                Sta::from_address(self, AddressMode::AbsoluteY);
+                Sta::from_address(self, AddressMode::AbsoluteY)
             }
             0xc6 => {
-                Dec::zero_page(self);
+                Dec::zero_page(self)
             }
             0x88 => {
-                Dey::implied(self);
+                Dey::implied(self)
             }
             0xca => {
-                Dex::from_implied(self);
+                Dex::from_implied(self)
             }
             0xc0 => {
-                Cpy::from_immediate(self);
+                Cpy::from_immediate(self)
             }
             0xc8 => {
-                Iny::from_implied(self);
+                Iny::from_implied(self)
             }
             0xe8 => {
-                Inx::from_implied(self);
+                Inx::from_implied(self)
             }
             0x00 => {
                 self.debug_stack();
@@ -382,7 +387,7 @@ impl Cpu {
                    self.mem.read_word(self.PC + 1),
                    self.PC,
                    self.instruction_counter,
-                )
+                );
             }
             _ => {
                 self.debug_stack();
@@ -392,9 +397,12 @@ impl Cpu {
                    self.mem.read_word(self.PC + 1),
                    self.PC,
                    self.instruction_counter,
-                )
+                );
             }
-        }
+        };
+
+        self.cycles += burned_cycles;
+        burned_cycles
     }
 }
 
