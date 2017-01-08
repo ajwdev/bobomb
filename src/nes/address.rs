@@ -139,7 +139,7 @@ impl AddressSpace {
             0x1800...0x1fff => {
                 self.ram[(addr-0x1800) as usize] // Mirror 3
             }
-            0x2000...0x2007 => self.ppu.read_at(addr),
+            0x2002 => self.ppu.read_at(addr),
             _ => {
                 panic!("unknown address {:#x}", addr);
             }
@@ -161,18 +161,24 @@ impl AddressSpace {
                 self.ram[(addr-0x1800) as usize] = value; // Mirror 3
             }
             0x2000 => {
-                self.ppu.write_ctrl(value);
+                self.ppu.write_register(ppu::PpuRegister::Ctrl, value);
             }
             0x2001 => {
-                self.ppu.write_mask(value);
+                self.ppu.write_register(ppu::PpuRegister::Mask, value);
             }
             0x2005 => {
-                self.ppu.write_scroll(value);
+                self.ppu.write_register(ppu::PpuRegister::Scroll, value);
             }
-            0x2002...0x2004|0x2006...0x2007 => {
+            0x2006 => {
+                self.ppu.write_register(ppu::PpuRegister::Addr, value);
+            }
+            0x2007 => {
+                self.ppu.write_register(ppu::PpuRegister::Data, value);
+            }
+            0x2002...0x2004 => {
                 // PPU
                 // TODO Should we do something similiar to what we did above?
-                panic!("ppu not implemented yet. access at {:#x}", addr);
+                panic!("ppu not implemented yet. write access at {:#x}", addr);
             }
             _ => {
                 panic!("unimplemented write address {:#x}", addr);
