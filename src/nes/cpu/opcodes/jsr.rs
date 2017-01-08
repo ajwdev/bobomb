@@ -10,7 +10,7 @@ impl Absolute for Jsr {
         // take this value and subtract one from it, THEN push it on the stack. On pop
         // we then add 1 to the address. I'm not sure why we just cant push the current PC
         // but there is probably a reason.
-        let ret = cpu.PC - 1;
+        let ret = cpu.PC - 1;   // TODO wrapping_sub ?
 
         // push the high byte and then the low byte
         cpu.push_stack(((ret & 0xFF00) >> 8) as u8);

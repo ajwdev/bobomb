@@ -43,7 +43,9 @@ pub use self::jmp::Jmp;
 pub use self::rts::Rts;
 
 mod pha;
+mod pla;
 pub use self::pha::Pha;
+pub use self::pla::Pla;
 
 mod cmp;
 pub use self::cmp::Cmp;

@@ -244,6 +244,9 @@ impl Cpu {
             0x48 => {
                 Pha::implied(self);
             }
+            0x68 => {
+                Pla::from_implied(self);
+            }
             0x25 => {
                 And::zero_page(self);
             }
