@@ -270,10 +270,10 @@ impl Cpu {
                 Pla::from_implied(self);
             }
             0x25 => {
-                And::zero_page(self);
+                And::from_address(self, AddressMode::ZeroPage);
             }
             0x29 => {
-                And::immediate(self);
+                And::from_immediate(self);
             }
             0x6d => {
                 Adc::from_address(self, AddressMode::Absolute);

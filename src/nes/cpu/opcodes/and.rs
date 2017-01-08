@@ -1,29 +1,37 @@
-use nes::cpu::{Cpu,Immediate,ZeroPage};
+use nes::cpu::{Cpu,FromImmediate,FromAddress,AddressMode};
 
 pub struct And { }
 
-impl Immediate for And {
-    fn immediate(cpu: &mut Cpu) -> usize {
-        // TODO Is it possible to refactor this out into common code?
+impl And {
+    #[inline]
+    fn and(cpu: &mut Cpu, word: u8) {
+        let result = cpu.AC & word;
+
+        cpu.AC = result;
+        cpu.zero_and_negative_status(result);
+    }
+}
+
+impl FromImmediate for And {
+    fn from_immediate(cpu: &mut Cpu) -> usize {
         let word = cpu.read_word_and_increment();
-        cpu.AC &= word;
-        // TODO I'm pretty sure this is wrong
-        cpu.zero_and_negative_status(word);
+        Self::and(cpu, word);
 
         2
     }
 }
 
-impl ZeroPage for And {
-    fn zero_page(cpu: &mut Cpu) -> usize {
-        // TODO Is it possible to refactor this out into common code?
-        let word = cpu.read_word_and_increment();
-        let dest = cpu.mem.read_word(Cpu::zero_page_address(word));
+impl FromAddress for And {
+    fn from_address(cpu: &mut Cpu, mode: AddressMode) -> usize {
+        let src = cpu.translate_address(mode);
+        let word = cpu.mem.read_word(src.to_u16());
 
-        cpu.AC &= dest;
-        cpu.zero_and_negative_status(word);
+        Self::and(cpu, word);
 
-        3
+        match mode {
+            AddressMode::ZeroPage => 3,
+            _ => { panic!("unimplemented address mode {:?} for AND", mode); }
+        }
     }
 }
 
