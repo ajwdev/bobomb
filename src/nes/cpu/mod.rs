@@ -43,7 +43,9 @@ pub struct Cpu {
 
     // These are only used for debugging purposes
     instruction_counter: i64,
-    stack_depth: i16
+    stack_depth: i16,
+    last_pc: u16,
+
 }
 
 impl Cpu {
@@ -53,7 +55,6 @@ impl Cpu {
             X: 0,
             Y: 0,
             AC: 0,
-            // TODO Do we want to do this on startup?
             PC: Cpu::find_pc_addr(&mem),
             SP: 0xfd,
             SR: StatusRegister::new(),
@@ -61,6 +62,7 @@ impl Cpu {
             mem: mem,
             instruction_counter: 0,
             stack_depth: 0,
+            last_pc: 0,
         }
     }
 
@@ -203,8 +205,17 @@ impl Cpu {
         Address(result)
     }
 
+    // This is only used in testing/debugging.
+    fn rewind(&mut self) -> u16 {
+        let previous = self.PC;
+        self.PC = self.last_pc;
+
+        previous
+    }
+
     // TODO Ok to make this public? Should we only use start() ?
     fn execute_instruction(&mut self) {
+        self.last_pc = self.PC;
         let instr = self.read_word_and_increment();
 
         // XXX Make this less terrible. It'd be nice we could expose
