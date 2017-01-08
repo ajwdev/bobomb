@@ -329,6 +329,9 @@ impl Cpu {
             0xa9 => {
                 Lda::from_immediate(self);
             }
+            0xb9 => {
+                Lda::from_address(self, AddressMode::AbsoluteY);
+            }
             0x84 => {
                 Sty::zero_page(self);
             }
