@@ -10,9 +10,11 @@ pub use self::ldx::Ldx;
 pub use self::ldy::Ldy;
 
 mod sta;
+mod stx;
 mod sty;
 pub use self::sta::Sta;
 pub use self::sty::Sty;
+pub use self::stx::Stx;
 
 mod and;
 pub use self::and::And;

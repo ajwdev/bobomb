@@ -335,8 +335,14 @@ impl Cpu {
             0x85 => {
                 Sta::from_address(self, AddressMode::ZeroPage);
             }
+            0x86 => {
+                Stx::from_address(self, AddressMode::ZeroPage);
+            }
             0x8d => {
                 Sta::from_address(self, AddressMode::Absolute);
+            }
+            0x8e => {
+                Stx::from_address(self, AddressMode::Absolute);
             }
             0x91 => {
                 Sta::from_address(self, AddressMode::IndirectY);
