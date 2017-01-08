@@ -244,6 +244,12 @@ impl Cpu {
             0x48 => {
                 Pha::implied(self);
             }
+            0x45 => {
+                Eor::from_address(self, AddressMode::ZeroPage);
+            }
+            0x49 => {
+                Eor::from_immediate(self);
+            }
             0x68 => {
                 Pla::from_implied(self);
             }

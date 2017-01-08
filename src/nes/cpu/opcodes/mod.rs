@@ -70,3 +70,6 @@ pub use self::clc::Clc;
 
 mod lsr;
 pub use self::lsr::Lsr;
+
+mod eor;
+pub use self::eor::Eor;
