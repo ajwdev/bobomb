@@ -246,7 +246,7 @@ impl Cpu {
             0x29 => {
                 And::immediate(self);
             }
-            0x60 => {
+            0x6d => {
                 Adc::from_address(self, AddressMode::Absolute);
             }
             0x65 => {
