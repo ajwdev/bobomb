@@ -1,12 +1,12 @@
 use nes::cpu::{Cpu,FromImplied,AddressMode};
 
-pub struct Iny { }
+pub struct Inx { }
 
-impl FromImplied for Iny {
+impl FromImplied for Inx {
     fn from_implied(cpu: &mut Cpu) -> usize {
-        let word = cpu.Y.wrapping_add(1);
+        let word = cpu.X.wrapping_add(1);
         // See Dey about why we have `word`
-        cpu.Y = word;
+        cpu.X = word;
 
         cpu.zero_and_negative_status(word);
 
@@ -21,27 +21,29 @@ mod test {
     use nes::cpu::status::Flags;
 
     #[test]
-    fn test_iny() {
-        let mut cpu = mock_cpu(&[0xc8]);
-        cpu.Y = 10;
+    fn test_inx() {
+        let mut cpu = mock_cpu(&[0xe8]);
+        cpu.X = 10;
 
         cpu.execute_instruction();
-        assert_cpu_register!(cpu, Registers::Y, 11);
+        assert_cpu_register!(cpu, Registers::X, 11);
         assert_status_reset!(cpu, Flags::Zero);
         assert_status_reset!(cpu, Flags::Negative);
 
         cpu.rewind();
-        cpu.Y = 255;
+        cpu.X = 255;
         cpu.execute_instruction();
-        assert_cpu_register!(cpu, Registers::Y, 0);
+        assert_cpu_register!(cpu, Registers::X, 0);
         assert_status_set!(cpu, Flags::Zero);
         assert_status_reset!(cpu, Flags::Negative);
 
         cpu.rewind();
-        cpu.Y = 127;
+        cpu.X = 127;
         cpu.execute_instruction();
-        assert_cpu_register!(cpu, Registers::Y, 128);
+        assert_cpu_register!(cpu, Registers::X, 128);
         assert_status_reset!(cpu, Flags::Zero);
         assert_status_set!(cpu, Flags::Negative);
     }
 }
+
+

@@ -353,6 +353,9 @@ impl Cpu {
             0xc8 => {
                 Iny::from_implied(self);
             }
+            0xe8 => {
+                Inx::from_implied(self);
+            }
             0x00 => {
                 self.debug_stack();
                 panic!("Hit a BRK instruction which is probably wrong: {:#x}, {:#x} {:#x}, PC: {:#x}, count: {}",

@@ -20,10 +20,12 @@ mod dec;
 mod dex;
 mod dey;
 mod iny;
+mod inx;
 pub use self::dec::Dec;
 pub use self::dex::Dex;
 pub use self::dey::Dey;
 pub use self::iny::Iny;
+pub use self::inx::Inx;
 
 mod adc;
 pub use self::adc::Adc;
