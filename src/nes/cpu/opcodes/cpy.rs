@@ -8,8 +8,6 @@ impl FromImmediate for Cpy {
         let word = cpu.read_word_and_increment();;
         let result = cpu.Y.wrapping_sub(word);
 
-        println!("scratch register: {:#X}", result);
-
         cpu.zero_and_negative_status(result);
 
         if cpu.Y >= word {
