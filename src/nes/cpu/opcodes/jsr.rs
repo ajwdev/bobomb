@@ -1,4 +1,5 @@
 use nes::cpu::{Cpu,Absolute};
+use nes::address::Address;
 
 pub struct Jsr { }
 
@@ -10,11 +11,10 @@ impl Absolute for Jsr {
         // take this value and subtract one from it, THEN push it on the stack. On pop
         // we then add 1 to the address. I'm not sure why we just cant push the current PC
         // but there is probably a reason.
-        let ret = cpu.PC - 1;   // TODO wrapping_sub ?
+        let ret = Address(cpu.PC.wrapping_sub(1));
 
-        // push the high byte and then the low byte
-        cpu.push_stack(((ret & 0xFF00) >> 8) as u8);
-        cpu.push_stack((ret & 0x00FF) as u8);
+        cpu.push_stack(ret.high());
+        cpu.push_stack(ret.low());
 
         cpu.PC = addr;
 

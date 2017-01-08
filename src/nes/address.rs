@@ -39,6 +39,14 @@ impl Address {
     }
 
 
+    pub fn high(&self) -> u8 {
+        ((self.0 & 0xFF00) >> 8) as u8
+    }
+
+    pub fn low(&self) -> u8 {
+        (self.0 & 0x00FF) as u8
+    }
+
     pub fn to_u16(&self) -> u16 {
         self.0
     }
