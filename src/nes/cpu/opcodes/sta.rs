@@ -12,6 +12,8 @@ impl FromAddress for Sta {
             AddressMode::ZeroPage => 3,
             AddressMode::IndirectY => 6,
             AddressMode::Absolute => 4,
+            AddressMode::AbsoluteX => 5,
+            AddressMode::AbsoluteY => 5,
             // TODO Make a macro for this
             _ => { panic!("unimplemented address mode {:?} for STA", mode); }
         }
