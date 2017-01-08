@@ -232,6 +232,9 @@ impl Cpu {
             0x20 => {
                 Jsr::absolute(self);
             }
+            0x60 => {
+                Rts::from_implied(self);
+            }
             0x4a => {
                 Lsr::accumulator(self);
             }

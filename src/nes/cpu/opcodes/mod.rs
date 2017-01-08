@@ -37,8 +37,10 @@ pub use self::bpl::Bpl;
 
 mod jsr;
 mod jmp;
+mod rts;
 pub use self::jsr::Jsr;
 pub use self::jmp::Jmp;
+pub use self::rts::Rts;
 
 mod pha;
 pub use self::pha::Pha;
