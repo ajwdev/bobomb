@@ -180,6 +180,9 @@ impl AddressSpace {
                 // TODO Should we do something similiar to what we did above?
                 panic!("ppu not implemented yet. write access at {:#x}", addr);
             }
+            0x4015 => {
+                println!("Write APU status not implemented. Skipping");
+            }
             _ => {
                 panic!("unimplemented write address {:#x}", addr);
             }
