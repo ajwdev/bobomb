@@ -5,15 +5,6 @@ use nes::rom::{Rom,Bank};
 
 const SYSTEM_RAM: usize = 2 * 1024;
 
-// http://wiki.nesdev.com/w/index.php/CPU_memory_map
-// These constants ignore mirrors
-const SYSTEM_RAM_START: u16 = 0x0;
-const SYSTEM_RAM_END: u16 = 0x07FF;
-
-const PPU_REGISTER_SIZE: usize = 8;
-const PPU_REGISTERS_START: u16 = 0x2000;
-const PPU_REGISTERS_END: u16 = 0x2007;
-
 pub struct Interconnect {
     ram: Vec<u8>, // Make this an array at some time. I think it needs boxed
     rom: Rom,
@@ -22,22 +13,6 @@ pub struct Interconnect {
     cycles: usize,
 }
 
-// TODO Come back to these. I think it's just going to required moving the code from
-// read_word/write_word below and then having those old functions call into this
-//
-// impl Index<u16> for Interconnect {
-//     type Output = u8;
-
-//     fn index(&self, addr: u16) -> &u8 {
-//         &self.data[idx]
-//     }
-// }
-
-// impl IndexMut<u16> for Interconnect {
-//     fn index_mut(&mut self, addr: u16) -> &mut u8 {
-//         &mut self.data[idx]
-//     }
-// }
 
 impl Interconnect {
     pub fn new(ppu: ppu::Ppu, rom: Rom) -> Self {
@@ -79,6 +54,7 @@ impl Interconnect {
 
     pub fn write_word(&mut self, addr: u16, value: u8) {
         match addr {
+            // RAM
             0x00...0x07ff => {
                 self.ram[addr as usize] = value;
             }
@@ -91,11 +67,15 @@ impl Interconnect {
             0x1800...0x1fff => {
                 self.ram[(addr-0x1800) as usize] = value; // Mirror 3
             }
+            // PPU
             0x2000 => {
                 self.ppu.write_register(ppu::PpuRegister::Ctrl, value);
             }
             0x2001 => {
                 self.ppu.write_register(ppu::PpuRegister::Mask, value);
+            }
+            0x2002...0x2004 => {
+                panic!("ppu not implemented yet. write access at {:#x}", addr);
             }
             0x2005 => {
                 self.ppu.write_register(ppu::PpuRegister::Scroll, value);
@@ -106,11 +86,7 @@ impl Interconnect {
             0x2007 => {
                 self.ppu.write_register(ppu::PpuRegister::Data, value);
             }
-            0x2002...0x2004 => {
-                // PPU
-                // TODO Should we do something similiar to what we did above?
-                panic!("ppu not implemented yet. write access at {:#x}", addr);
-            }
+            // APU
             0x4015 => {
                 println!("Write APU status not implemented. Skipping");
             }
