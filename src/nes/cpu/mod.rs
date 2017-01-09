@@ -10,9 +10,9 @@ pub use nes::cpu::address_modes::*;
 
 use nes::address::Address;
 use nes::interconnect::Interconnect;
-use nes::cpu::status::{StatusRegister};
-use nes::cpu::opcodes::*;
+use nes::cpu::status::StatusRegister;
 use nes::cpu::disassemble::Disassembler;
+use nes::cpu::opcodes::*;
 
 // TODO Consider breaking the CPU logic out into its own private module and re-exporting it. This
 // will require adjusting the visibility on a lot of methods.
@@ -411,7 +411,8 @@ impl Cpu {
 #[cfg(test)]
 mod test {
     use super::Cpu;
-    use nes::rom::Bank;
+    use nes::ppu::Ppu;
+    use nes::rom::{Bank,Rom};
     use nes::interconnect::Interconnect;
 
 
@@ -433,16 +434,19 @@ mod test {
     }
 
     pub fn memory_from_rom(interconnect: Vec<u8>, doublebank: bool) -> Interconnect {
-        if doublebank {
+        let rom = if doublebank {
             if interconnect.len() <= 0x4000 {
                 // 16k
                 panic!("rom not large enough for double banking");
             }
-            Interconnect::new_double_bank(Bank::new(&interconnect[0..0x4000]), Bank::new(&interconnect[0x4000..]))
+            Rom::new_double_bank(Bank::new(&interconnect[0..0x4000]), Bank::new(&interconnect[0x4000..]))
         } else {
             // single banked
-            Interconnect::new_single_bank(Bank::new(&interconnect[0..0x4000]))
-        }
+            Rom::new_single_bank(Bank::new(&interconnect[0..0x4000]))
+        };
+
+        let ppu = Ppu::new();
+        Interconnect::new(ppu, rom)
     }
 
     pub fn mock_cpu(words: &[u8]) -> Cpu {
@@ -458,7 +462,9 @@ mod test {
         mock_rom[0x3ffc] = 0xef;
         mock_rom[0x3ffd] = 0xbe;
 
-        let interconnect = Interconnect::new_single_bank(Bank::new(&mock_rom));
+        let rom = Rom::new_single_bank(Bank::new(&mock_rom));
+        let ppu = Ppu::new();
+        let mut interconnect = Interconnect::new(ppu, rom);
         let result = Cpu::find_pc_addr(&interconnect);
         assert!(result == 0xbeef, "expected 0xbeef, got: {:#x}", result);
     }

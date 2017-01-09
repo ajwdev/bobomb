@@ -1,7 +1,7 @@
 use std::ops::{Index,IndexMut};
 
 use nes::ppu;
-use nes::rom::Bank;
+use nes::rom::{Rom,Bank};
 
 const SYSTEM_RAM: usize = 2 * 1024;
 
@@ -14,21 +14,10 @@ const PPU_REGISTER_SIZE: usize = 8;
 const PPU_REGISTERS_START: u16 = 0x2000;
 const PPU_REGISTERS_END: u16 = 0x2007;
 
-const ROM_BANK_SIZE: u16 = 16 * 1024;
-
-const ROM_LOWER_START: u16 = 0x8000;
-const ROM_LOWER_END: u16 = ROM_LOWER_START + 0x3FFF;
-const ROM_UPPER_START: u16 = ROM_LOWER_START + ROM_BANK_SIZE; // 0xc000
-const ROM_UPPER_END: u16 = ROM_UPPER_START + 0x3FFF;
-
-
 pub struct Interconnect {
     ram: Vec<u8>, // Make this an array at some time. I think it needs boxed
+    rom: Rom,
     ppu: ppu::Ppu,
-
-    // rom: rom::Rom
-    lower_rom: Option<Bank>,
-    upper_rom: Option<Bank>,
 
     cycles: usize,
 }
@@ -51,41 +40,17 @@ pub struct Interconnect {
 // }
 
 impl Interconnect {
-    pub fn new_double_bank(lower_rom: Bank, upper_rom: Bank) -> Self {
+    pub fn new(ppu: ppu::Ppu, rom: Rom) -> Self {
         Interconnect {
             ram: vec![0; SYSTEM_RAM],
-            ppu: ppu::Ppu::new(),
-            lower_rom: Some(lower_rom),
-            upper_rom: Some(upper_rom),
-            cycles: 0,
-        }
-    }
-
-    pub fn new_single_bank(rom: Bank) -> Self {
-        Interconnect {
-            ram: vec![0; SYSTEM_RAM],
-            ppu: ppu::Ppu::new(),
-            lower_rom: Some(rom),
-            upper_rom: None,
+            rom: rom,
+            ppu: ppu,
             cycles: 0,
         }
     }
 
     pub fn read_word(&self, addr: u16) -> u8 {
         match addr {
-            ROM_LOWER_START...ROM_LOWER_END => {
-                // Lower bank
-                let reladdr: u16 = addr - ROM_LOWER_START;
-                self.lower_rom.as_ref().unwrap()[reladdr as usize]
-            }
-            ROM_UPPER_START...ROM_UPPER_END => {
-                let reladdr: u16 = addr - (ROM_LOWER_START + ROM_BANK_SIZE);
-                if self.upper_rom.is_some() {
-                    self.upper_rom.as_ref().unwrap()[reladdr as usize]
-                } else {
-                    self.lower_rom.as_ref().unwrap()[reladdr as usize]
-                }
-            }
             0x0000...0x07ff => {
                 self.ram[addr as usize] // Includes zero page, stack, and ram
             }
@@ -98,7 +63,14 @@ impl Interconnect {
             0x1800...0x1fff => {
                 self.ram[(addr-0x1800) as usize] // Mirror 3
             }
-            0x2002 => self.ppu.read_at(addr),
+            // PPU
+            0x2002 => {
+                self.ppu.read_at(addr)
+            }
+            // ROM
+            0x8000...0xFFFF => {
+                self.rom[addr]
+            }
             _ => {
                 panic!("unknown address {:#x}", addr);
             }
@@ -152,34 +124,38 @@ impl Interconnect {
 #[cfg(test)]
 mod test {
     use super::Interconnect;
-    use nes::rom::Bank;
+    use nes::ppu::Ppu;
+    use nes::rom::{Bank,Rom};
 
     #[test]
     fn test_write_word() {
-        // TODO Adjust for every writable section of address space
-        let mut mem = Interconnect::new_double_bank(Bank::new(&[0; 16384]), Bank::new(&[0; 16384]));
+        let rom = Rom::new_double_bank(Bank::new(&[0; 16384]), Bank::new(&[0; 16384]));
+        let ppu = Ppu::new();
+        let mut interconnect = Interconnect::new(ppu, rom);
         let mut result: u8;
 
-        result = mem.read_word(0x0010);
+        result = interconnect.read_word(0x0010);
         assert!(result == 0x00, "expected 0x00, got {:#x}", result);
 
-        mem.write_word(0x0010, 0xff);
-        result = mem.read_word(0x0010);
+        interconnect.write_word(0x0010, 0xff);
+        result = interconnect.read_word(0x0010);
         assert!(result == 0xff, "expected 0xff, got {:#x}", result);
     }
 
     #[test]
     fn test_read_system_ram() {
-        let mut mem = Interconnect::new_double_bank(Bank::new(&[0; 16384]), Bank::new(&[0; 16384]));
-        mem.ram[0] = 0xFF;
-        mem.ram[0x10] = 0xFF;
-        mem.ram[0xa0] = 0xFF;
-        mem.ram[0x7ff] = 0xFF;
+        let rom = Rom::new_double_bank(Bank::new(&[0; 16384]), Bank::new(&[0; 16384]));
+        let ppu = Ppu::new();
+        let mut interconnect = Interconnect::new(ppu, rom);
+        interconnect.ram[0] = 0xFF;
+        interconnect.ram[0x10] = 0xFF;
+        interconnect.ram[0xa0] = 0xFF;
+        interconnect.ram[0x7ff] = 0xFF;
 
-        assert_eq!(0xFF, mem.read_word(0x00));
-        assert_eq!(0xFF, mem.read_word(0x10));
-        assert_eq!(0xFF, mem.read_word(0x7ff));
-        assert_eq!(0, mem.read_word(0x01));
+        assert_eq!(0xFF, interconnect.read_word(0x00));
+        assert_eq!(0xFF, interconnect.read_word(0x10));
+        assert_eq!(0xFF, interconnect.read_word(0x7ff));
+        assert_eq!(0, interconnect.read_word(0x01));
     }
 
     #[test]
@@ -191,17 +167,19 @@ mod test {
         mock_rom[0x3FFF] = 0xFF;
 
 
-        let mem = Interconnect::new_single_bank(Bank::new(&mock_rom));
+        let rom = Rom::new_single_bank(Bank::new(&mock_rom));
+        let ppu = Ppu::new();
+        let mut interconnect = Interconnect::new(ppu, rom);
         // Lower bank
-        assert_eq!(0xFF, mem.read_word(0x8000));
-        assert_eq!(0xFF, mem.read_word(0x8010));
-        assert_eq!(0xFF, mem.read_word(0xbfff));
-        assert_eq!(0, mem.read_word(0x8001));
+        assert_eq!(0xFF, interconnect.read_word(0x8000));
+        assert_eq!(0xFF, interconnect.read_word(0x8010));
+        assert_eq!(0xFF, interconnect.read_word(0xbfff));
+        assert_eq!(0, interconnect.read_word(0x8001));
         // Upper bank
-        assert_eq!(0xFF, mem.read_word(0xc000));
-        assert_eq!(0xFF, mem.read_word(0xc010));
-        assert_eq!(0xFF, mem.read_word(0xffff));
-        assert_eq!(0, mem.read_word(0xc001));
+        assert_eq!(0xFF, interconnect.read_word(0xc000));
+        assert_eq!(0xFF, interconnect.read_word(0xc010));
+        assert_eq!(0xFF, interconnect.read_word(0xffff));
+        assert_eq!(0, interconnect.read_word(0xc001));
     }
 
     #[test]
@@ -218,16 +196,18 @@ mod test {
         mock_rom[0x7FFF] = 0xAA; // end of bank
 
 
-        let mem = Interconnect::new_double_bank(Bank::new(&mock_rom[0..16 * 1024]), Bank::new(&mock_rom[16 * 1024..]));
+        let rom = Rom::new_double_bank(Bank::new(&mock_rom[0..16 * 1024]), Bank::new(&mock_rom[16 * 1024..]));
+        let ppu = Ppu::new();
+        let mut interconnect = Interconnect::new(ppu, rom);
         // Lower bank
-        assert_eq!(0xFF, mem.read_word(0x8000));
-        assert_eq!(0xFF, mem.read_word(0x8010));
-        assert_eq!(0xFF, mem.read_word(0xbfff));
-        assert_eq!(0, mem.read_word(0x8001));
+        assert_eq!(0xFF, interconnect.read_word(0x8000));
+        assert_eq!(0xFF, interconnect.read_word(0x8010));
+        assert_eq!(0xFF, interconnect.read_word(0xbfff));
+        assert_eq!(0, interconnect.read_word(0x8001));
         // Upper bank
-        assert_eq!(0xAA, mem.read_word(0xc000));
-        assert_eq!(0xAA, mem.read_word(0xc010));
-        assert_eq!(0xAA, mem.read_word(0xffff));
-        assert_eq!(0, mem.read_word(0xc001));
+        assert_eq!(0xAA, interconnect.read_word(0xc000));
+        assert_eq!(0xAA, interconnect.read_word(0xc010));
+        assert_eq!(0xAA, interconnect.read_word(0xffff));
+        assert_eq!(0, interconnect.read_word(0xc001));
     }
 }
