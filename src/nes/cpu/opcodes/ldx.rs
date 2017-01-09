@@ -35,7 +35,7 @@ mod test {
         let mut cpu = mock_cpu(&[0xa2, 0xff]);
 
         assert_cpu_register!(cpu, Registers::X, 0);
-        cpu.execute_instruction();
+        cpu.step(None);
         assert_cpu_register!(cpu, Registers::X, 0xff);
     }
 

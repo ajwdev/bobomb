@@ -20,7 +20,7 @@ mod test {
         let mut cpu = mock_cpu(&[0x48]);
         cpu.AC = 0xFF;
 
-        cpu.execute_instruction();
+        cpu.step(None);
 
         let mut result = cpu.pop_stack();
         assert!(result == 0xFF, "expected 0xFF, got {:#x}", result);

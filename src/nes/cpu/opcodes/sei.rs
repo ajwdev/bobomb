@@ -21,7 +21,7 @@ mod test {
         let mut cpu = mock_cpu(&[0x78]);
         cpu.SR.reset(Flags::Interrupt);
 
-        cpu.execute_instruction();
+        cpu.step(None);
         assert!(cpu.SR.is_set(Flags::Interrupt),
                 "expected true, got {:#?}",
                 cpu.SR.is_set(Flags::Interrupt));

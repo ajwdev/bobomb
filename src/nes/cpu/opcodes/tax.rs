@@ -31,14 +31,14 @@ mod test {
         assert_cpu_register!(cpu, Registers::X, 0xf0);
         assert_cpu_register!(cpu, Registers::AC, 0x00);
 
-        cpu.execute_instruction();
+        cpu.step(None);
         assert_cpu_register!(cpu, Registers::X, 0x00);
         // TODO Add these to TXA
         assert_status_set!(cpu, Flags::Zero);
         assert_status_reset!(cpu, Flags::Negative);
 
         cpu.AC = 0xff;
-        cpu.execute_instruction();
+        cpu.step(None);
         assert_cpu_register!(cpu, Registers::X, 0xff);
         assert_status_reset!(cpu, Flags::Zero);
         assert_status_set!(cpu, Flags::Negative);

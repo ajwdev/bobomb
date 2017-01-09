@@ -47,12 +47,12 @@ mod test {
         cpu.SR.reset(Flags::Zero);
 
 
-        cpu.execute_instruction();
+        cpu.step(None);
         assert_cpu_register!(cpu, Registers::AC, 0xFF);
         assert_status_reset!(cpu, Flags::Zero);
         assert_status_set!(cpu, Flags::Negative);
 
-        cpu.execute_instruction();
+        cpu.step(None);
         assert_cpu_register!(cpu, Registers::AC, 0x00);
         assert_status_set!(cpu, Flags::Zero);
         assert_status_reset!(cpu, Flags::Negative);

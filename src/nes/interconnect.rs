@@ -1,6 +1,7 @@
 use std::ops::{Index,IndexMut};
 
 use nes::ppu;
+use nes::address::Address;
 use nes::rom::{Rom,Bank};
 
 const SYSTEM_RAM: usize = 2 * 1024;
@@ -22,6 +23,10 @@ impl Interconnect {
             ppu: ppu,
             cycles: 0,
         }
+    }
+
+    pub fn find_reset_vector_address(&self) -> Address {
+        Address::new(self.read_word(0xFFFD), self.read_word(0xFFFC))
     }
 
     pub fn read_word(&self, addr: u16) -> u8 {
@@ -132,6 +137,19 @@ mod test {
         assert_eq!(0xFF, interconnect.read_word(0x10));
         assert_eq!(0xFF, interconnect.read_word(0x7ff));
         assert_eq!(0, interconnect.read_word(0x01));
+    }
+
+    #[test]
+    fn test_find_reset_vector_address() {
+        let mut mock_rom = vec![0; 1024*16];
+        mock_rom[0x3ffc] = 0xef;
+        mock_rom[0x3ffd] = 0xbe;
+
+        let rom = Rom::new_single_bank(Bank::new(&mock_rom));
+        let ppu = Ppu::new();
+        let interconnect = Interconnect::new(ppu, rom);
+        let result = interconnect.find_reset_vector_address();
+        assert!(result.to_u16() == 0xbeef, "expected 0xbeef, got: {:#x}", result.to_u16());
     }
 
     #[test]

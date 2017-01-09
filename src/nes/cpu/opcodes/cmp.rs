@@ -32,7 +32,7 @@ mod test {
     fn test_cmp_equal() {
         let mut cpu = mock_cpu(&[0xc9,0xAA]);
         cpu.AC = 0xAA;
-        cpu.execute_instruction();
+        cpu.step(None);
 
         assert_cpu_register!(cpu, Registers::AC, 0xAA);
         assert_status_set!(cpu, Flags::Zero);
@@ -44,7 +44,7 @@ mod test {
     fn test_cmp_less_than() {
         let mut cpu = mock_cpu(&[0xc9,0xA0]);
         cpu.AC = 0xAA;
-        cpu.execute_instruction();
+        cpu.step(None);
 
         assert_cpu_register!(cpu, Registers::AC, 0xAA);
         assert_status_reset!(cpu, Flags::Zero);
@@ -56,7 +56,7 @@ mod test {
     fn test_cmp_less_than_twos_comp() {
         let mut cpu = mock_cpu(&[0xc9,0x10]);
         cpu.AC = 0xAA;
-        cpu.execute_instruction();
+        cpu.step(None);
 
         assert_cpu_register!(cpu, Registers::AC, 0xAA);
         assert_status_reset!(cpu, Flags::Zero);
@@ -69,7 +69,7 @@ mod test {
     fn test_cmp_greater_than() {
         let mut cpu = mock_cpu(&[0xc9,0xBB]);
         cpu.AC = 0xAA;
-        cpu.execute_instruction();
+        cpu.step(None);
 
         assert_cpu_register!(cpu, Registers::AC, 0xAA);
         assert_status_reset!(cpu, Flags::Zero);
@@ -81,7 +81,7 @@ mod test {
     fn test_cmp_greater_than_twos_comp() {
         let mut cpu = mock_cpu(&[0xc9,0xBB]);
         cpu.AC = 0x10;
-        cpu.execute_instruction();
+        cpu.step(None);
 
         assert_cpu_register!(cpu, Registers::AC, 0x10);
         assert_status_reset!(cpu, Flags::Zero);

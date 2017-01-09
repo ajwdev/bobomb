@@ -32,7 +32,7 @@ mod test {
 
         assert!(cpu.PC == 0x8000, "expected 0x8000, got {:#x}", cpu.PC);
 
-        cpu.execute_instruction();
+        cpu.step(None);
         assert!(cpu.PC == 0xbeef, "expected 0xbeef, got {:#x}", cpu.PC);
 
         let mut result = cpu.pop_stack();

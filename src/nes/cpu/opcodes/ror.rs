@@ -51,7 +51,7 @@ mod test {
         cpu.SR.reset(Flags::Zero);
         cpu.SR.reset(Flags::Negative);
 
-        cpu.execute_instruction();
+        cpu.step(None);
         let result = cpu.interconnect.read_word(0x00FF);
         assert_equalx!(0b11000000, result);
         assert_status_reset!(cpu, Flags::Carry);
@@ -65,7 +65,7 @@ mod test {
         cpu.SR.reset(Flags::Zero);
         cpu.SR.reset(Flags::Negative);
 
-        cpu.execute_instruction();
+        cpu.step(None);
         let result = cpu.interconnect.read_word(0x00FF);
         assert_equalx!(0b01000000, result);
         assert_status_set!(cpu, Flags::Carry);
@@ -79,7 +79,7 @@ mod test {
         cpu.SR.reset(Flags::Zero);
         cpu.SR.reset(Flags::Negative);
 
-        cpu.execute_instruction();
+        cpu.step(None);
         let result = cpu.interconnect.read_word(0x00FF);
         assert_equalx!(0b00000000, result);
         assert_status_set!(cpu, Flags::Carry);

@@ -21,7 +21,7 @@ mod test {
 
         // TODO Cleanup Cld so it looks more like this
         cpu.SR.set(Flags::Carry);
-        cpu.execute_instruction();
+        cpu.step(None);
         assert_status_reset!(cpu, Flags::Carry);
     }
 }

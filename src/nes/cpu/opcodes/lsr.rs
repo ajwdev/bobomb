@@ -40,26 +40,26 @@ mod test {
         cpu.SR.reset(Flags::Carry);
         cpu.SR.set(Flags::Negative);
 
-        cpu.execute_instruction();
+        cpu.step(None);
         assert_cpu_register!(cpu, Registers::AC, 127);
         assert_status_set!(cpu, Flags::Carry);
         assert_status_reset!(cpu, Flags::Negative);
         assert_status_reset!(cpu, Flags::Zero);
 
         cpu.AC = 2;
-        cpu.execute_instruction();
+        cpu.step(None);
         assert_cpu_register!(cpu, Registers::AC, 1);
         assert_status_reset!(cpu, Flags::Carry);
         assert_status_reset!(cpu, Flags::Negative);
         assert_status_reset!(cpu, Flags::Zero);
 
-        cpu.execute_instruction();
+        cpu.step(None);
         assert_cpu_register!(cpu, Registers::AC, 0);
         assert_status_set!(cpu, Flags::Carry);
         assert_status_reset!(cpu, Flags::Negative);
         assert_status_set!(cpu, Flags::Zero);
 
-        cpu.execute_instruction();
+        cpu.step(None);
         assert_cpu_register!(cpu, Registers::AC, 0);
         assert_status_reset!(cpu, Flags::Carry);
         assert_status_reset!(cpu, Flags::Negative);

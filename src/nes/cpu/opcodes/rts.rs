@@ -27,7 +27,7 @@ mod test {
         cpu.push_stack(0xBE);
         cpu.push_stack(0xEE);
 
-        cpu.execute_instruction();
+        cpu.step(None);
         assert!(cpu.PC == 0xbeef, "expected 0xbeef, got {:#x}", cpu.PC);
     }
 }

@@ -25,21 +25,21 @@ mod test {
         let mut cpu = mock_cpu(&[0xc8]);
         cpu.Y = 10;
 
-        cpu.execute_instruction();
+        cpu.step(None);
         assert_cpu_register!(cpu, Registers::Y, 11);
         assert_status_reset!(cpu, Flags::Zero);
         assert_status_reset!(cpu, Flags::Negative);
 
         cpu.rewind();
         cpu.Y = 255;
-        cpu.execute_instruction();
+        cpu.step(None);
         assert_cpu_register!(cpu, Registers::Y, 0);
         assert_status_set!(cpu, Flags::Zero);
         assert_status_reset!(cpu, Flags::Negative);
 
         cpu.rewind();
         cpu.Y = 127;
-        cpu.execute_instruction();
+        cpu.step(None);
         assert_cpu_register!(cpu, Registers::Y, 128);
         assert_status_reset!(cpu, Flags::Zero);
         assert_status_set!(cpu, Flags::Negative);

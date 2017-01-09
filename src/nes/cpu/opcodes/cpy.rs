@@ -31,28 +31,28 @@ mod test {
         let mut cpu = mock_cpu(&[0xc0,10]);
         cpu.Y = 100;
 
-        cpu.execute_instruction();
+        cpu.step(None);
         assert_status_reset!(cpu, Flags::Zero);
         assert_status_reset!(cpu, Flags::Negative);
         assert_status_set!(cpu, Flags::Carry);
 
         cpu.rewind();
         cpu.Y = 240;
-        cpu.execute_instruction();
+        cpu.step(None);
         assert_status_reset!(cpu, Flags::Zero);
         assert_status_set!(cpu, Flags::Negative);
         assert_status_set!(cpu, Flags::Carry);
 
         cpu.rewind();
         cpu.Y = 10;
-        cpu.execute_instruction();
+        cpu.step(None);
         assert_status_set!(cpu, Flags::Zero);
         assert_status_reset!(cpu, Flags::Negative);
         assert_status_set!(cpu, Flags::Carry);
 
         cpu.rewind();
         cpu.Y = 2;
-        cpu.execute_instruction();
+        cpu.step(None);
         assert_status_reset!(cpu, Flags::Zero);
         assert_status_set!(cpu, Flags::Negative);
         assert_status_reset!(cpu, Flags::Carry);

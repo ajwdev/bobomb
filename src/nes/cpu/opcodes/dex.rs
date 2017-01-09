@@ -27,7 +27,7 @@ mod test {
         let mut cpu = mock_cpu(&[0xca]);
         cpu.X = 10;
 
-        cpu.execute_instruction();
+        cpu.step(None);
         assert_cpu_register!(cpu, Registers::X, 9);
     }
 }

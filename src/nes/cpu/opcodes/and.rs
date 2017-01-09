@@ -46,7 +46,7 @@ mod test {
         cpu.AC = 0xf0;
 
         assert_cpu_register!(cpu, Registers::AC, 0xf0);
-        cpu.execute_instruction();
+        cpu.step(None);
         assert_cpu_register!(cpu, Registers::AC, 0x80);
         //TODO Make assertions on status registers
     }
@@ -58,7 +58,7 @@ mod test {
         cpu.AC = 0xf0;
 
         assert_cpu_register!(cpu, Registers::AC, 0xf0);
-        cpu.execute_instruction();
+        cpu.step(None);
         assert_cpu_register!(cpu, Registers::AC, 0x80);
         //TODO Make assertions on status registers
     }

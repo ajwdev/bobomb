@@ -13,3 +13,5 @@ Resources
   - http://www.fceux.com/web/help/fceux.html?NESRAMMappingFindingValues.html
   - http://wiki.nesdev.com/w/index.php/PPU\_programmer\_reference
   - https://en.wikibooks.org/wiki/6502\_Assembly
+  - http://nesdev.com/NES%20emulator%20development%20guide.txt
+  - https://wiki.nesdev.com/w/images/d/d1/Ntsc\_timing.png

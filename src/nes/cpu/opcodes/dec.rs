@@ -27,7 +27,7 @@ mod test {
 
         let mut result = cpu.interconnect.read_word(0x10);
         assert_equalx!(result, 0xff);
-        cpu.execute_instruction();
+        cpu.step(None);
         result = cpu.interconnect.read_word(0x10);
         assert_equalx!(result, 0xfe);
         //TODO Make assertions on status registers

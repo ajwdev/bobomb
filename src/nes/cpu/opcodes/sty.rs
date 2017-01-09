@@ -21,7 +21,7 @@ mod test {
 
         let mut result = cpu.interconnect.read_word(0x0010);
         assert!(result == 0x00, "expected 0x00, got {:#x}", result);
-        cpu.execute_instruction();
+        cpu.step(None);
         result = cpu.interconnect.read_word(0x0010);
         assert!(result == 0xff, "expected 0xff, got {:#x}", result);
     }

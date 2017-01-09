@@ -24,7 +24,7 @@ mod test {
         assert!(cpu.SR.is_set(Flags::Decimal),
                 "expected true, got {:#?}",
                 cpu.SR.is_set(Flags::Decimal));
-        cpu.execute_instruction();
+        cpu.step(None);
         assert!(!cpu.SR.is_set(Flags::Decimal),
                 "expected false, got {:#?}",
                 cpu.SR.is_set(Flags::Decimal));

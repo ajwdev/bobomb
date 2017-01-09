@@ -21,7 +21,7 @@ mod test {
         cpu.AC = 0xFF;
         cpu.push_stack(0xAA);
 
-        cpu.execute_instruction();
+        cpu.step(None);
         assert_cpu_register!(cpu, Registers::AC, 0xAA);
     }
 }

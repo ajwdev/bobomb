@@ -21,6 +21,12 @@ use nes::cpu::opcodes::*;
 
 pub const STACK_START: u16 = 0x100;
 
+#[derive(Debug,Clone,Copy)]
+pub enum Interrupt {
+    Nmi,
+    Irq,
+}
+
 #[derive(Debug)]
 pub enum Registers {
     X,
@@ -45,8 +51,6 @@ pub struct Cpu {
     // Maybe make this something smaller so we can catch overflows and raise timer interrupts?
     cycles: usize,
 
-    // These are only used for debugging purposes
-    instruction_counter: i64,
     stack_depth: i16,
     last_pc: u16,
 
@@ -59,31 +63,30 @@ impl Cpu {
             X: 0,
             Y: 0,
             AC: 0,
-            PC: Cpu::find_pc_addr(&interconnect),
+            PC: interconnect.find_reset_vector_address().to_u16(),
             SP: 0xfd,
             SR: StatusRegister::new(),
 
             interconnect: interconnect,
             cycles: 0,
 
-            instruction_counter: 0,
             stack_depth: 0,
             last_pc: 0,
         }
     }
 
-    pub fn start(&mut self) {
-        println!("PC: {:#x}", self.PC);
-        loop {
-            let cycles = self.execute_instruction();
-            self.instruction_counter += 1;
-        }
-    }
+    // pub fn start(&mut self) {
+    //     println!("PC: {:#x}", self.PC);
+    //     loop {
+    //         let cycles = self.execute_instruction();
+    //         self.instruction_counter += 1;
+    //     }
+    // }
 
-    fn find_pc_addr(interconnect: &Interconnect) -> u16 {
-        // http://forum.6502.org/viewtopic.php?t=1708
-        (interconnect.read_word(0xFFFD) as u16) << 8 | interconnect.read_word(0xFFFC) as u16
-    }
+    // fn find_pc_addr(interconnect: &Interconnect) -> u16 {
+    //     // http://forum.6502.org/viewtopic.php?t=1708
+    //     (interconnect.read_word(0xFFFD) as u16) << 8 | interconnect.read_word(0xFFFC) as u16
+    // }
 
     pub fn register_value(&self, reg: Registers) -> u8 {
         match reg {
@@ -97,7 +100,8 @@ impl Cpu {
 
     #[inline]
     fn zero_page_address(low: u8) -> u16 {
-        0x0000 + low as u16
+        // TODO Considering refactoring to always accept Address's
+        Address::new_zeropage(low).to_u16()
     }
 
     #[inline]
@@ -153,6 +157,8 @@ impl Cpu {
             self.PC = self.PC.wrapping_sub((!word + 1) as u16);
         }
     }
+
+    // TODO Consider breaking the stack code out into a seperate struct
 
     // 6502 stack grows downward
     pub fn push_stack(&mut self, word: u8) {
@@ -225,8 +231,7 @@ impl Cpu {
         previous
     }
 
-    // TODO Ok to make this public? Should we only use start() ?
-    fn execute_instruction(&mut self) -> usize {
+    pub fn step(&mut self, interrupt: Option<Interrupt>) -> usize {
         self.last_pc = self.PC;
         let instr = self.read_word_and_increment();
 
@@ -234,7 +239,9 @@ impl Cpu {
         // memory as a byte stream and/or get a slice out of memory
         // with the mapping all working correctly
         println!("{}", Disassembler::disassemble(
-            self.PC-1, instr, &[self.interconnect.read_word(self.PC),self.interconnect.read_word(self.PC+1)]
+            self.PC-1,
+            instr,
+            &[self.interconnect.read_word(self.PC),self.interconnect.read_word(self.PC+1)]
         ));
 
 
@@ -383,22 +390,20 @@ impl Cpu {
             }
             0x00 => {
                 self.debug_stack();
-                panic!("Hit a BRK instruction which is probably wrong: {:#x}, {:#x} {:#x}, PC: {:#x}, count: {}",
+                panic!("Hit a BRK instruction which is probably wrong: {:#x}, {:#x} {:#x}, PC: {:#x}",
                    instr,
                    self.interconnect.read_word(self.PC),
                    self.interconnect.read_word(self.PC + 1),
-                   self.PC,
-                   self.instruction_counter,
+                   self.PC
                 );
             }
             _ => {
                 self.debug_stack();
-                panic!("unrecognized opcode {:#x}, {:#x} {:#x}, PC: {:#x}, count: {}",
+                panic!("unrecognized opcode {:#x}, {:#x} {:#x}, PC: {:#x}",
                    instr,
                    self.interconnect.read_word(self.PC),
                    self.interconnect.read_word(self.PC + 1),
-                   self.PC,
-                   self.instruction_counter,
+                   self.PC
                 );
             }
         };
@@ -453,20 +458,6 @@ mod test {
         let mock_rom = rom_with_pc_at_start(words);
         let interconnect = memory_from_rom(mock_rom, true);
         Cpu::new(interconnect)
-    }
-
-
-    #[test]
-    fn test_find_pc_addr() {
-        let mut mock_rom = vec![0; 1024*16];
-        mock_rom[0x3ffc] = 0xef;
-        mock_rom[0x3ffd] = 0xbe;
-
-        let rom = Rom::new_single_bank(Bank::new(&mock_rom));
-        let ppu = Ppu::new();
-        let mut interconnect = Interconnect::new(ppu, rom);
-        let result = Cpu::find_pc_addr(&interconnect);
-        assert!(result == 0xbeef, "expected 0xbeef, got: {:#x}", result);
     }
 
     #[test]

@@ -22,7 +22,7 @@ mod test {
 
         cpu.SR.reset_zero();
         assert!(cpu.PC == 0x8000, "expected 0x8000, got {:#x}", cpu.PC);
-        cpu.execute_instruction();
+        cpu.step(None);
         assert!(cpu.PC == 0x8002, "expected 0x8002, got {:#x}", cpu.PC);
     }
 
@@ -32,7 +32,7 @@ mod test {
 
         cpu.SR.set_zero();
         assert!(cpu.PC == 0x8000, "expected 0x8000, got {:#x}", cpu.PC);
-        cpu.execute_instruction(); // Two byte instruction so *add* two below
+        cpu.step(None); // Two byte instruction so *add* two below
         assert!(cpu.PC == 0x802c, "expected 0x802a, got {:#x}", cpu.PC);
     }
 
@@ -42,7 +42,7 @@ mod test {
 
         cpu.SR.set_zero();
         assert!(cpu.PC == 0x8000, "expected 0x8000, got {:#x}", cpu.PC);
-        cpu.execute_instruction(); // Two byte instruction so *substract* two bytes below
+        cpu.step(None); // Two byte instruction so *substract* two bytes below
 
         // NOTE For posterity, this actually drops us below the ROM
         // start range which I dont think will happen with real ROMs.

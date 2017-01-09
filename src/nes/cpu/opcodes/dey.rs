@@ -26,7 +26,7 @@ mod test {
         cpu.Y = 0xff;
 
         assert_cpu_register!(cpu, Registers::Y, 0xff);
-        cpu.execute_instruction();
+        cpu.step(None);
         assert_cpu_register!(cpu, Registers::Y, 0xfe);
         //TODO Make assertions on status registers
     }

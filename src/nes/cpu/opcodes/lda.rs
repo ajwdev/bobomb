@@ -45,7 +45,7 @@ mod test {
         let mut cpu = mock_cpu(&[0xad, 0x03, 0x80, 0xff]);
 
         assert_cpu_register!(cpu, Registers::AC, 0);
-        cpu.execute_instruction();
+        cpu.step(None);
         assert_cpu_register!(cpu, Registers::AC, 0xff);
     }
 
@@ -54,7 +54,7 @@ mod test {
         let mut cpu = mock_cpu(&[0xa9, 0xff]);
 
         assert_cpu_register!(cpu, Registers::AC, 0);
-        cpu.execute_instruction();
+        cpu.step(None);
         assert_cpu_register!(cpu, Registers::AC, 0xff);
     }
 
@@ -64,7 +64,7 @@ mod test {
         cpu.interconnect.write_word(0x00ff, 0xbe);
 
         assert_cpu_register!(cpu, Registers::AC, 0);
-        cpu.execute_instruction();
+        cpu.step(None);
         assert_cpu_register!(cpu, Registers::AC, 0xbe);
     }
 }

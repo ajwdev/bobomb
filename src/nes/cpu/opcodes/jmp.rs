@@ -21,7 +21,7 @@ mod test {
         let mut cpu = mock_cpu(&[0x4c, 0xef, 0xbe]);
 
         assert!(cpu.PC == 0x8000, "expected 0x8000, got {:#x}", cpu.PC);
-        cpu.execute_instruction();
+        cpu.step(None);
         assert!(cpu.PC == 0xbeef, "expected 0xbeef, got {:#x}", cpu.PC);
     }
 }
