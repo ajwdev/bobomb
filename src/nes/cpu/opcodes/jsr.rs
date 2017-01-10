@@ -13,9 +13,7 @@ impl Absolute for Jsr {
         // but there is probably a reason.
         let ret = Address(cpu.PC.wrapping_sub(1));
 
-        cpu.push_stack(ret.high());
-        cpu.push_stack(ret.low());
-
+        cpu.push_address(ret);
         cpu.PC = addr;
 
         6
@@ -35,9 +33,9 @@ mod test {
         cpu.step(None);
         assert!(cpu.PC == 0xbeef, "expected 0xbeef, got {:#x}", cpu.PC);
 
-        let mut result = cpu.pop_stack();
+        let mut result = cpu.pop_word();
         assert!(result == 0x02, "expected 0x02, got {:#x}", result);
-        result = cpu.pop_stack();
+        result = cpu.pop_word();
         assert!(result == 0x80, "expected 0x80, got {:#x}", result);
     }
 }

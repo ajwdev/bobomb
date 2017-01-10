@@ -5,7 +5,7 @@ pub struct Pha { }
 impl Implied for Pha {
     fn implied(cpu: &mut Cpu) -> usize {
         let reg = cpu.AC;
-        cpu.push_stack(reg);
+        cpu.push_word(reg);
 
         3
     }
@@ -22,7 +22,7 @@ mod test {
 
         cpu.step(None);
 
-        let mut result = cpu.pop_stack();
+        let mut result = cpu.pop_word();
         assert!(result == 0xFF, "expected 0xFF, got {:#x}", result);
     }
 }

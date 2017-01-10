@@ -10,7 +10,7 @@ pub use nes::cpu::address_modes::*;
 
 use nes::address::Address;
 use nes::interconnect::Interconnect;
-use nes::cpu::status::StatusRegister;
+use nes::cpu::status::{Flags,StatusRegister};
 use nes::cpu::disassemble::Disassembler;
 use nes::cpu::opcodes::*;
 
@@ -39,14 +39,14 @@ pub enum Registers {
 // TODO Fix this at some point
 #[allow(non_snake_case)]
 pub struct Cpu {
+    pub interconnect: Interconnect,
+
     PC: u16, // Program counter
     X: u8, // General purpose register
     Y: u8, // General purpose register
     AC: u8, // Accumlator register
     SP: u8, // Stack pointer
     SR: StatusRegister, // Status register
-
-    interconnect: Interconnect,
 
     // Maybe make this something smaller so we can catch overflows and raise timer interrupts?
     cycles: usize,
@@ -161,7 +161,7 @@ impl Cpu {
     // TODO Consider breaking the stack code out into a seperate struct
 
     // 6502 stack grows downward
-    pub fn push_stack(&mut self, word: u8) {
+    pub fn push_word(&mut self, word: u8) {
         // TODO Panic if pointer ends up in a page besides page 1
         let ptr = STACK_START + self.SP as u16;
         self.interconnect.write_word(ptr, word);
@@ -169,12 +169,23 @@ impl Cpu {
         self.stack_depth += 1;
     }
 
-    pub fn pop_stack(&mut self) -> u8 {
+    pub fn pop_word(&mut self) -> u8 {
         // TODO Panic if pointer ends up in a page besides page 1
         self.SP += 1;
         self.stack_depth -= 1;
         let ptr = STACK_START + self.SP as u16;
         self.interconnect.read_word(ptr)
+    }
+
+    pub fn push_address(&mut self, addr: Address) {
+        self.push_word(addr.high());
+        self.push_word(addr.low());
+    }
+
+    pub fn pop_address(&mut self) -> Address {
+        let hi = self.pop_word();
+        let lo = self.pop_word();
+        Address::new(hi, lo)
     }
 
     fn debug_stack(&self) {
@@ -223,6 +234,26 @@ impl Cpu {
         Address(result)
     }
 
+    fn execute_interrupt(&mut self, intr: Interrupt) -> usize {
+        let pc = Address(self.PC);
+        let sp = self.SP;
+
+        self.push_address(pc);
+        self.push_word(sp);
+
+        match intr {
+            Interrupt::Nmi => {
+                self.PC = self.interconnect.find_nmi_vector_address().to_u16();
+            }
+            Interrupt::Irq => {
+                self.PC = self.interconnect.find_irq_vector_address().to_u16();
+            }
+        }
+        self.SR.set(Flags::Interrupt);
+
+        7
+    }
+
     // This is only used in testing/debugging.
     fn rewind(&mut self) -> u16 {
         let previous = self.PC;
@@ -231,8 +262,23 @@ impl Cpu {
         previous
     }
 
-    pub fn step(&mut self, interrupt: Option<Interrupt>) -> usize {
+    pub fn step(&mut self, pending_interrupt: Option<Interrupt>) -> usize {
+        let mut burned_cycles = 0;
         self.last_pc = self.PC;
+
+        if let Some(intr) = pending_interrupt {
+            match intr {
+                Interrupt::Nmi => {
+                    burned_cycles += self.execute_interrupt(intr);
+                }
+                Interrupt::Irq => {
+                    if !self.SR.is_set(Flags::Interrupt) {
+                        burned_cycles += self.execute_interrupt(intr);
+                    }
+                }
+            }
+        }
+
         let instr = self.read_word_and_increment();
 
         // XXX Make this less terrible. It'd be nice we could expose
@@ -246,7 +292,7 @@ impl Cpu {
 
 
         // TODO How does this perform? Look into an array of opcodes like in the disassembler
-        let burned_cycles = match instr {
+        burned_cycles += match instr {
             0x10 => {
                 Bpl::relative(self)
             }
@@ -496,23 +542,23 @@ mod test {
         let mut cpu = mock_cpu(&[]);
         cpu.SP = 0xFF;
 
-        cpu.push_stack(0x10);
+        cpu.push_word(0x10);
         let mut result = cpu.interconnect.read_word(0x01FF);
 
         assert!(cpu.SP == 0xFE, "expected 0xFE, got {:#x}", cpu.SP);
         assert!(result == 0x10, "expected 0x10, got {:#x}", result);
 
-        cpu.push_stack(0x11);
+        cpu.push_word(0x11);
         result = cpu.interconnect.read_word(0x01FE);
 
         assert!(cpu.SP == 0xFD, "expected 0xFD, got {:#x}", cpu.SP);
         assert!(result == 0x11, "expected 0x11, got {:#x}", result);
 
-        result = cpu.pop_stack();
+        result = cpu.pop_word();
         assert!(result == 0x11, "expected 0x11, got {:#x}", result);
         assert!(cpu.SP == 0xFE, "expected 0xFE, got {:#x}", cpu.SP);
 
-        result = cpu.pop_stack();
+        result = cpu.pop_word();
         assert!(result == 0x10, "expected 0x10, got {:#x}", result);
         assert!(cpu.SP == 0xFF, "expected 0xFF, got {:#x}", cpu.SP);
     }

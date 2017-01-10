@@ -29,6 +29,14 @@ impl Interconnect {
         Address::new(self.read_word(0xFFFD), self.read_word(0xFFFC))
     }
 
+    pub fn find_nmi_vector_address(&self) -> Address {
+        Address::new(self.read_word(0xFFFB), self.read_word(0xFFFA))
+    }
+
+    pub fn find_irq_vector_address(&self) -> Address {
+        Address::new(self.read_word(0xFFFF), self.read_word(0xFFFE))
+    }
+
     pub fn read_word(&self, addr: u16) -> u8 {
         match addr {
             0x0000...0x07ff => {

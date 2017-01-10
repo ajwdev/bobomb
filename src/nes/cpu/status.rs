@@ -94,6 +94,25 @@ impl StatusRegister {
         *reg = false;
     }
 
+    #[inline]
+    pub fn from_u8(&mut self, word: u8) {
+        self.negative = (word & 0b10000000) > 0;
+        self.overflow = (word & 0b01000000) > 0;
+        self.decimal = (word & 0b00001000) > 0;
+        self.interrupt = (word & 0b00000100) > 0;
+        self.zero = (word & 0b00000010) > 0;
+        self.carry = (word & 0b00000001) > 0;
+    }
+
+    #[inline]
+    pub fn to_u8(&self) -> u8 {
+        (self.negative as u8) << 7 |
+        (self.overflow as u8) << 6 |
+        (self.decimal as u8) << 3 |
+        (self.interrupt as u8) << 2 |
+        (self.zero as u8) << 1 |
+        (self.carry as u8)
+    }
 
 
     #[inline]
