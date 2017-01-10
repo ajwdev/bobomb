@@ -1,3 +1,9 @@
+use nes::address::Address;
+use nes::cpu::Interrupt;
+
+mod control;
+use nes::ppu::control::{ControlRegister,VramIncrement};
+
 const VRAM_SIZE: usize = 16 * 1024;
 
 // http://wiki.nesdev.com/w/index.php/PPU
@@ -8,7 +14,7 @@ pub enum PpuRegister {
     Oamdata, // $2004
     Oamdma, // $4014
     // In docs, these are prefixed with PPU
-    Ctrl, // $2000
+    Control, // $2000
     Mask, // $2001
     Status, // $2002
     Scroll, // $2005
@@ -25,7 +31,7 @@ pub struct Ppu {
     Oamdata: u8,
     Oamdma: u8,
 
-    Ctrl: u8,
+    control: ControlRegister,
     Mask: u8,
     Status: u8,
     Scroll: u8,
@@ -35,6 +41,10 @@ pub struct Ppu {
     // PPUADDR
     vram_address: u16,
     addr_latch_first_write_done: bool,
+
+    frame_is_even: bool,
+
+    cycles: usize,
 }
 
 impl Ppu {
@@ -46,16 +56,28 @@ impl Ppu {
             Oamdma: 0,
 
             // https://wiki.nesdev.com/w/index.php/PPU_power_up_state
-            Ctrl: 0,
+            control: ControlRegister::new(),
             Mask: 0,
             Status: 0xa0, // Docs aren't clear if this should be 0x80 or 0xa0 on start
             Scroll: 0,
             Addr: 0,
             Data: 0,
 
+            cycles: 0,
             vram_address: 0,
+            frame_is_even: true,
             addr_latch_first_write_done: false,
         }
+    }
+
+    pub fn step(&mut self) -> Option<Interrupt> {
+        // if self.cycles == 16 {
+        //     self.cycles = 0;
+        //     Some(Interrupt::Nmi)
+        // } else {
+        //     self.cycles += 1;
+            None
+        // }
     }
 
     pub fn read_at(&self, address: u16) -> u8 {
@@ -74,10 +96,6 @@ impl Ppu {
 
     fn write_reg_mask(&mut self, value: u8) {
         self.Mask = value;
-    }
-
-    fn write_reg_ctrl(&mut self, value: u8) {
-        self.Ctrl = value;
     }
 
     fn write_reg_addr(&mut self, value: u8) {
@@ -99,11 +117,9 @@ impl Ppu {
 
     #[inline]
     fn increment_vram_address(&mut self) {
-        // If $2000:2 is high, increment by 32
-        if self.Ctrl & 0b00000100 == 0 {
-            self.vram_address += 1
-        } else {
-            self.vram_address += 32
+        match self.control.vram_address_increment {
+            VramIncrement::AcrossOne => { self.vram_address += 1 },
+            VramIncrement::DownThirtyTwo => { self.vram_address += 32 },
         }
     }
 
@@ -128,7 +144,7 @@ impl Ppu {
             PpuRegister::Addr => { self.write_reg_addr(value) }
             PpuRegister::Scroll => { self.write_reg_scroll(value) }
             PpuRegister::Mask => { self.write_reg_mask(value) }
-            PpuRegister::Ctrl => { self.write_reg_ctrl(value) }
+            PpuRegister::Control => { self.control.write_register(value) }
             PpuRegister::Data => { self.write_reg_data(value) }
             _ => { panic!("PPU register {:?} is not implemented", reg); }
         }

@@ -82,7 +82,8 @@ impl Interconnect {
             }
             // PPU
             0x2000 => {
-                self.ppu.write_register(ppu::PpuRegister::Ctrl, value);
+                println!("PPU Status Write: {:#X}", value);
+                self.ppu.write_register(ppu::PpuRegister::Control, value);
             }
             0x2001 => {
                 self.ppu.write_register(ppu::PpuRegister::Mask, value);

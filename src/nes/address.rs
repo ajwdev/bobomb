@@ -1,3 +1,5 @@
+use std::fmt;
+
 #[derive(Debug,Copy,Clone)]
 pub struct Address(pub u16);
 
@@ -26,5 +28,17 @@ impl Address {
 
     pub fn to_u16(&self) -> u16 {
         self.0
+    }
+}
+
+impl fmt::UpperHex for Address {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:X}", self.0)
+    }
+}
+
+impl fmt::LowerHex for Address {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:x}", self.0)
     }
 }
