@@ -107,7 +107,7 @@ impl Cpu {
     #[inline]
     fn read_word_and_increment(&mut self) -> u8 {
         let word = self.interconnect.read_word(self.PC);
-        self.PC += 1;    // 1 byte forward
+        self.PC += 1;
         word
     }
 
@@ -115,7 +115,7 @@ impl Cpu {
     fn read_dword_and_increment(&mut self) -> u16 {
         let lo = self.interconnect.read_word(self.PC);
         let hi = self.interconnect.read_word(self.PC + 1);
-        self.PC += 2;    // 2 bytes forward
+        self.PC += 2;
 
         (hi as u16) << 8 | lo as u16
     }
@@ -200,6 +200,23 @@ impl Cpu {
         println!("---------------");
     }
 
+    // If we wrap, only increment the lower byte. This was a bug in the 6502
+    #[inline]
+    fn buggy_read_dword(&self, addr: u16) -> u16 {
+        let lo = self.interconnect.read_word(addr);
+        let hi = self.interconnect.read_word((addr & 0xFF00) | (addr as u8).wrapping_add(1) as u16);
+
+        (hi as u16) << 8 | lo as u16
+    }
+
+    #[inline]
+    fn indirect_address(&mut self) -> u16 {
+        let word = self.read_word_and_increment();
+        (self.interconnect.read_word(Cpu::zero_page_address(word+1)) as u16) << 8 |
+            (self.interconnect.read_word(Cpu::zero_page_address(word)) as u16)
+    }
+
+
     // https://wiki.nesdev.com/w/index.php/CPU_addressing_modes
     pub fn translate_address(&mut self, mode: AddressMode) -> Address {
         let result: u16;
@@ -210,14 +227,25 @@ impl Cpu {
                 let word = self.read_word_and_increment();
                 result = Cpu::zero_page_address(word);
             },
-            // Also known as Indirect Indexed Addressing
-            // TODO Watch out for the wraparound bug here and eventually in indirect and indirectX
-            AddressMode::IndirectY => {
+            AddressMode::ZeroPageX => {
                 let word = self.read_word_and_increment();
-                let indirect_addr =
-                    (self.interconnect.read_word(Cpu::zero_page_address(word+1)) as u16) << 8 |
-                        (self.interconnect.read_word(Cpu::zero_page_address(word)) as u16);
-                result = indirect_addr + self.Y as u16;
+                result = Cpu::zero_page_address(word) + self.X as u16;
+            },
+            AddressMode::ZeroPageY => {
+                let word = self.read_word_and_increment();
+                result = Cpu::zero_page_address(word) + self.Y as u16;
+            },
+            AddressMode::Indirect => {
+                let indirect_addr = self.indirect_address();
+                result = self.buggy_read_dword(indirect_addr);
+            },
+            AddressMode::IndirectY => {
+                let indirect_addr = self.indirect_address();
+                result = self.buggy_read_dword(indirect_addr) + self.Y as u16;
+            },
+            AddressMode::IndirectX => {
+                let indirect_addr = self.indirect_address();
+                result = self.buggy_read_dword(indirect_addr + (self.X as u16));
             },
             AddressMode::Absolute => {
                 result = self.read_dword_and_increment();
