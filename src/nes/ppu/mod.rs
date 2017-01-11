@@ -5,6 +5,10 @@ mod control;
 use nes::ppu::control::{ControlRegister,VramIncrement};
 
 const VRAM_SIZE: usize = 16 * 1024;
+const COLUMNS_PER_SCANLINE: usize = 340;
+const CYCLES_PER_SCANLINE: usize = 341;
+const SCANLINES_PER_FRAME: usize = 262;
+const VBLANK_SCANLINE: usize = 241;
 
 // http://wiki.nesdev.com/w/index.php/PPU
 // http://wiki.nesdev.com/w/index.php/PPU_programmer_reference
@@ -26,8 +30,10 @@ pub enum PpuRegister {
 #[derive(Debug)]
 pub struct Ppu {
     vram: Vec<u8>,
+    oam: Vec<u8>,
 
-    Oamaddr: u8,
+    // OAM == Object Attribute Memory. Its for sprites
+    oamaddr: u8,
     Oamdata: u8,
     Oamdma: u8,
 
@@ -43,15 +49,19 @@ pub struct Ppu {
     addr_latch_first_write_done: bool,
 
     frame_is_even: bool,
+    is_vblank: bool,
 
     cycles: usize,
+    frames: usize,
+    scanline: usize,
 }
 
 impl Ppu {
     pub fn new() -> Self {
         Ppu {
             vram: vec![0; VRAM_SIZE],
-            Oamaddr: 0,
+            oam: vec![0; 256],
+            oamaddr: 0,
             Oamdata: 0,
             Oamdma: 0,
 
@@ -64,20 +74,37 @@ impl Ppu {
             Data: 0,
 
             cycles: 0,
+            frames: 0,
+            scanline: 0,
+
             vram_address: 0,
-            frame_is_even: true,
             addr_latch_first_write_done: false,
+            frame_is_even: true,
+            is_vblank: false,
         }
     }
 
     pub fn step(&mut self) -> Option<Interrupt> {
-        // if self.cycles == 16 {
-        //     self.cycles = 0;
-        //     Some(Interrupt::Nmi)
-        // } else {
-        //     self.cycles += 1;
-            None
-        // }
+        let mut intr = None;
+
+        if self.cycles == (COLUMNS_PER_SCANLINE * SCANLINES_PER_FRAME) {
+            println!("PPU cycles resset");
+            self.cycles = 0;
+            return None;
+        } else if self.cycles == ((CYCLES_PER_SCANLINE * VBLANK_SCANLINE) + 1) {
+            if self.control.nmi_during_vblank {
+                println!("PPU NMI!!!");
+                intr = Some(Interrupt::Nmi);
+            }
+
+            self.is_vblank = true;
+        } else if self.cycles == ((CYCLES_PER_SCANLINE * 261) + 1) {
+            println!("PPU vblank cleared");
+            self.is_vblank = false;
+        }
+
+        self.cycles += 1;
+        intr
     }
 
     pub fn read_at(&self, address: u16) -> u8 {
@@ -111,8 +138,6 @@ impl Ppu {
             self.vram_address |= (value as u16) & 0x00FF;
             self.addr_latch_first_write_done = false;
         }
-
-        println!("VRAM address: {:#x}", self.vram_address);
     }
 
     #[inline]
@@ -124,7 +149,6 @@ impl Ppu {
     }
 
     fn write_reg_data(&mut self, value: u8) {
-        println!("VRAM write: {:#x}", self.vram_address);
         match self.vram_address {
             0x00...0x3fff => {
                 self.vram[self.vram_address as usize] = value;
@@ -139,6 +163,11 @@ impl Ppu {
         self.increment_vram_address();
     }
 
+    pub fn write_dma(&mut self, word: u8) {
+        self.oam[self.oamaddr as usize] = word;
+        self.oamaddr += 1
+    }
+
     pub fn write_register(&mut self, reg: PpuRegister, value: u8) {
         match reg {
             PpuRegister::Addr => { self.write_reg_addr(value) }
@@ -146,6 +175,7 @@ impl Ppu {
             PpuRegister::Mask => { self.write_reg_mask(value) }
             PpuRegister::Control => { self.control.write_register(value) }
             PpuRegister::Data => { self.write_reg_data(value) }
+            PpuRegister::Oamaddr => { self.oamaddr = value }
             _ => { panic!("PPU register {:?} is not implemented", reg); }
         }
     }

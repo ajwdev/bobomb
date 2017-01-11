@@ -98,14 +98,19 @@ impl Nes {
     }
 
     pub fn start_emulation(&mut self) {
+        let mut intr: Option<cpu::Interrupt> = None;
+
         loop {
-            let cycles = self.cpu.step(None);
-            // psuedo code for ppu
-            //
-            // let ppu_cycles =  cycles * 3;
-            // for ppu_cycles or whatever {
-            //     self.ppu.step();
-            // }
+            let cycles = self.cpu.step(intr);
+            intr = None;
+
+            let ppu_cycles = cycles * 3;
+            for n in 0..ppu_cycles {
+                // This feels gross
+                if let Some(x) = self.cpu.interconnect.ppu.step() {
+                    intr = Some(x);
+                }
+            }
         }
     }
 }

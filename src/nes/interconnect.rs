@@ -7,21 +7,26 @@ use nes::rom::{Rom,Bank};
 const SYSTEM_RAM: usize = 2 * 1024;
 
 pub struct Interconnect {
+    pub ppu: ppu::Ppu,
+
     ram: Vec<u8>, // Make this an array at some time. I think it needs boxed
     rom: Rom,
-    ppu: ppu::Ppu,
 
-    cycles: usize,
+    pub dma_in_progress: bool,
+    pub dma_write_iteration: u8,
+    pub dma_high_byte: u8,
 }
 
 
 impl Interconnect {
     pub fn new(ppu: ppu::Ppu, rom: Rom) -> Self {
         Interconnect {
+            ppu: ppu,
             ram: vec![0; SYSTEM_RAM],
             rom: rom,
-            ppu: ppu,
-            cycles: 0,
+            dma_in_progress: false,
+            dma_write_iteration: 0,
+            dma_high_byte: 0,
         }
     }
 
@@ -86,19 +91,34 @@ impl Interconnect {
                 self.ppu.write_register(ppu::PpuRegister::Control, value);
             }
             0x2001 => {
+                println!("PPU Mask Write: {:#X}", value);
                 self.ppu.write_register(ppu::PpuRegister::Mask, value);
             }
-            0x2002...0x2004 => {
+            0x2002 => {
+                panic!("ppu not implemented yet. write access at {:#x}", addr);
+            }
+            0x2003 => {
+                println!("PPU Oamaddr Write: {:#X}", value);
+                self.ppu.write_register(ppu::PpuRegister::Oamaddr, value);
+            }
+            0x2004 => {
                 panic!("ppu not implemented yet. write access at {:#x}", addr);
             }
             0x2005 => {
+                println!("PPU Scrol Write: {:#X}", value);
                 self.ppu.write_register(ppu::PpuRegister::Scroll, value);
             }
             0x2006 => {
+                println!("PPU Address Write: {:#X}", value);
                 self.ppu.write_register(ppu::PpuRegister::Addr, value);
             }
             0x2007 => {
+                // println!("PPU Data Write: {:#X}", value);
                 self.ppu.write_register(ppu::PpuRegister::Data, value);
+            }
+            0x4014 => {
+                println!("DMA started");
+                self.dma_high_byte = value;
             }
             // APU
             0x4015 => {

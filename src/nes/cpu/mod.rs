@@ -266,6 +266,27 @@ impl Cpu {
         let mut burned_cycles = 0;
         self.last_pc = self.PC;
 
+        // On a real NES, what happens if an interrupt fires during DMA?
+        if self.interconnect.dma_in_progress {
+            let next_byte = self.interconnect.read_word(
+                Address::new(
+                    self.interconnect.dma_high_byte,
+                    self.interconnect.dma_write_iteration
+                ).to_u16()
+            );
+            self.interconnect.ppu.write_dma(next_byte);
+
+            self.interconnect.dma_write_iteration += 1;
+
+            if self.interconnect.dma_write_iteration == 255 {
+                self.interconnect.dma_in_progress = false;
+                self.interconnect.dma_write_iteration = 0;
+                return 3;   // This equal a total of 513 cycles per DMA
+            } else {
+                return 2;
+            }
+        }
+
         if let Some(intr) = pending_interrupt {
             match intr {
                 Interrupt::Nmi => {
