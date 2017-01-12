@@ -427,6 +427,9 @@ impl Cpu {
             0xad => {
                 Lda::from_address(self, AddressMode::Absolute)
             }
+            0xae => {
+                Ldx::from_address(self, AddressMode::Absolute)
+            }
             0xa5 => {
                 Lda::from_address(self, AddressMode::ZeroPage)
             }
