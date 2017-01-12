@@ -69,9 +69,11 @@ pub use self::tay::Tay;
 pub use self::txs::Txs;
 
 mod sei;
+mod sec;
 mod cld;
 mod clc;
 pub use self::sei::Sei;
+pub use self::sec::Sec;
 pub use self::cld::Cld;
 pub use self::clc::Clc;
 

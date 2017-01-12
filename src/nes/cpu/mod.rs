@@ -209,14 +209,6 @@ impl Cpu {
         (hi as u16) << 8 | lo as u16
     }
 
-    #[inline]
-    fn indirect_address(&mut self) -> u16 {
-        let word = self.read_word_and_increment();
-        (self.interconnect.read_word(Cpu::zero_page_address(word+1)) as u16) << 8 |
-            (self.interconnect.read_word(Cpu::zero_page_address(word)) as u16)
-    }
-
-
     // https://wiki.nesdev.com/w/index.php/CPU_addressing_modes
     pub fn translate_address(&mut self, mode: AddressMode) -> Address {
         let result: u16;
@@ -236,15 +228,15 @@ impl Cpu {
                 result = Cpu::zero_page_address(word) + self.Y as u16;
             },
             AddressMode::Indirect => {
-                let indirect_addr = self.indirect_address();
+                let indirect_addr = self.read_dword_and_increment();
                 result = self.buggy_read_dword(indirect_addr);
             },
             AddressMode::IndirectY => {
-                let indirect_addr = self.indirect_address();
+                let indirect_addr = Cpu::zero_page_address(self.read_word_and_increment());
                 result = self.buggy_read_dword(indirect_addr) + self.Y as u16;
             },
             AddressMode::IndirectX => {
-                let indirect_addr = self.indirect_address();
+                let indirect_addr = Cpu::zero_page_address(self.read_word_and_increment());
                 result = self.buggy_read_dword(indirect_addr + (self.X as u16));
             },
             AddressMode::Absolute => {
@@ -395,6 +387,9 @@ impl Cpu {
             }
             0x69 => {
                 Adc::from_immediate(self)
+            }
+            0x38 => {
+                Sec::from_implied(self)
             }
             0x78 => {
                 Sei::implied(self)
