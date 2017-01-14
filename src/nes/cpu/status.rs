@@ -95,23 +95,26 @@ impl StatusRegister {
     }
 
     #[inline]
-    pub fn from_u8(&mut self, word: u8) {
-        self.negative = (word & 0b10000000) > 0;
-        self.overflow = (word & 0b01000000) > 0;
-        self.decimal = (word & 0b00001000) > 0;
-        self.interrupt = (word & 0b00000100) > 0;
-        self.zero = (word & 0b00000010) > 0;
-        self.carry = (word & 0b00000001) > 0;
+    pub fn load_from_u8(&mut self, word: u8) {
+        self.carry     = ( word & 1) == 1;
+        self.zero      = ( word & (1 << 1)) == 1;
+        self.interrupt = ( word & (1 << 2)) == 1;
+        self.decimal   = ( word & (1 << 3)) == 1;
+        self.overflow  = ( word & (1 << 6)) == 1;
+        self.negative  = ( word & (1 << 7)) == 1;
     }
 
     #[inline]
     pub fn to_u8(&self) -> u8 {
-        (self.negative as u8) << 7 |
-        (self.overflow as u8) << 6 |
-        (self.decimal as u8) << 3 |
-        (self.interrupt as u8) << 2 |
-        (self.zero as u8) << 1 |
-        (self.carry as u8)
+        let result
+            = (self.carry as u8)
+            | (self.zero as u8) << 1
+            | (self.interrupt as u8) << 2
+            | (self.decimal as u8) << 3
+            | (self.overflow as u8) << 6
+            | (self.negative as u8) << 7;
+
+        result
     }
 
 
@@ -161,5 +164,19 @@ impl StatusRegister {
     #[deprecated(note="please use `set(T)` instead")]
     pub fn set_decimal(&mut self) {
         self.decimal = true;
+    }
+}
+
+impl From<u8> for StatusRegister {
+    fn from(t: u8) -> StatusRegister {
+        let mut sr = StatusRegister::new();
+        sr.load_from_u8(t);
+        sr
+    }
+}
+
+impl From<StatusRegister> for u8 {
+    fn from(t: StatusRegister) -> u8 {
+        t.to_u8()
     }
 }

@@ -256,10 +256,10 @@ impl Cpu {
 
     fn execute_interrupt(&mut self, intr: Interrupt) -> usize {
         let pc = Address(self.PC);
-        let sp = self.SP;
+        let sr: u8 = self.SR.to_u8();
 
         self.push_address(pc);
-        self.push_word(sp);
+        self.push_word(sr);
 
         match intr {
             Interrupt::Nmi => {
