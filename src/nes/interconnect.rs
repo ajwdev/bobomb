@@ -1,7 +1,9 @@
 use std::ops::{Index,IndexMut};
+use std::cell::{RefCell,RefMut};
 
 use nes::ppu;
-use nes::address::Address;
+use nes::controller;
+use nes::address::{Address,Addressable};
 use nes::rom::{Rom,Bank};
 
 const SYSTEM_RAM: usize = 2 * 1024;
@@ -11,6 +13,8 @@ pub struct Interconnect {
 
     ram: Vec<u8>, // Make this an array at some time. I think it needs boxed
     rom: Rom,
+    controller1: RefCell<controller::Controller>,
+    controller2: RefCell<controller::Controller>,
 
     pub dma_in_progress: bool,
     pub dma_write_iteration: u8,
@@ -24,6 +28,8 @@ impl Interconnect {
             ppu: ppu,
             ram: vec![0; SYSTEM_RAM],
             rom: rom,
+            controller1: RefCell::new(controller::Controller::new()),
+            controller2: RefCell::new(controller::Controller::new()),
             dma_in_progress: false,
             dma_write_iteration: 0,
             dma_high_byte: 0,
@@ -59,6 +65,21 @@ impl Interconnect {
             // PPU
             0x2002 => {
                 self.ppu.read_at(addr)
+            }
+            // Controllers
+            0x4016 => {
+                println!("controller 1 read");
+                {
+                    let mut controller = self.controller1.borrow_mut();
+                    controller.read() as u8
+                }
+            }
+            0x4017 => {
+                println!("Controller 2 read");
+                {
+                    let mut controller = self.controller2.borrow_mut();
+                    controller.read() as u8
+                }
             }
             // ROM
             0x8000...0xFFFF => {
@@ -123,6 +144,22 @@ impl Interconnect {
             // APU
             0x4015 => {
                 println!("Write APU status not implemented. Skipping");
+            }
+            // Controllers
+            0x4016 => {
+                println!("Controller write {:#X}", value);
+                {
+                    let mut controller = self.controller1.borrow_mut();
+                    controller.write(value);
+                }
+                {
+                    let mut controller = self.controller2.borrow_mut();
+                    controller.write(value);
+                }
+            }
+            // APU
+            0x4017 => {
+                println!("Write APU thing not implemented. Skipping");
             }
             _ => {
                 panic!("unimplemented write address {:#x}", addr);

@@ -1,6 +1,7 @@
 pub mod cpu;
 pub mod ppu;
 pub mod rom;
+pub mod controller;
 pub mod address;
 pub mod interconnect;
 
