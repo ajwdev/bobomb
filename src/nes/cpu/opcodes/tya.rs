@@ -4,7 +4,10 @@ pub struct Tya { }
 
 impl Implied for Tya {
     fn implied(cpu: &mut Cpu) -> usize {
-        cpu.AC = cpu.Y;
+        let result = cpu.Y;
+        cpu.AC = result;
+
+        cpu.zero_and_negative_status(result);
 
         2
     }

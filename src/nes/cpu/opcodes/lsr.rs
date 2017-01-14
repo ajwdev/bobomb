@@ -1,27 +1,53 @@
-use nes::cpu::{Cpu,Registers,Accumulator};
+use nes::cpu::{Cpu,Registers,AddressMode,Accumulator,FromAddress};
 use nes::cpu::status::Flags;
 
 pub struct Lsr { }
 
-impl Accumulator for Lsr {
-    fn accumulator(cpu: &mut Cpu) -> usize {
-        if cpu.AC & 0x01 == 0 {
+impl Lsr {
+    #[inline]
+    fn shift_right(cpu: &mut Cpu, mut word: u8) -> u8 {
+        if word & 0x01 == 0 {
             cpu.SR.reset(Flags::Carry);
         } else {
             cpu.SR.set(Flags::Carry);
         }
 
-        cpu.AC = cpu.AC.wrapping_shr(1);
+        word = word.wrapping_shr(1);
 
         cpu.SR.reset(Flags::Negative); // We can never go negative
 
-        if cpu.AC == 0 {
+        if word == 0 {
             cpu.SR.set(Flags::Zero);
         } else {
             cpu.SR.reset(Flags::Zero);
         }
 
+        word
+    }
+}
+
+impl Accumulator for Lsr {
+    fn accumulator(cpu: &mut Cpu) -> usize {
+        let src = cpu.AC;
+        let result = Lsr::shift_right(cpu, src);
+        cpu.AC = result;
+
         2
+    }
+}
+
+impl FromAddress for Lsr {
+    fn from_address(cpu: &mut Cpu, mode: AddressMode) -> usize {
+        let src = cpu.translate_address(mode);
+        let word = cpu.interconnect.read_word(src.to_u16());
+        let result = Self::shift_right(cpu, word);
+
+        cpu.interconnect.write_word(src.to_u16(), result);
+
+        match mode {
+            AddressMode::ZeroPage => 5,
+            _ => { panic!("unimplemented address mode {:?} for LSR", mode); }
+        }
     }
 }
 

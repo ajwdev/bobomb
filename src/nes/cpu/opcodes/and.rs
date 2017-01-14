@@ -30,6 +30,7 @@ impl FromAddress for And {
 
         match mode {
             AddressMode::ZeroPage => 3,
+            AddressMode::ZeroPageX => 4,
             _ => { panic!("unimplemented address mode {:?} for AND", mode); }
         }
     }

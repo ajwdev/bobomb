@@ -4,7 +4,10 @@ pub struct Pla { }
 
 impl FromImplied for Pla {
     fn from_implied(cpu: &mut Cpu) -> usize {
-        cpu.AC = cpu.pop_word();
+        let result = cpu.pop_word();
+        cpu.AC = result;
+
+        cpu.zero_and_negative_status(result);
 
         4
     }

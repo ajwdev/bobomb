@@ -17,7 +17,10 @@ pub use self::sty::Sty;
 pub use self::stx::Stx;
 
 mod and;
+mod ora;
 pub use self::and::And;
+pub use self::ora::Ora;
+
 mod dec;
 mod dex;
 mod dey;
@@ -35,9 +38,15 @@ pub use self::cpy::Cpy;
 mod adc;
 pub use self::adc::Adc;
 
+mod bcs;
+mod bcc;
+mod bmi;
 mod beq;
 mod bne;
 mod bpl;
+pub use self::bcs::Bcs;
+pub use self::bcc::Bcc;
+pub use self::bmi::Bmi;
 pub use self::beq::Beq;
 pub use self::bne::Bne;
 pub use self::bpl::Bpl;
@@ -83,5 +92,9 @@ pub use self::lsr::Lsr;
 mod eor;
 pub use self::eor::Eor;
 
+mod asl;
 mod ror;
+mod rol;
+pub use self::asl::Asl;
 pub use self::ror::Ror;
+pub use self::rol::Rol;

@@ -29,7 +29,9 @@ impl FromAddress for Lda {
         match mode {
             AddressMode::ZeroPage => 3,
             AddressMode::Absolute => 4,
+            AddressMode::AbsoluteX => 4, // Extra cycles
             AddressMode::AbsoluteY => 4, // This could have extra cycle added
+            AddressMode::IndirectY => 5, // This could have extra cycle added
             _ => { panic!("unimplemented address mode {:?} for LDX", mode); }
         }
     }

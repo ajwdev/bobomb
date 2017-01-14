@@ -334,6 +334,15 @@ impl Cpu {
 
         // TODO How does this perform? Look into an array of opcodes like in the disassembler
         burned_cycles += match instr {
+            0x06 => {
+                Asl::from_address(self, AddressMode::ZeroPage)
+            }
+            0x0a => {
+                Asl::from_accumulator(self)
+            }
+            0x09 => {
+                Ora::from_immediate(self)
+            }
             0x10 => {
                 Bpl::relative(self)
             }
@@ -342,6 +351,15 @@ impl Cpu {
             }
             0xd0 => {
                 Bne::relative(self)
+            }
+            0xb0 => {
+                Bcs::from_relative(self)
+            }
+            0x30 => {
+                Bmi::from_relative(self)
+            }
+            0x90 => {
+                Bcc::from_relative(self)
             }
             0xc9 => {
                 Cmp::immediate(self)
@@ -354,6 +372,9 @@ impl Cpu {
             }
             0x4a => {
                 Lsr::accumulator(self)
+            }
+            0x46 => {
+                Lsr::from_address(self, AddressMode::ZeroPage)
             }
             0x4c => {
                 Jmp::absolute(self)
@@ -373,6 +394,12 @@ impl Cpu {
             0x25 => {
                 And::from_address(self, AddressMode::ZeroPage)
             }
+            0x35 => {
+                And::from_address(self, AddressMode::ZeroPageX)
+            }
+            0x05 => {
+                Ora::from_address(self, AddressMode::ZeroPage)
+            }
             0x29 => {
                 And::from_immediate(self)
             }
@@ -384,6 +411,9 @@ impl Cpu {
             }
             0x66 => {
                 Ror::from_address(self, AddressMode::ZeroPage)
+            }
+            0x2a => {
+                Rol::from_accumulator(self)
             }
             0x69 => {
                 Adc::from_immediate(self)
@@ -416,7 +446,13 @@ impl Cpu {
                 Txs::implied(self)
             }
             0xa0 => {
-                Ldy::immediate(self)
+                Ldy::from_immediate(self)
+            }
+            0xa4 => {
+                Ldy::from_address(self, AddressMode::ZeroPage)
+            }
+            0xb4 => {
+                Ldy::from_address(self, AddressMode::ZeroPageX)
             }
             0xa2 => {
                 Ldx::from_immediate(self)
@@ -436,8 +472,14 @@ impl Cpu {
             0xa9 => {
                 Lda::from_immediate(self)
             }
+            0xb1 => {
+                Lda::from_address(self, AddressMode::IndirectY)
+            }
             0xb9 => {
                 Lda::from_address(self, AddressMode::AbsoluteY)
+            }
+            0xbd => {
+                Lda::from_address(self, AddressMode::AbsoluteX)
             }
             0x84 => {
                 Sty::zero_page(self)
@@ -459,6 +501,9 @@ impl Cpu {
             }
             0x91 => {
                 Sta::from_address(self, AddressMode::IndirectY)
+            }
+            0x95 => {
+                Sta::from_address(self, AddressMode::ZeroPageX)
             }
             0x99 => {
                 Sta::from_address(self, AddressMode::AbsoluteY)

@@ -3,6 +3,7 @@ use nes::cpu::{Cpu,FromImmediate,FromAddress,AddressMode};
 pub struct Eor { }
 
 impl Eor {
+    #[inline]
     fn xor(cpu: &mut Cpu, word: u8) {
         let result = cpu.AC ^ word;
         cpu.AC = result;

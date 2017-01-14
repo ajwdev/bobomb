@@ -4,7 +4,10 @@ pub struct Txa { }
 
 impl Implied for Txa {
     fn implied(cpu: &mut Cpu) -> usize {
-        cpu.AC = cpu.X;
+        let result = cpu.X;
+        cpu.AC = result;
+
+        cpu.zero_and_negative_status(result);
 
         2
     }
