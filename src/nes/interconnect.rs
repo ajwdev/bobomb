@@ -48,6 +48,8 @@ impl Interconnect {
         Address::new(self.read_word(0xFFFF), self.read_word(0xFFFE))
     }
 
+    // TODO Make this work
+    // pub fn read_word<T: Addressable>(&self, addr: T) -> u8 {
     pub fn read_word(&self, addr: u16) -> u8 {
         match addr {
             0x0000...0x07ff => {
