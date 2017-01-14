@@ -45,6 +45,10 @@ pub trait FromImmediate {
     fn from_immediate(&mut Cpu) -> usize;
 }
 
+pub trait FromAccumulator {
+    fn from_accumulator(cpu: &mut Cpu) -> usize;
+}
+
 pub trait FromAddress {
     fn from_address(cpu: &mut Cpu, mode: AddressMode) -> usize;
 }
@@ -64,7 +68,7 @@ pub trait IndirectY {
     fn indirect_y(&mut Cpu) -> usize;
 }
 
-#[deprecated(note="please use `FromAddress` trait instead")]
+#[deprecated(note="please use `FromAccumulator` trait instead")]
 pub trait Accumulator {
     fn accumulator(&mut Cpu) -> usize;
 }
