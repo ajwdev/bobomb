@@ -183,8 +183,8 @@ impl Cpu {
     }
 
     pub fn pop_address(&mut self) -> Address {
-        let hi = self.pop_word();
         let lo = self.pop_word();
+        let hi = self.pop_word();
         Address::new(hi, lo)
     }
 
