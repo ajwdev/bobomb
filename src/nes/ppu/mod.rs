@@ -149,16 +149,9 @@ impl Ppu {
     }
 
     fn write_reg_data(&mut self, value: u8) {
-        match self.vram_address {
-            0x00...0x3fff => {
-                self.vram[self.vram_address as usize] = value;
-            }
-            0x4000...0x0ffff => {
-                let new_addr = (self.vram_address - 0x4000) as usize;
-                self.vram[new_addr] = value;
-            }
-            _ => { panic!("out of range write to video ram: 0x{:#X}", self.vram_address); }
-        }
+        // PPU RAM is just mirroed starting at 0x4000
+        let idx = (self.vram_address % 0x4000) as usize;
+        self.vram[idx] = value;
 
         self.increment_vram_address();
     }
