@@ -54,9 +54,11 @@ pub use self::bpl::Bpl;
 mod jsr;
 mod jmp;
 mod rts;
+mod rti;
 pub use self::jsr::Jsr;
 pub use self::jmp::Jmp;
 pub use self::rts::Rts;
+pub use self::rti::Rti;
 
 mod pha;
 mod pla;

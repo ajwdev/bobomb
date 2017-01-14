@@ -367,6 +367,9 @@ impl Cpu {
             0x20 => {
                 Jsr::absolute(self)
             }
+            0x40 => {
+                let c = Rti::from_implied(self);
+            }
             0x60 => {
                 Rts::from_implied(self)
             }
