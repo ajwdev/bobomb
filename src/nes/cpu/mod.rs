@@ -187,7 +187,7 @@ impl Cpu {
     }
 
     #[inline]
-    fn page_crossed<T: Addressable>(a: T, b: T) -> bool {
+    pub fn page_crossed<T: Addressable>(a: T, b: T) -> bool {
         a.high() != b.high()
     }
 

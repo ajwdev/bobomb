@@ -5,7 +5,7 @@ use super::branch::Branch;
 pub struct Bmi { }
 
 impl FromRelative for Bmi {
-    fn from_relative(cpu: &mut Cpu) -> usize {
+    fn from_relative(cpu: &mut Cpu) -> u32 {
         Branch::branch_on_true(cpu, |c| c.SR.is_set(Flags::Negative));
 
         2

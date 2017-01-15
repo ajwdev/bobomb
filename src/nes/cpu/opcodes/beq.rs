@@ -6,9 +6,7 @@ pub struct Beq { }
 
 impl Relative for Beq {
     fn relative(cpu: &mut Cpu) -> usize {
-        Branch::branch_on_true(cpu, |c| c.SR.is_set(Flags::Zero));
-
-        2
+        Branch::branch_on_true(cpu, |c| c.SR.is_set(Flags::Zero)) as usize
     }
 }
 
