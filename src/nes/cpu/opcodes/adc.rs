@@ -19,9 +19,9 @@ impl Adc {
             cpu.SR.reset(Flags::Carry);
         }
 
-        // TODO Consider breaking this out
-        if (cpu.AC ^ result) == 0 {
-            cpu.SR.reset(Flags::Overflow);
+        // Check if the sign bit changed
+        if ((word >> 7) != (result >> 7)) {
+            cpu.SR.set(Flags::Overflow);
         } else {
             cpu.SR.reset(Flags::Overflow);
         }
