@@ -1,8 +1,15 @@
 #![feature(asm)]
+#![feature(inclusive_range_syntax)]
 
 #[macro_use]
 #[no_link]
 extern crate probe;
+
+// For the debugger API
+extern crate protobuf;
+extern crate grpc;
+extern crate futures;
+extern crate futures_cpupool;
 
 mod nes;
 

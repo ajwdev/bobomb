@@ -1,35 +1,53 @@
 use nes::cpu::AddressMode;
 use nes::cpu::opcodes;
-use nes::address::Address;
+use nes::address::{Address,Addressable};
 
 pub struct Disassembler { }
 
 impl Disassembler {
-    pub fn disassemble(pc: u16, opc: u8, pipeline: &[u8]) -> String {
+    pub fn disassemble<T: Addressable>(opc: u8, pipeline: &[u8], address: T) -> Result<(String,u32), String> {
         match OPCODES[opc as usize] {
             Some((label, mode)) => {
-                match mode {
-                    AddressMode::Implied | AddressMode::Accumulator => {
-                        format!(
-                            "0x{:04X} | {} | {}",
-                            pc,
-                            Self::decode_bytes(mode, opc, pipeline),
-                            label
-                        )
-                    }
-                    _ => {
-                        format!(
-                            "0x{:04X} | {} | {} {}",
-                            pc,
-                            Self::decode_bytes(mode, opc, pipeline),
-                            label,
-                            Self::decode_operands(mode, pipeline).unwrap()
-                        )
-                    }
-                }
+                let byte_str = Self::decode_bytes(mode, opc, pipeline);
+                let operands = Self::decode_operands(mode, pipeline);
+
+                Ok((
+                    Self::format_line(address.nes_address(), label.to_string(), byte_str, operands),
+                    Self::instruction_length(mode),
+                ))
             }
             None => {
-                panic!("Unmatched opcode {:#x}", opc);
+                Err(format!("Unmatched opcode {:#x}", opc))
+            }
+        }
+    }
+
+    #[inline]
+    fn format_line(address: u16, label: String, byte_str: String, operands: Option<String>) -> String {
+        let mut result = String::new();
+
+        result.push_str(format!("0x{:04X} | ", address).as_str());
+        result.push_str(format!("{} | {} ", byte_str, label).as_str());
+        if let Some(x) = operands {
+            result.push_str(format!("{}", x).as_str());
+        }
+
+        result
+    }
+
+    #[inline]
+    fn instruction_length(mode: AddressMode) -> u32 {
+        match mode {
+            AddressMode::Implied | AddressMode::Accumulator => {
+                1
+            }
+            AddressMode::Relative | AddressMode::Immediate
+            | AddressMode::Indirect | AddressMode::IndirectY | AddressMode::IndirectX
+            | AddressMode::ZeroPage | AddressMode::ZeroPageX | AddressMode::ZeroPageY => {
+                2
+            }
+            AddressMode::Absolute | AddressMode::AbsoluteX | AddressMode::AbsoluteY => {
+                3
             }
         }
     }

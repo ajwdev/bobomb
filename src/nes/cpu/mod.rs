@@ -1,7 +1,10 @@
+use std::sync::{Arc,Mutex};
+
 #[macro_use]
 mod macros;
 
-mod disassemble;
+pub mod disassemble;
+
 mod status;
 mod opcodes;
 mod address_modes;
@@ -11,7 +14,6 @@ pub use nes::cpu::address_modes::*;
 use nes::address::{Address,Addressable};
 use nes::interconnect::Interconnect;
 use nes::cpu::status::{Flags,StatusRegister};
-use nes::cpu::disassemble::Disassembler;
 use nes::cpu::opcodes::*;
 
 // TODO Consider breaking the CPU logic out into its own private module and re-exporting it. This
@@ -39,7 +41,7 @@ pub enum Registers {
 // TODO Fix this at some point
 #[allow(non_snake_case)]
 pub struct Cpu {
-    pub interconnect: Interconnect,
+    pub interconnect: Arc<Mutex<Interconnect>>,
 
     PC: u16, // Program counter
     X: u8, // General purpose register
@@ -56,13 +58,14 @@ pub struct Cpu {
 }
 
 impl Cpu {
-    pub fn new(interconnect: Interconnect) -> Self {
+    pub fn new(interconnect: Arc<Mutex<Interconnect>>) -> Self {
         // See comment at top of file for power on state
+        let pc = interconnect.lock().unwrap().find_reset_vector_address();
         Cpu {
             X: 0,
             Y: 0,
             AC: 0,
-            PC: interconnect.find_reset_vector_address().into(),
+            PC: pc.into(),
             SP: 0xfd,
             SR: StatusRegister::new(),
 
@@ -72,6 +75,28 @@ impl Cpu {
             stack_depth: 0,
             last_pc: 0,
         }
+    }
+
+    pub fn get_pc(&self) -> Address {
+        Address(self.PC)
+    }
+
+    pub fn write_at<T: Addressable>(&mut self, addr: T, value: u8) {
+        let mut mem = match self.interconnect.lock() {
+            Ok(guard) => guard,
+            Err(poisoned) => poisoned.into_inner(),
+        };
+
+        mem.write_word(addr.nes_address(), value);
+    }
+
+    pub fn read_at<T: Addressable>(&self, addr: T) -> u8 {
+        let mut mem = match self.interconnect.lock() {
+            Ok(guard) => guard,
+            Err(poisoned) => poisoned.into_inner(),
+        };
+
+        mem.read_word(addr.nes_address())
     }
 
     pub fn register_value(&self, reg: Registers) -> u8 {
@@ -92,15 +117,15 @@ impl Cpu {
 
     #[inline]
     fn read_word_and_increment(&mut self) -> u8 {
-        let word = self.interconnect.read_word(self.PC);
+        let word = self.read_at(self.PC);
         self.PC += 1;
         word
     }
 
     #[inline]
     fn read_dword_and_increment(&mut self) -> u16 {
-        let lo = self.interconnect.read_word(self.PC);
-        let hi = self.interconnect.read_word(self.PC + 1);
+        let lo = self.read_at(self.PC);
+        let hi = self.read_at(self.PC + 1);
         self.PC += 2;
 
         (hi as u16) << 8 | lo as u16
@@ -150,7 +175,7 @@ impl Cpu {
     pub fn push_word(&mut self, word: u8) {
         // TODO Panic if pointer ends up in a page besides page 1
         let ptr = STACK_START + self.SP as u16;
-        self.interconnect.write_word(ptr, word);
+        self.write_at(ptr, word);
         self.SP -= 1;
         self.stack_depth += 1;
     }
@@ -160,7 +185,7 @@ impl Cpu {
         self.SP += 1;
         self.stack_depth -= 1;
         let ptr = STACK_START + self.SP as u16;
-        self.interconnect.read_word(ptr)
+        self.read_at(ptr)
     }
 
     pub fn push_address(&mut self, addr: Address) {
@@ -181,7 +206,7 @@ impl Cpu {
         let start = self.SP as u16 + STACK_START + 1; // Add 1 to not display the current "slot"
         let end = start + self.stack_depth as u16;
         for idx in (start..end).rev() {
-            println!("{:#06x} | {:02X}", idx as u16, self.interconnect.read_word(idx as u16));
+            println!("{:#06x} | {:02X}", idx as u16, self.read_at(idx as u16));
         }
         println!("---------------");
     }
@@ -194,8 +219,8 @@ impl Cpu {
     // If we wrap, only increment the lower byte. This was a bug in the 6502
     #[inline]
     fn buggy_read_dword(&self, addr: u16) -> u16 {
-        let lo = self.interconnect.read_word(addr);
-        let hi = self.interconnect.read_word((addr & 0xFF00) | (addr as u8).wrapping_add(1) as u16);
+        let lo = self.read_at(addr);
+        let hi = self.read_at((addr & 0xFF00) | (addr as u8).wrapping_add(1) as u16);
 
         (hi as u16) << 8 | lo as u16
     }
@@ -257,12 +282,17 @@ impl Cpu {
         self.push_address(pc);
         self.push_word(sr);
 
+        let mut interconnect = match self.interconnect.lock() {
+            Ok(guard) => guard,
+            Err(poisoned) => poisoned.into_inner(),
+        };
+
         match intr {
             Interrupt::Nmi => {
-                self.PC = self.interconnect.find_nmi_vector_address().to_u16();
+                self.PC = interconnect.find_nmi_vector_address().into();
             }
             Interrupt::Irq => {
-                self.PC = self.interconnect.find_irq_vector_address().to_u16();
+                self.PC = interconnect.find_irq_vector_address().into();
             }
         }
         self.SR.set(Flags::Interrupt);
@@ -283,23 +313,30 @@ impl Cpu {
         self.last_pc = self.PC;
 
         // On a real NES, what happens if an interrupt fires during DMA?
-        if self.interconnect.dma_in_progress {
-            let next_byte = self.interconnect.read_word(
-                Address::new(
-                    self.interconnect.dma_high_byte,
-                    self.interconnect.dma_write_iteration
-                ).to_u16()
-            );
-            self.interconnect.ppu.write_dma(next_byte);
+        {
+            let mut interconnect = match self.interconnect.lock() {
+                Ok(guard) => guard,
+                Err(poisoned) => poisoned.into_inner(),
+            };
 
-            self.interconnect.dma_write_iteration += 1;
+            if interconnect.dma_in_progress {
+                let next_byte = self.read_at(
+                    Address::new(
+                        interconnect.dma_high_byte,
+                        interconnect.dma_write_iteration
+                    ).to_u16()
+                );
+                interconnect.ppu.write_dma(next_byte);
 
-            if self.interconnect.dma_write_iteration == 255 {
-                self.interconnect.dma_in_progress = false;
-                self.interconnect.dma_write_iteration = 0;
-                return 3;   // This equal a total of 513 cycles per DMA
-            } else {
-                return 2;
+                interconnect.dma_write_iteration += 1;
+
+                if interconnect.dma_write_iteration == 255 {
+                    interconnect.dma_in_progress = false;
+                    interconnect.dma_write_iteration = 0;
+                    return 3;   // This equal a total of 513 cycles per DMA
+                } else {
+                    return 2;
+                }
             }
         }
 
@@ -321,11 +358,11 @@ impl Cpu {
         // XXX Make this less terrible. It'd be nice we could expose
         // memory as a byte stream and/or get a slice out of memory
         // with the mapping all working correctly
-        println!("{}", Disassembler::disassemble(
-            self.PC-1,
-            instr,
-            &[self.interconnect.read_word(self.PC),self.interconnect.read_word(self.PC+1)]
-        ));
+        // println!("{}", Disassembler::disassemble(
+        //     self.PC-1,
+        //     instr,
+        //     &[self.read_at(self.PC),self.read_at(self.PC+1)]
+        // ));
 
 
         // TODO How does this perform? Look into an array of opcodes like in the disassembler
@@ -565,8 +602,8 @@ impl Cpu {
                 self.debug_stack();
                 panic!("Hit a BRK instruction which is probably wrong: {:#x}, {:#x} {:#x}, PC: {:#x}",
                    instr,
-                   self.interconnect.read_word(self.PC),
-                   self.interconnect.read_word(self.PC + 1),
+                   self.read_at(self.PC),
+                   self.read_at(self.PC + 1),
                    self.PC
                 );
             }
@@ -574,8 +611,8 @@ impl Cpu {
                 self.debug_stack();
                 panic!("unrecognized opcode {:#x}, {:#x} {:#x}, PC: {:#x}",
                    instr,
-                   self.interconnect.read_word(self.PC),
-                   self.interconnect.read_word(self.PC + 1),
+                   self.read_at(self.PC),
+                   self.read_at(self.PC + 1),
                    self.PC
                 );
             }
@@ -670,13 +707,13 @@ mod test {
         cpu.SP = 0xFF;
 
         cpu.push_word(0x10);
-        let mut result = cpu.interconnect.read_word(0x01FF);
+        let mut result = cpu.read_at(0x01FF);
 
         assert!(cpu.SP == 0xFE, "expected 0xFE, got {:#x}", cpu.SP);
         assert!(result == 0x10, "expected 0x10, got {:#x}", result);
 
         cpu.push_word(0x11);
-        result = cpu.interconnect.read_word(0x01FE);
+        result = cpu.read_at(0x01FE);
 
         assert!(cpu.SP == 0xFD, "expected 0xFD, got {:#x}", cpu.SP);
         assert!(result == 0x11, "expected 0x11, got {:#x}", result);

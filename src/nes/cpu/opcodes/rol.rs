@@ -31,10 +31,10 @@ impl Rol {
 impl FromAddress for Rol {
     fn from_address(cpu: &mut Cpu, mode: AddressMode) -> u32 {
         let (src, _) = cpu.translate_address(mode);
-        let word = cpu.interconnect.read_word(src.to_u16());
+        let word = cpu.read_at(src.to_u16());
         let result = Self::rotate_one_bit_left(cpu, word);
 
-        cpu.interconnect.write_word(src.to_u16(), result);
+        cpu.write_at(src.to_u16(), result);
 
         match mode {
             AddressMode::ZeroPage => 5,
@@ -64,13 +64,13 @@ mod test {
     fn test_eor() {
         let mut cpu = mock_cpu(&[0x66,0xFF]);
 
-        cpu.interconnect.write_word(0x00FF, 0b10000000);
+        cpu.write_at(0x00FF, 0b10000000);
         cpu.SR.set(Flags::Carry);
         cpu.SR.reset(Flags::Zero);
         cpu.SR.reset(Flags::Negative);
 
         cpu.step(None);
-        let result = cpu.interconnect.read_word(0x00FF);
+        let result = cpu.read_at(0x00FF);
         assert_equalx!(0b11000000, result);
         assert_status_reset!(cpu, Flags::Carry);
         assert_status_reset!(cpu, Flags::Zero);
@@ -78,13 +78,13 @@ mod test {
 
 
         cpu.rewind();
-        cpu.interconnect.write_word(0x00FF, 0b10000001);
+        cpu.write_at(0x00FF, 0b10000001);
         cpu.SR.reset(Flags::Carry);
         cpu.SR.reset(Flags::Zero);
         cpu.SR.reset(Flags::Negative);
 
         cpu.step(None);
-        let result = cpu.interconnect.read_word(0x00FF);
+        let result = cpu.read_at(0x00FF);
         assert_equalx!(0b01000000, result);
         assert_status_set!(cpu, Flags::Carry);
         assert_status_reset!(cpu, Flags::Zero);
@@ -92,13 +92,13 @@ mod test {
 
 
         cpu.rewind();
-        cpu.interconnect.write_word(0x00FF, 0b00000001);
+        cpu.write_at(0x00FF, 0b00000001);
         cpu.SR.reset(Flags::Carry);
         cpu.SR.reset(Flags::Zero);
         cpu.SR.reset(Flags::Negative);
 
         cpu.step(None);
-        let result = cpu.interconnect.read_word(0x00FF);
+        let result = cpu.read_at(0x00FF);
         assert_equalx!(0b00000000, result);
         assert_status_set!(cpu, Flags::Carry);
         assert_status_set!(cpu, Flags::Zero);

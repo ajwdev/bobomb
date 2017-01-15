@@ -30,10 +30,10 @@ mod test {
         let mut cpu = mock_cpu(&[0x85, 0x10]);
         cpu.AC = 0xff;
 
-        let mut result = cpu.interconnect.read_word(0x0010);
+        let mut result = cpu.read_at(0x0010);
         assert!(result == 0x00, "expected 0x00, got {:#x}", result);
         cpu.step(None);
-        result = cpu.interconnect.read_word(0x0010);
+        result = cpu.read_at(0x0010);
         assert!(result == 0xff, "expected 0xff, got {:#x}", result);
     }
 
@@ -42,24 +42,24 @@ mod test {
         let mut cpu = mock_cpu(&[0x8d, 0x10, 0x00]);
         cpu.AC = 0xff;
 
-        let mut result = cpu.interconnect.read_word(0x0010);
+        let mut result = cpu.read_at(0x0010);
         assert!(result == 0x00, "expected 0x00, got {:#x}", result);
         cpu.step(None);
-        result = cpu.interconnect.read_word(0x0010);
+        result = cpu.read_at(0x0010);
         assert!(result == 0xff, "expected 0xff, got {:#x}", result);
     }
 
     #[test]
     fn test_sta_indirect_y() {
         let mut cpu = mock_cpu(&[0x91, 0x10]);
-        cpu.interconnect.write_word(0x0010, 0xaa);
+        cpu.write_at(0x0010, 0xaa);
         cpu.Y = 0x10;
         cpu.AC = 0xff;
 
-        let mut result = cpu.interconnect.read_word(0x00ba);
+        let mut result = cpu.read_at(0x00ba);
         assert!(result == 0x00, "expected 0x00, got {:#x}", result);
         cpu.step(None);
-        result = cpu.interconnect.read_word(0x00ba);
+        result = cpu.read_at(0x00ba);
         assert!(result == 0xff, "expected 0xff, got {:#x}", result);
     }
 }

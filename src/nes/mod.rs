@@ -1,3 +1,6 @@
+use std::sync::{Arc,Mutex,Condvar};
+use std::{thread, time};
+
 pub mod cpu;
 pub mod ppu;
 pub mod rom;
@@ -5,8 +8,15 @@ pub mod controller;
 pub mod address;
 pub mod interconnect;
 
+mod debugger;
+use nes::debugger::{DebuggerServer,Debugger,DebuggerImpl};
+
+mod executor;
+pub use nes::executor::ExecutorLock;
+
 pub struct Nes {
-    cpu: cpu::Cpu,
+    cpu: Arc<Mutex<cpu::Cpu>>,
+    interconnect: Arc<Mutex<interconnect::Interconnect>>,
 
     rom_header: [u8; 16],
     cycles: u32,
@@ -39,11 +49,12 @@ impl Nes {
         };
 
         let ppu = ppu::Ppu::new();
-        let interconnect = interconnect::Interconnect::new(ppu, rom);
-        let cpu = cpu::Cpu::new(interconnect);
+        let interconnect = Arc::new(Mutex::new(interconnect::Interconnect::new(ppu, rom)));
+        let cpu = Arc::new(Mutex::new(cpu::Cpu::new(interconnect.clone())));
 
         Nes {
             cpu: cpu,
+            interconnect: interconnect,
 
             rom_header: header,
             cycles: 0,
@@ -99,19 +110,42 @@ impl Nes {
     }
 
     pub fn start_emulation(&mut self) {
+        let ten_millis = time::Duration::from_millis(10);
+
         let mut intr: Option<cpu::Interrupt> = None;
+        let lock_pair: ExecutorLock = Arc::new((Mutex::new(true), Condvar::new()));
+
+        let _server = DebuggerServer::new(
+            "[::]:6502",
+            DebuggerImpl::new(self.cpu.clone(), self.interconnect.clone(), lock_pair.clone())
+        );
+
+        let &(ref lock, ref cvar) = &*lock_pair;
 
         loop {
-            let cycles = self.cpu.step(intr);
+            {
+                let running = lock.lock().unwrap();
+                if !*running {
+                    // If we're here, the debugger has blocked us
+                    println!("!!! Stopped by debugger ...");
+                    cvar.wait(running).unwrap();
+                }
+            }
+
+            let cycles = self.cpu.lock().unwrap().step(intr);
             intr = None;
 
             let ppu_cycles = cycles * 3;
             for n in 0..ppu_cycles {
                 // This feels gross
-                if let Some(x) = self.cpu.interconnect.ppu.step() {
+                if let Some(x) = self.interconnect.lock().unwrap().ppu.step() {
                     intr = Some(x);
                 }
             }
+
+            // We'll need to figure out the timings latter. For now, lets
+            // not burn our cpu so much
+            thread::sleep(ten_millis);
         }
     }
 }

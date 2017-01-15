@@ -12,7 +12,7 @@ impl FromImmediate for Ldy {
 impl FromAddress for Ldy {
     fn from_address(cpu: &mut Cpu, mode: AddressMode) -> u32 {
         let (src, extra_cycles) = cpu.translate_address(mode);
-        let word = cpu.interconnect.read_word(src.to_u16());
+        let word = cpu.read_at(src.to_u16());
         cpu.Y = word;
 
         cpu.zero_and_negative_status(word);

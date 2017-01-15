@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+service Debugger {
+  rpc Ping (PingRequest) returns (OkReply) {}
+
+  rpc Stop (StopRequest) returns (OkReply) {}
+  rpc Continue (ContinueRequest) returns (OkReply) {}
+
+  rpc Disassemble (DisassembleRequest) returns (DisassembleReply) {}
+}
+
+message OkReply {
+  string message = 1;
+}
+
+message StopRequest {
+    uint32 program_counter = 1;
+}
+
+message ContinueRequest {
+}
+
+message PingRequest {
+  string message = 1;
+}
+
+
+message DisassembleRequest {
+  uint32 address = 1;
+  uint64 count = 2;
+}
+
+message DisassembleMsg {
+   string line = 1;
+   uint32 instruction_width = 2;
+   uint32 address = 3;
+   // Consider adding AddressMode
+}
+
+message DisassembleReply {
+    uint64 length = 1;
+    repeated DisassembleMsg disassembly = 2;
+    string last_error = 5;
+}

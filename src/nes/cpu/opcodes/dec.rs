@@ -15,10 +15,10 @@ impl Dec {
 impl FromAddress for Dec {
     fn from_address(cpu: &mut Cpu, mode: AddressMode) -> u32 {
         let (src, _) = cpu.translate_address(mode);
-        let word = cpu.interconnect.read_word(src.to_u16());
+        let word = cpu.read_at(src.to_u16());
         let result = Self::decrement(cpu, word);
 
-        cpu.interconnect.write_word(src.into(), result);
+        cpu.write_at(src, result);
 
         match mode {
             AddressMode::ZeroPage => 5,
@@ -36,12 +36,12 @@ mod test {
     #[test]
     fn test_dec_zero() {
         let mut cpu = mock_cpu(&[0xc6, 0x10]);
-        cpu.interconnect.write_word(0x10, 0xff);
+        cpu.write_at(0x10, 0xff);
 
-        let mut result = cpu.interconnect.read_word(0x10);
+        let mut result = cpu.read_at(0x10);
         assert_equalx!(result, 0xff);
         cpu.step(None);
-        result = cpu.interconnect.read_word(0x10);
+        result = cpu.read_at(0x10);
         assert_equalx!(result, 0xfe);
         //TODO Make assertions on status registers
     }

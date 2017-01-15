@@ -4,6 +4,10 @@ version = "0.1.0"
 authors = ["Andrew Williams <williams.andrew@gmail.com>"]
 
 [dependencies]
+grpc            = "0.*"
+protobuf        = "1.*"
+futures         = "0.1"
+futures-cpupool = "0.1"
 
 [dependencies.probe]
 git = "https://github.com/cuviper/rust-libprobe.git"

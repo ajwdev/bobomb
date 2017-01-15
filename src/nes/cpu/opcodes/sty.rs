@@ -27,10 +27,10 @@ mod test {
         let mut cpu = mock_cpu(&[0x84, 0x10]);
         cpu.Y = 0xff;
 
-        let mut result = cpu.interconnect.read_word(0x0010);
+        let mut result = cpu.read_at(0x0010);
         assert!(result == 0x00, "expected 0x00, got {:#x}", result);
         cpu.step(None);
-        result = cpu.interconnect.read_word(0x0010);
+        result = cpu.read_at(0x0010);
         assert!(result == 0xff, "expected 0xff, got {:#x}", result);
     }
 }
