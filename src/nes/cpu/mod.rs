@@ -63,7 +63,7 @@ impl Cpu {
             X: 0,
             Y: 0,
             AC: 0,
-            PC: interconnect.find_reset_vector_address().to_u16(),
+            PC: interconnect.find_reset_vector_address().into(),
             SP: 0xfd,
             SR: StatusRegister::new(),
 
@@ -74,19 +74,6 @@ impl Cpu {
             last_pc: 0,
         }
     }
-
-    // pub fn start(&mut self) {
-    //     println!("PC: {:#x}", self.PC);
-    //     loop {
-    //         let cycles = self.execute_instruction();
-    //         self.instruction_counter += 1;
-    //     }
-    // }
-
-    // fn find_pc_addr(interconnect: &Interconnect) -> u16 {
-    //     // http://forum.6502.org/viewtopic.php?t=1708
-    //     (interconnect.read_word(0xFFFD) as u16) << 8 | interconnect.read_word(0xFFFC) as u16
-    // }
 
     pub fn register_value(&self, reg: Registers) -> u8 {
         match reg {
@@ -101,7 +88,7 @@ impl Cpu {
     #[inline]
     fn zero_page_address(low: u8) -> u16 {
         // TODO Considering refactoring to always accept Address's
-        Address::new_zeropage(low).to_u16()
+        Address::new_zeropage(low).into()
     }
 
     #[inline]

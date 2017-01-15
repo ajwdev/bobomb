@@ -46,6 +46,19 @@ impl Address {
     }
 }
 
+impl From<u16> for Address {
+    fn from(t: u16) -> Address {
+        Address(t)
+    }
+}
+
+impl From<Address> for u16 {
+    fn from(t: Address) -> u16 {
+        t.0
+    }
+}
+
+
 impl Sub for Address {
     type Output = Address;
 
