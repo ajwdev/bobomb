@@ -13,7 +13,7 @@ impl Ora {
 }
 
 impl FromImmediate for Ora {
-    fn from_immediate(cpu: &mut Cpu) -> usize {
+    fn from_immediate(cpu: &mut Cpu) -> u32 {
         let word = cpu.read_word_and_increment();
         Self::and(cpu, word);
 
@@ -22,7 +22,7 @@ impl FromImmediate for Ora {
 }
 
 impl FromAddress for Ora {
-    fn from_address(cpu: &mut Cpu, mode: AddressMode) -> usize {
+    fn from_address(cpu: &mut Cpu, mode: AddressMode) -> u32 {
         let (src, extra_cycles) = cpu.translate_address(mode);
         let word = cpu.interconnect.read_word(src.to_u16());
 
@@ -30,9 +30,9 @@ impl FromAddress for Ora {
 
         match mode {
             AddressMode::ZeroPage => 3,
-            AddressMode::AbsoluteX => { 4 + (extra_cycles as usize) },
-            AddressMode::AbsoluteY => { 4 + (extra_cycles as usize) },
-            AddressMode::IndirectY => { 5 + (extra_cycles as usize) },
+            AddressMode::AbsoluteX => { 4 + (extra_cycles as u32) },
+            AddressMode::AbsoluteY => { 4 + (extra_cycles as u32) },
+            AddressMode::IndirectY => { 5 + (extra_cycles as u32) },
             _ => { panic!("unimplemented address mode {:?} for AND", mode); }
         }
     }

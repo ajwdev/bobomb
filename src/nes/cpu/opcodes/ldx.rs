@@ -4,14 +4,14 @@ use super::load::Load;
 pub struct Ldx { }
 
 impl FromImmediate for Ldx {
-    fn from_immediate(cpu: &mut Cpu) -> usize {
+    fn from_immediate(cpu: &mut Cpu) -> u32 {
         // TODO Check the status registers (i.e N/Z)
-        Load::immediate(cpu, Registers::X)
+        Load::immediate(cpu, Registers::X) as u32
     }
 }
 
 impl FromAddress for Ldx {
-    fn from_address(cpu: &mut Cpu, mode: AddressMode) -> usize {
+    fn from_address(cpu: &mut Cpu, mode: AddressMode) -> u32 {
         let (src, extra_cycles) = cpu.translate_address(mode);
         let word = cpu.interconnect.read_word(src.to_u16());
         cpu.X = word;
@@ -21,7 +21,7 @@ impl FromAddress for Ldx {
         match mode {
             AddressMode::ZeroPage => 3,
             AddressMode::Absolute => 4,
-            AddressMode::AbsoluteY => { 4 + (extra_cycles as usize) },
+            AddressMode::AbsoluteY => { 4 + (extra_cycles as u32) },
             _ => { panic!("unimplemented address mode {:?} for LDX", mode); }
         }
     }

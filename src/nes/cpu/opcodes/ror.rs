@@ -29,7 +29,7 @@ impl Ror {
 }
 
 impl FromAddress for Ror {
-    fn from_address(cpu: &mut Cpu, mode: AddressMode) -> usize {
+    fn from_address(cpu: &mut Cpu, mode: AddressMode) -> u32 {
         let (src, _) = cpu.translate_address(mode);
         let word = cpu.interconnect.read_word(src.into());
 
@@ -45,7 +45,7 @@ impl FromAddress for Ror {
 }
 
 impl FromAccumulator for Ror {
-    fn from_accumulator(cpu: &mut Cpu) -> usize {
+    fn from_accumulator(cpu: &mut Cpu) -> u32 {
         let word = cpu.AC;
         let result = Ror::rotate_right(cpu, word);
         cpu.AC = result;

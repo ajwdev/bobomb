@@ -13,7 +13,7 @@ impl Inc {
 }
 
 impl FromAddress for Inc {
-    fn from_address(cpu: &mut Cpu, mode: AddressMode) -> usize {
+    fn from_address(cpu: &mut Cpu, mode: AddressMode) -> u32 {
         let (src, _) = cpu.translate_address(mode);
         let word = cpu.interconnect.read_word(src.to_u16());
         let result = Self::increment(cpu, word);

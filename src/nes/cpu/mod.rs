@@ -48,8 +48,7 @@ pub struct Cpu {
     SP: u8, // Stack pointer
     SR: StatusRegister, // Status register
 
-    // Maybe make this something smaller so we can catch overflows and raise timer interrupts?
-    cycles: usize,
+    cycles: u32,
 
     stack_depth: i16,
     last_pc: u16,
@@ -251,7 +250,7 @@ impl Cpu {
         (Address(result), pages_differ)
     }
 
-    fn execute_interrupt(&mut self, intr: Interrupt) -> usize {
+    fn execute_interrupt(&mut self, intr: Interrupt) -> u32 {
         let pc = Address(self.PC);
         let sr: u8 = self.SR.to_u8();
 
@@ -279,7 +278,7 @@ impl Cpu {
         previous
     }
 
-    pub fn step(&mut self, pending_interrupt: Option<Interrupt>) -> usize {
+    pub fn step(&mut self, pending_interrupt: Option<Interrupt>) -> u32 {
         let mut burned_cycles = 0;
         self.last_pc = self.PC;
 

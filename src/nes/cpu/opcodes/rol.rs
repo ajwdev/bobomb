@@ -29,7 +29,7 @@ impl Rol {
 }
 
 impl FromAddress for Rol {
-    fn from_address(cpu: &mut Cpu, mode: AddressMode) -> usize {
+    fn from_address(cpu: &mut Cpu, mode: AddressMode) -> u32 {
         let (src, _) = cpu.translate_address(mode);
         let word = cpu.interconnect.read_word(src.to_u16());
         let result = Self::rotate_one_bit_left(cpu, word);
@@ -44,7 +44,7 @@ impl FromAddress for Rol {
 }
 
 impl FromAccumulator for Rol {
-    fn from_accumulator(cpu: &mut Cpu) -> usize {
+    fn from_accumulator(cpu: &mut Cpu) -> u32 {
         let word = cpu.AC;
         let result = Self::rotate_one_bit_left(cpu, word);
 

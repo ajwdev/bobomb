@@ -4,7 +4,7 @@ use nes::address::Address;
 pub struct Rti { }
 
 impl FromImplied for Rti {
-    fn from_implied(cpu: &mut Cpu) -> usize {
+    fn from_implied(cpu: &mut Cpu) -> u32 {
         let word = cpu.pop_word();
         cpu.SR.load_from_u8(word);
         cpu.PC = cpu.pop_address().into();

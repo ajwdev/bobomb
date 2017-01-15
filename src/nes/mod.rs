@@ -9,7 +9,7 @@ pub struct Nes {
     cpu: cpu::Cpu,
 
     rom_header: [u8; 16],
-    cycles: usize,
+    cycles: u32,
 }
 
 impl Nes {

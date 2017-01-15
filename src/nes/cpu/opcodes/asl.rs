@@ -24,7 +24,7 @@ impl Asl {
 }
 
 impl FromAddress for Asl {
-    fn from_address(cpu: &mut Cpu, mode: AddressMode) -> usize {
+    fn from_address(cpu: &mut Cpu, mode: AddressMode) -> u32 {
         let (src, _) = cpu.translate_address(mode);
         let word = cpu.interconnect.read_word(src.to_u16());
         let result = Self::shift_left(cpu, word);
@@ -39,7 +39,7 @@ impl FromAddress for Asl {
 }
 
 impl FromAccumulator for Asl {
-    fn from_accumulator(cpu: &mut Cpu) -> usize {
+    fn from_accumulator(cpu: &mut Cpu) -> u32 {
         let word = cpu.AC;
         let result = Self::shift_left(cpu, word);
 

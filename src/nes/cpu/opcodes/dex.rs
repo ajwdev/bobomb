@@ -3,7 +3,7 @@ use nes::cpu::{Cpu,FromImplied,AddressMode};
 pub struct Dex { }
 
 impl FromImplied for Dex {
-    fn from_implied(cpu: &mut Cpu) -> usize {
+    fn from_implied(cpu: &mut Cpu) -> u32 {
         cpu.X = cpu.X.wrapping_sub(1);
         // TODO The reason we create `word` here is because we can't pass cpu.X to
         // `zero_and_negative_status` as it's already mutably borrowed by the function

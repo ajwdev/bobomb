@@ -5,7 +5,7 @@ use super::store::Store;
 pub struct Sec { }
 
 impl FromImplied for Sec {
-    fn from_implied(cpu: &mut Cpu) -> usize {
+    fn from_implied(cpu: &mut Cpu) -> u32 {
         cpu.SR.set(Flags::Carry);
         2
     }

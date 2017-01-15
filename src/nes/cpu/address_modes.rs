@@ -24,7 +24,7 @@ pub trait Implied {
 }
 
 pub trait FromImplied {
-    fn from_implied(&mut Cpu) -> usize;
+    fn from_implied(&mut Cpu) -> u32;
 }
 
 #[deprecated(note="please use `FromRelative` trait instead")]
@@ -33,7 +33,7 @@ pub trait Relative {
 }
 
 pub trait FromRelative {
-    fn from_relative(&mut Cpu) -> usize;
+    fn from_relative(&mut Cpu) -> u32;
 }
 
 #[deprecated(note="please use `FromImmediate` trait instead")]
@@ -42,15 +42,15 @@ pub trait Immediate {
 }
 
 pub trait FromImmediate {
-    fn from_immediate(&mut Cpu) -> usize;
+    fn from_immediate(&mut Cpu) -> u32;
 }
 
 pub trait FromAccumulator {
-    fn from_accumulator(cpu: &mut Cpu) -> usize;
+    fn from_accumulator(cpu: &mut Cpu) -> u32;
 }
 
 pub trait FromAddress {
-    fn from_address(cpu: &mut Cpu, mode: AddressMode) -> usize;
+    fn from_address(cpu: &mut Cpu, mode: AddressMode) -> u32;
 }
 
 #[deprecated(note="please use `FromAddress` trait instead")]

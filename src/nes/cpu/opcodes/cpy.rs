@@ -4,7 +4,7 @@ use nes::cpu::status::Flags;
 pub struct Cpy { }
 
 impl FromImmediate for Cpy {
-    fn from_immediate(cpu: &mut Cpu) -> usize {
+    fn from_immediate(cpu: &mut Cpu) -> u32 {
         let word = cpu.read_word_and_increment();;
         let result = cpu.Y.wrapping_sub(word);
 

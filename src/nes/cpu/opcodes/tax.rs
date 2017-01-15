@@ -3,7 +3,7 @@ use nes::cpu::{Cpu,FromImplied};
 pub struct Tax { }
 
 impl FromImplied for Tax {
-    fn from_implied(cpu: &mut Cpu) -> usize {
+    fn from_implied(cpu: &mut Cpu) -> u32 {
         // XXX This intermediate variable only exists because we can't
         // pass the borrowed CPU to zero_and_negative_status. Fix this?
         let result = cpu.AC;

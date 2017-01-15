@@ -3,7 +3,7 @@ use nes::cpu::{Cpu,FromImplied,AddressMode};
 pub struct Iny { }
 
 impl FromImplied for Iny {
-    fn from_implied(cpu: &mut Cpu) -> usize {
+    fn from_implied(cpu: &mut Cpu) -> u32 {
         let word = cpu.Y.wrapping_add(1);
         // See Dey about why we have `word`
         cpu.Y = word;

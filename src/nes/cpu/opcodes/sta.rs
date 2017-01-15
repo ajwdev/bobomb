@@ -4,7 +4,7 @@ use super::store::Store;
 pub struct Sta { }
 
 impl FromAddress for Sta {
-    fn from_address(cpu: &mut Cpu, mode: AddressMode) -> usize {
+    fn from_address(cpu: &mut Cpu, mode: AddressMode) -> u32 {
         let (dest, _) = cpu.translate_address(mode);
         Store::save_destination(cpu, Registers::AC, dest.to_u16());
 

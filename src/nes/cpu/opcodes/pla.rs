@@ -3,7 +3,7 @@ use nes::cpu::{Cpu,FromImplied};
 pub struct Pla { }
 
 impl FromImplied for Pla {
-    fn from_implied(cpu: &mut Cpu) -> usize {
+    fn from_implied(cpu: &mut Cpu) -> u32 {
         let result = cpu.pop_word();
         cpu.AC = result;
 
