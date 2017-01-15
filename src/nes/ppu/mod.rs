@@ -114,10 +114,10 @@ impl Ppu {
             return None;
         } else if self.cycles == ((CYCLES_PER_SCANLINE * VBLANK_SCANLINE) + 1) {
             println!("Vblank started");
-            // if self.control.nmi_during_vblank {
+            if self.control.nmi_during_vblank {
                 println!("NMI fired!!!");
                 intr = Some(Interrupt::Nmi);
-            // }
+            }
 
             self.is_vblank.set(true);
         } else if self.cycles == ((CYCLES_PER_SCANLINE * 261) + 1) {
