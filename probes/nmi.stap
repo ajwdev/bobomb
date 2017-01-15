@@ -1,0 +1,7 @@
+probe begin {
+  println("Starting NMI tracing...");
+}
+
+probe process.mark("nmi") {
+  printf("NMI fired\n");
+}

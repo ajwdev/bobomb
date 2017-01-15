@@ -1,4 +1,14 @@
 [root]
 name = "bobomb"
 version = "0.1.0"
+dependencies = [
+ "probe 0.1.6 (git+https://github.com/cuviper/rust-libprobe.git)",
+]
 
+[[package]]
+name = "probe"
+version = "0.1.6"
+source = "git+https://github.com/cuviper/rust-libprobe.git#98b71d8fa609044e602c7d67286ffcd26b3cc647"
+
+[metadata]
+"checksum probe 0.1.6 (git+https://github.com/cuviper/rust-libprobe.git)" = "<none>"

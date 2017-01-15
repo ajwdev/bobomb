@@ -109,19 +109,20 @@ impl Ppu {
         let mut intr = None;
 
         if self.cycles == (COLUMNS_PER_SCANLINE * SCANLINES_PER_FRAME) {
-            println!("PPU cycles reset");
             self.cycles = 0;
             return None;
         } else if self.cycles == ((CYCLES_PER_SCANLINE * VBLANK_SCANLINE) + 1) {
-            println!("Vblank started");
+            probe!(vblank, begin);
+
             if self.control.nmi_during_vblank {
-                println!("NMI fired!!!");
+                probe!(interrupt, nmi);
                 intr = Some(Interrupt::Nmi);
             }
 
             self.is_vblank.set(true);
         } else if self.cycles == ((CYCLES_PER_SCANLINE * 261) + 1) {
-            println!("Vblank ended");
+            probe!(vblank, end);
+
             self.is_vblank.set(false);
         }
 

@@ -1,3 +1,9 @@
+#![feature(asm)]
+
+#[macro_use]
+#[no_link]
+extern crate probe;
+
 mod nes;
 
 use std::env;

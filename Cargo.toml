@@ -4,3 +4,6 @@ version = "0.1.0"
 authors = ["Andrew Williams <williams.andrew@gmail.com>"]
 
 [dependencies]
+
+[dependencies.probe]
+git = "https://github.com/cuviper/rust-libprobe.git"
