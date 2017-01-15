@@ -22,11 +22,13 @@ pub use self::and::And;
 pub use self::ora::Ora;
 
 mod dec;
+mod inc;
 mod dex;
 mod dey;
 mod iny;
 mod inx;
 pub use self::dec::Dec;
+pub use self::inc::Inc;
 pub use self::dex::Dex;
 pub use self::dey::Dey;
 pub use self::iny::Iny;
@@ -36,7 +38,9 @@ mod cpy;
 pub use self::cpy::Cpy;
 
 mod adc;
+mod sbc;
 pub use self::adc::Adc;
+pub use self::sbc::Sbc;
 
 mod bcs;
 mod bcc;

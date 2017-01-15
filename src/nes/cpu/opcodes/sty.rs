@@ -1,12 +1,20 @@
-use nes::cpu::{Cpu,Registers,ZeroPage};
+use nes::cpu::{Cpu,Registers,FromAddress,AddressMode};
 use super::store::Store;
 
 pub struct Sty { }
 
-impl ZeroPage for Sty {
-    fn zero_page(cpu: &mut Cpu) -> usize {
-        Store::zero_page(cpu, Registers::Y);
-        3
+impl FromAddress for Sty {
+    fn from_address(cpu: &mut Cpu, mode: AddressMode) -> usize {
+        let dest = cpu.translate_address(mode);
+        Store::save_destination(cpu, Registers::Y, dest.into());
+
+        match mode {
+            AddressMode::ZeroPage => 3,
+            AddressMode::ZeroPageX => 4,
+            AddressMode::Absolute => 4,
+            // TODO Make a macro for this
+            _ => { panic!("unimplemented address mode {:?} for STY", mode); }
+        }
     }
 }
 

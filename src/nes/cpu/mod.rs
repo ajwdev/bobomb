@@ -355,7 +355,7 @@ impl Cpu {
                 Jsr::absolute(self)
             }
             0x40 => {
-                let c = Rti::from_implied(self);
+                Rti::from_implied(self)
             }
             0x60 => {
                 Rts::from_implied(self)
@@ -399,14 +399,23 @@ impl Cpu {
             0x65 => {
                 Adc::from_address(self, AddressMode::ZeroPage)
             }
+            0x69 => {
+                Adc::from_immediate(self)
+            }
+            0xe5 => {
+                Sbc::from_address(self, AddressMode::ZeroPage)
+            }
+            0xe9 => {
+                Sbc::from_immediate(self)
+            }
             0x66 => {
                 Ror::from_address(self, AddressMode::ZeroPage)
             }
+            0x6a => {
+                Ror::from_accumulator(self)
+            }
             0x2a => {
                 Rol::from_accumulator(self)
-            }
-            0x69 => {
-                Adc::from_immediate(self)
             }
             0x38 => {
                 Sec::from_implied(self)
@@ -459,6 +468,9 @@ impl Cpu {
             0xa5 => {
                 Lda::from_address(self, AddressMode::ZeroPage)
             }
+            0xb5 => {
+                Lda::from_address(self, AddressMode::ZeroPageX)
+            }
             0xa9 => {
                 Lda::from_immediate(self)
             }
@@ -472,7 +484,13 @@ impl Cpu {
                 Lda::from_address(self, AddressMode::AbsoluteX)
             }
             0x84 => {
-                Sty::zero_page(self)
+                Sty::from_address(self, AddressMode::ZeroPage)
+            }
+            0x94 => {
+                Sty::from_address(self, AddressMode::ZeroPageX)
+            }
+            0x8c => {
+                Sty::from_address(self, AddressMode::Absolute)
             }
             0x85 => {
                 Sta::from_address(self, AddressMode::ZeroPage)
@@ -499,7 +517,25 @@ impl Cpu {
                 Sta::from_address(self, AddressMode::AbsoluteY)
             }
             0xc6 => {
-                Dec::zero_page(self)
+                Dec::from_address(self, AddressMode::ZeroPage)
+            }
+            0xd6 => {
+                Dec::from_address(self, AddressMode::ZeroPageX)
+            }
+            0xce => {
+                Dec::from_address(self, AddressMode::Absolute)
+            }
+            0xe6 => {
+                Inc::from_address(self, AddressMode::ZeroPage)
+            }
+            0xf6 => {
+                Inc::from_address(self, AddressMode::ZeroPageX)
+            }
+            0xee => {
+                Inc::from_address(self, AddressMode::Absolute)
+            }
+            0xfe => {
+                Inc::from_address(self, AddressMode::AbsoluteX)
             }
             0x88 => {
                 Dey::implied(self)

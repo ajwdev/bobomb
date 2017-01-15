@@ -1,38 +1,56 @@
-use nes::cpu::{Cpu,FromAddress,AddressMode};
+use nes::cpu::{Cpu,FromAddress,FromAccumulator,AddressMode};
 use nes::cpu::status::Flags;
 
 pub struct Ror { }
 
-impl FromAddress for Ror {
-    fn from_address(cpu: &mut Cpu, mode: AddressMode) -> usize {
-        let src = cpu.translate_address(mode);
-        let mut word = cpu.interconnect.read_word(src.to_u16());
-
+impl Ror {
+    #[inline]
+    fn rotate_right(cpu: &mut Cpu, word: u8) -> u8 {
         let old_carry_set = cpu.SR.is_set(Flags::Carry);
         let new_carry_set = (0x1 & word) > 0;
 
-        word = word >> 1;
+        let mut result = word >> 1;
         if old_carry_set {
-            word |= 0b10000000;
+            result |= 0b10000000;
         } else {
-            word &= !0b10000000;
+            result &= !0b10000000;
         }
 
-        cpu.interconnect.write_word(src.to_u16(), word);
-
-        cpu.zero_and_negative_status(word);
+        cpu.zero_and_negative_status(result);
 
         if new_carry_set {
-            cpu.SR.set(Flags::Carry)
+            cpu.SR.set(Flags::Carry);
         } else {
-            cpu.SR.reset(Flags::Carry)
+            cpu.SR.reset(Flags::Carry);
         }
 
+        result
+    }
+}
+
+impl FromAddress for Ror {
+    fn from_address(cpu: &mut Cpu, mode: AddressMode) -> usize {
+        let src = cpu.translate_address(mode);
+        let word = cpu.interconnect.read_word(src.into());
+
+        let result = Ror::rotate_right(cpu, word);
+
+        cpu.interconnect.write_word(src.into(), result);
 
         match mode {
             AddressMode::ZeroPage => 5,
             _ => { panic!("unimplemented address mode {:?} for ROR", mode); }
         }
+    }
+}
+
+impl FromAccumulator for Ror {
+    fn from_accumulator(cpu: &mut Cpu) -> usize {
+        let word = cpu.AC;
+        let result = Ror::rotate_right(cpu, word);
+        cpu.AC = result;
+
+        2
     }
 }
 

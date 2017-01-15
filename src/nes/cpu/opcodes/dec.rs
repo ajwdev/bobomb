@@ -1,18 +1,31 @@
-use nes::cpu::{Cpu,ZeroPage};
+use nes::cpu::{Cpu,FromAddress,AddressMode};
 
 pub struct Dec { }
 
-impl ZeroPage for Dec {
-    fn zero_page(cpu: &mut Cpu) -> usize {
-        // TODO Try and DRY this up. I think we can come up
-        // with a good solution for all address modes
-        let addr = Cpu::zero_page_address(cpu.read_word_and_increment());
-        let mut word = cpu.interconnect.read_word(addr);
+impl Dec {
+    #[inline]
+    fn decrement(cpu: &mut Cpu, word: u8) -> u8 {
+        let result = word.wrapping_sub(1);
+        cpu.zero_and_negative_status(result);
 
-        word = word.wrapping_sub(1);
-        cpu.interconnect.write_word(addr, word);
-        cpu.zero_and_negative_status(word);
-        5
+        result
+    }
+}
+
+impl FromAddress for Dec {
+    fn from_address(cpu: &mut Cpu, mode: AddressMode) -> usize {
+        let src = cpu.translate_address(mode);
+        let word = cpu.interconnect.read_word(src.to_u16());
+        let result = Self::decrement(cpu, word);
+
+        cpu.interconnect.write_word(src.into(), result);
+
+        match mode {
+            AddressMode::ZeroPage => 5,
+            AddressMode::ZeroPageX => 6,
+            AddressMode::Absolute => 6,
+            _ => { panic!("unimplemented address mode {:?} for DEC", mode); }
+        }
     }
 }
 
