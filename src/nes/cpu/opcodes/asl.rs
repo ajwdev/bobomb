@@ -43,7 +43,7 @@ impl FromAccumulator for Asl {
         let word = cpu.AC;
         let result = Self::shift_left(cpu, word);
 
-        cpu.AC = word;
+        cpu.AC = result;
 
         2
     }
