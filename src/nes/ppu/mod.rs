@@ -46,7 +46,7 @@ pub struct Ppu {
 
     control: ControlRegister,
     Mask: u8,
-    Status: u8,
+    // Status: u8,
     // Scroll: Cell<u8>,
     // Addr: Cell<u8>,
     Data: u8,
@@ -57,6 +57,7 @@ pub struct Ppu {
     tmp_vram_address: Cell<u16>,
     vram_address: Cell<u16>,
     addr_latch_first_write_done: Cell<bool>,
+    sprite_overflow: Cell<bool>,
 
     // frame_is_even: bool,
     is_vblank: Cell<bool>,
@@ -80,20 +81,21 @@ impl Ppu {
             // https://wiki.nesdev.com/w/index.php/PPU_power_up_state
             control: ControlRegister::new(),
             Mask: 0,
-            Status: 0xa0, // Docs aren't clear if this should be 0x80 or 0xa0 on start
+            // Status: 0xa0, // Docs aren't clear if this should be 0x80 or 0xa0 on start
             // Scroll: Cell::new(0),
             // Addr: Cell::new(0),
             Data: 0,
 
             last_write: 0,
 
-            cycles: 0,
+            cycles: 340,
             frames: 0,
-            scanline: 0,
+            scanline: 240,
 
             tmp_vram_address: Cell::new(0),
             vram_address: Cell::new(0),
             fine_x_scroll: 0,
+            sprite_overflow: Cell::new(false),
             addr_latch_first_write_done: Cell::new(false),
             // frame_is_even: true,
             // TODO We should have seperate fields for an NMI being fired and a vblank. They are
@@ -135,6 +137,9 @@ impl Ppu {
                 if self.is_vblank.get() {
                     println!("reset vblank through status");
                     result |= 1 << 7
+                }
+                if self.sprite_overflow.get() {
+                    result |= 1 << 5
                 }
                 self.is_vblank.set(false);
                 self.vram_address.set(0);
