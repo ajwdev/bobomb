@@ -340,13 +340,13 @@ impl Cpu {
                 Ora::from_immediate(self)
             }
             0x10 => {
-                Bpl::relative(self)
+                Bpl::relative(self) as u32
             }
             0xf0 => {
-                Beq::relative(self)
+                Beq::relative(self) as u32
             }
             0xd0 => {
-                Bne::relative(self)
+                Bne::relative(self) as u32
             }
             0xb0 => {
                 Bcs::from_relative(self)
@@ -358,10 +358,10 @@ impl Cpu {
                 Bcc::from_relative(self)
             }
             0xc9 => {
-                Cmp::immediate(self)
+                Cmp::immediate(self) as u32
             }
             0x20 => {
-                Jsr::absolute(self)
+                Jsr::absolute(self) as u32
             }
             0x40 => {
                 Rti::from_implied(self)
@@ -370,16 +370,16 @@ impl Cpu {
                 Rts::from_implied(self)
             }
             0x4a => {
-                Lsr::accumulator(self)
+                Lsr::accumulator(self) as u32
             }
             0x46 => {
                 Lsr::from_address(self, AddressMode::ZeroPage)
             }
             0x4c => {
-                Jmp::absolute(self)
+                Jmp::absolute(self) as u32
             }
             0x48 => {
-                Pha::implied(self)
+                Pha::implied(self) as u32
             }
             0x45 => {
                 Eor::from_address(self, AddressMode::ZeroPage)
@@ -430,13 +430,13 @@ impl Cpu {
                 Sec::from_implied(self)
             }
             0x78 => {
-                Sei::implied(self)
+                Sei::implied(self) as u32
             }
             0x18 => {
-                Clc::implied(self)
+                Clc::implied(self) as u32
             }
             0xd8 => {
-                Cld::implied(self)
+                Cld::implied(self) as u32
             }
             0xaa => {
                 Tax::from_implied(self)
@@ -445,13 +445,13 @@ impl Cpu {
                 Tay::from_implied(self)
             }
             0x8a => {
-                Txa::implied(self)
+                Txa::implied(self) as u32
             }
             0x98 => {
-                Tya::implied(self)
+                Tya::implied(self) as u32
             }
             0x9a => {
-                Txs::implied(self)
+                Txs::implied(self) as u32
             }
             0xa0 => {
                 Ldy::from_immediate(self)
@@ -547,7 +547,7 @@ impl Cpu {
                 Inc::from_address(self, AddressMode::AbsoluteX)
             }
             0x88 => {
-                Dey::implied(self)
+                Dey::implied(self) as u32
             }
             0xca => {
                 Dex::from_implied(self)
