@@ -9,6 +9,9 @@ pub trait Addressable:
 {
     fn nes_address(&self) -> u16;
 
+    fn high(&self) -> u8;
+    fn low(&self) -> u8;
+
     #[inline]
     fn nes_usize(&self) -> usize {
         self.nes_address() as usize
@@ -32,23 +35,50 @@ impl Address {
         Address((buf[1] as u16) << 8 | buf[0] as u16)
     }
 
-
-    pub fn high(&self) -> u8 {
-        ((self.0 & 0xFF00) >> 8) as u8
-    }
-
-    pub fn low(&self) -> u8 {
-        (self.0 & 0x00FF) as u8
-    }
-
+    #[inline]
     pub fn to_u16(&self) -> u16 {
         self.0
     }
 }
 
+impl Addressable for Address {
+    #[inline]
+    fn nes_address(&self) -> u16 {
+        self.to_u16()
+    }
+
+    #[inline]
+    fn high(&self) -> u8 {
+        ((self.0 & 0xFF00) >> 8) as u8
+    }
+
+    #[inline]
+    fn low(&self) -> u8 {
+        (self.0 & 0x00FF) as u8
+    }
+}
+
+
 impl From<u16> for Address {
     fn from(t: u16) -> Address {
         Address(t)
+    }
+}
+
+impl Addressable for u16 {
+    #[inline]
+    fn nes_address(&self) -> u16 {
+        *self
+    }
+
+    #[inline]
+    fn high(&self) -> u8 {
+        ((*self & 0xFF00) >> 8) as u8
+    }
+
+    #[inline]
+    fn low(&self) -> u8 {
+        (*self & 0x00FF) as u8
     }
 }
 
@@ -100,20 +130,5 @@ impl fmt::UpperHex for Address {
 impl fmt::LowerHex for Address {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:x}", self.0)
-    }
-}
-
-
-impl Addressable for Address {
-    #[inline]
-    fn nes_address(&self) -> u16 {
-        self.to_u16()
-    }
-}
-
-impl Addressable for u16 {
-    #[inline]
-    fn nes_address(&self) -> u16 {
-        *self
     }
 }
