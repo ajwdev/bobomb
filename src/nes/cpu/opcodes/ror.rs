@@ -30,7 +30,7 @@ impl Ror {
 
 impl FromAddress for Ror {
     fn from_address(cpu: &mut Cpu, mode: AddressMode) -> usize {
-        let src = cpu.translate_address(mode);
+        let (src, _) = cpu.translate_address(mode);
         let word = cpu.interconnect.read_word(src.into());
 
         let result = Ror::rotate_right(cpu, word);

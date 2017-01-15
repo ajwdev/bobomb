@@ -11,7 +11,7 @@ impl FromImmediate for Ldy {
 
 impl FromAddress for Ldy {
     fn from_address(cpu: &mut Cpu, mode: AddressMode) -> usize {
-        let src = cpu.translate_address(mode);
+        let (src, extra_cycles) = cpu.translate_address(mode);
         let word = cpu.interconnect.read_word(src.to_u16());
         cpu.Y = word;
 
@@ -20,6 +20,7 @@ impl FromAddress for Ldy {
         match mode {
             AddressMode::ZeroPage => 3,
             AddressMode::ZeroPageX => 4,
+            AddressMode::AbsoluteY => { 4 + (extra_cycles as usize) },
             _ => { panic!("unimplemented address mode {:?} for LDY", mode); }
         }
     }

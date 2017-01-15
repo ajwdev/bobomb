@@ -8,7 +8,7 @@ mod address_modes;
 
 pub use nes::cpu::address_modes::*;
 
-use nes::address::Address;
+use nes::address::{Address,Addressable};
 use nes::interconnect::Interconnect;
 use nes::cpu::status::{Flags,StatusRegister};
 use nes::cpu::disassemble::Disassembler;
@@ -187,6 +187,11 @@ impl Cpu {
         println!("---------------");
     }
 
+    #[inline]
+    fn page_crossed<T: Addressable>(a: T, b: T) -> bool {
+        a.high() != b.high()
+    }
+
     // If we wrap, only increment the lower byte. This was a bug in the 6502
     #[inline]
     fn buggy_read_dword(&self, addr: u16) -> u16 {
@@ -197,8 +202,10 @@ impl Cpu {
     }
 
     // https://wiki.nesdev.com/w/index.php/CPU_addressing_modes
-    pub fn translate_address(&mut self, mode: AddressMode) -> Address {
+    // TODO Returning a tuple here feels weird. Maybe an enum indciating page crossed
+    pub fn translate_address(&mut self, mode: AddressMode) -> (Address, bool) {
         let result: u16;
+        let mut pages_differ = false;
 
         // TODO Not sure what happens here in case of overflows. Needs research. Add tests
         match mode {
@@ -221,6 +228,7 @@ impl Cpu {
             AddressMode::IndirectY => {
                 let indirect_addr = Cpu::zero_page_address(self.read_word_and_increment());
                 result = self.buggy_read_dword(indirect_addr) + self.Y as u16;
+                pages_differ = Cpu::page_crossed(self.PC, result);
             },
             AddressMode::IndirectX => {
                 let indirect_addr = Cpu::zero_page_address(self.read_word_and_increment());
@@ -231,14 +239,16 @@ impl Cpu {
             },
             AddressMode::AbsoluteX => {
                 result = self.read_dword_and_increment() + self.X as u16;
+                pages_differ = Cpu::page_crossed(self.PC, result);
             },
             AddressMode::AbsoluteY => {
                 result = self.read_dword_and_increment() + self.Y as u16;
+                pages_differ = Cpu::page_crossed(self.PC, result);
             },
             _ => { panic!("unimplemented {:?} for translate_address", mode); }
         }
 
-        Address(result)
+        (Address(result), pages_differ)
     }
 
     fn execute_interrupt(&mut self, intr: Interrupt) -> usize {

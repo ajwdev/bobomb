@@ -1,4 +1,4 @@
-use nes::cpu::{Cpu,Immediate};
+use nes::cpu::{Cpu,AddressMode,Immediate,FromAddress};
 use nes::cpu::status::Flags;
 
 pub struct Cmp { }
@@ -6,9 +6,8 @@ pub struct Cmp { }
 // NOTE Per http://www.atariarchives.org/alp/appendix_1.php, the Cmp instruction does the
 // subtraction as if both numbers are unsigned so watch out for overflows
 
-impl Immediate for Cmp {
-    fn immediate(cpu: &mut Cpu) -> usize {
-        let word = cpu.read_word_and_increment();
+impl Cmp {
+    fn compare(cpu: &mut Cpu, word: u8) {
         let result = cpu.AC.wrapping_sub(word);
 
         cpu.zero_and_negative_status(result);
@@ -17,8 +16,33 @@ impl Immediate for Cmp {
         } else {
             cpu.SR.reset(Flags::Carry);
         }
+    }
+}
+
+impl Immediate for Cmp {
+    fn immediate(cpu: &mut Cpu) -> usize {
+        let word = cpu.read_word_and_increment();
+        Self::compare(cpu, word);
 
         2
+    }
+}
+
+impl FromAddress for Cmp {
+    fn from_address(cpu: &mut Cpu, mode: AddressMode) -> usize {
+        let (src, extra_cycles) = cpu.translate_address(mode);
+        let word = cpu.interconnect.read_word(src.to_u16());
+
+        Self::compare(cpu, word);
+
+        match mode {
+            AddressMode::ZeroPage => 3,
+            AddressMode::ZeroPageX => 4,
+            AddressMode::AbsoluteX => { 4 + (extra_cycles as usize) },
+            AddressMode::AbsoluteY => { 4 + (extra_cycles as usize) },
+            AddressMode::IndirectY => { 5 + (extra_cycles as usize) },
+            _ => { panic!("unimplemented address mode {:?} for AND", mode); }
+        }
     }
 }
 

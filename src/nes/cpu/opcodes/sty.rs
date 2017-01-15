@@ -5,7 +5,7 @@ pub struct Sty { }
 
 impl FromAddress for Sty {
     fn from_address(cpu: &mut Cpu, mode: AddressMode) -> usize {
-        let dest = cpu.translate_address(mode);
+        let (dest, _) = cpu.translate_address(mode);
         Store::save_destination(cpu, Registers::Y, dest.into());
 
         match mode {

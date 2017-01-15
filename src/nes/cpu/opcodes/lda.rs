@@ -21,7 +21,7 @@ impl FromImmediate for Lda {
 
 impl FromAddress for Lda {
     fn from_address(cpu: &mut Cpu, mode: AddressMode) -> usize {
-        let src = cpu.translate_address(mode);
+        let (src, extra_cycles) = cpu.translate_address(mode);
         let word = cpu.interconnect.read_word(src.to_u16());
 
         Lda::load_accumulator(cpu, word);
@@ -30,9 +30,9 @@ impl FromAddress for Lda {
             AddressMode::ZeroPage => 3,
             AddressMode::ZeroPageX => 4,
             AddressMode::Absolute => 4,
-            AddressMode::AbsoluteX => 4, // Extra cycles
-            AddressMode::AbsoluteY => 4, // This could have extra cycle added
-            AddressMode::IndirectY => 5, // This could have extra cycle added
+            AddressMode::AbsoluteX => { 4 + (extra_cycles as usize) },
+            AddressMode::AbsoluteY => { 4 + (extra_cycles as usize) },
+            AddressMode::IndirectY => { 5 + (extra_cycles as usize) },
             _ => { panic!("unimplemented address mode {:?} for LDX", mode); }
         }
     }

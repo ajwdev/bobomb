@@ -23,13 +23,16 @@ impl FromImmediate for Eor {
 
 impl FromAddress for Eor {
     fn from_address(cpu: &mut Cpu, mode: AddressMode) -> usize {
-        let src = cpu.translate_address(mode);
+        let (src, extra_cycles) = cpu.translate_address(mode);
         let word = cpu.interconnect.read_word(src.to_u16());
 
         Self::xor(cpu, word);
 
         match mode {
             AddressMode::ZeroPage => 3,
+            AddressMode::AbsoluteX => { 4 + (extra_cycles as usize) },
+            AddressMode::AbsoluteY => { 4 + (extra_cycles as usize) },
+            AddressMode::IndirectY => { 5 + (extra_cycles as usize) },
             _ => { panic!("unimplemented address mode {:?} for EOR", mode); }
         }
     }
