@@ -66,6 +66,7 @@ impl Interconnect {
             }
             // PPU
             0x2002 => {
+                println!("PPU status (0x2002)");
                 self.ppu.read_at(addr)
             }
             // Controllers
@@ -110,35 +111,36 @@ impl Interconnect {
             }
             // PPU
             0x2000 => {
-                println!("PPU Status Write: {:#X}", value);
+                println!("PPU Control (0x2000) Write: {:#X}", value);
                 self.ppu.write_register(ppu::PpuRegister::Control, value);
             }
             0x2001 => {
-                println!("PPU Mask Write: {:#X}", value);
+                println!("PPU Mask (0x2001) Write: {:#X}", value);
                 self.ppu.write_register(ppu::PpuRegister::Mask, value);
             }
             0x2002 => {
                 panic!("ppu not implemented yet. write access at {:#x}", addr);
             }
             0x2003 => {
-                println!("PPU Oamaddr Write: {:#X}", value);
+                println!("PPU Oamaddr (0x2003) Write: {:#X}", value);
                 self.ppu.write_register(ppu::PpuRegister::Oamaddr, value);
             }
             0x2004 => {
                 panic!("ppu not implemented yet. write access at {:#x}", addr);
             }
             0x2005 => {
-                println!("PPU Scrol Write: {:#X}", value);
+                println!("PPU Scroll (0x2005) Write: {:#X}", value);
                 self.ppu.write_register(ppu::PpuRegister::Scroll, value);
             }
             0x2006 => {
-                println!("PPU Address Write: {:#X}", value);
+                // println!("PPU Address Write: {:#X}", value);
                 self.ppu.write_register(ppu::PpuRegister::Addr, value);
             }
             0x2007 => {
                 // println!("PPU Data Write: {:#X}", value);
                 self.ppu.write_register(ppu::PpuRegister::Data, value);
             }
+            // PPU
             0x4014 => {
                 println!("DMA started");
                 self.dma_high_byte = value;
@@ -160,7 +162,10 @@ impl Interconnect {
                 }
             }
             // APU
-            0x4017 => {
+            0x4000...0x4008 => {
+                println!("Write APU thing not implemented. Skipping");
+            }
+            0x400A...0x4017 => {
                 println!("Write APU thing not implemented. Skipping");
             }
             _ => {
