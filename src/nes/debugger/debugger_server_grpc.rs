@@ -28,6 +28,8 @@ pub trait Debugger {
     fn Continue(&self, p: super::debugger_server::ContinueRequest) -> ::grpc::result::GrpcResult<super::debugger_server::OkReply>;
 
     fn Disassemble(&self, p: super::debugger_server::DisassembleRequest) -> ::grpc::result::GrpcResult<super::debugger_server::DisassembleReply>;
+
+    fn Breakpoint(&self, p: super::debugger_server::BreakpointRequest) -> ::grpc::result::GrpcResult<super::debugger_server::OkReply>;
 }
 
 pub trait DebuggerAsync {
@@ -38,6 +40,8 @@ pub trait DebuggerAsync {
     fn Continue(&self, p: super::debugger_server::ContinueRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::debugger_server::OkReply>;
 
     fn Disassemble(&self, p: super::debugger_server::DisassembleRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::debugger_server::DisassembleReply>;
+
+    fn Breakpoint(&self, p: super::debugger_server::BreakpointRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::debugger_server::OkReply>;
 }
 
 // sync client
@@ -72,6 +76,10 @@ impl Debugger for DebuggerClient {
     fn Disassemble(&self, p: super::debugger_server::DisassembleRequest) -> ::grpc::result::GrpcResult<super::debugger_server::DisassembleReply> {
         ::futures::Future::wait(self.async_client.Disassemble(p))
     }
+
+    fn Breakpoint(&self, p: super::debugger_server::BreakpointRequest) -> ::grpc::result::GrpcResult<super::debugger_server::OkReply> {
+        ::futures::Future::wait(self.async_client.Breakpoint(p))
+    }
 }
 
 // async client
@@ -82,6 +90,7 @@ pub struct DebuggerAsyncClient {
     method_Stop: ::std::sync::Arc<::grpc::method::MethodDescriptor<super::debugger_server::StopRequest, super::debugger_server::OkReply>>,
     method_Continue: ::std::sync::Arc<::grpc::method::MethodDescriptor<super::debugger_server::ContinueRequest, super::debugger_server::OkReply>>,
     method_Disassemble: ::std::sync::Arc<::grpc::method::MethodDescriptor<super::debugger_server::DisassembleRequest, super::debugger_server::DisassembleReply>>,
+    method_Breakpoint: ::std::sync::Arc<::grpc::method::MethodDescriptor<super::debugger_server::BreakpointRequest, super::debugger_server::OkReply>>,
 }
 
 impl DebuggerAsyncClient {
@@ -113,6 +122,12 @@ impl DebuggerAsyncClient {
                     req_marshaller: Box::new(::grpc::grpc_protobuf::MarshallerProtobuf),
                     resp_marshaller: Box::new(::grpc::grpc_protobuf::MarshallerProtobuf),
                 }),
+                method_Breakpoint: ::std::sync::Arc::new(::grpc::method::MethodDescriptor {
+                    name: "/Debugger/Breakpoint".to_string(),
+                    streaming: ::grpc::method::GrpcStreaming::Unary,
+                    req_marshaller: Box::new(::grpc::grpc_protobuf::MarshallerProtobuf),
+                    resp_marshaller: Box::new(::grpc::grpc_protobuf::MarshallerProtobuf),
+                }),
             }
         })
     }
@@ -133,6 +148,10 @@ impl DebuggerAsync for DebuggerAsyncClient {
 
     fn Disassemble(&self, p: super::debugger_server::DisassembleRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::debugger_server::DisassembleReply> {
         self.grpc_client.call_unary(p, self.method_Disassemble.clone())
+    }
+
+    fn Breakpoint(&self, p: super::debugger_server::BreakpointRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::debugger_server::OkReply> {
+        self.grpc_client.call_unary(p, self.method_Breakpoint.clone())
     }
 }
 
@@ -173,6 +192,13 @@ impl DebuggerAsync for DebuggerServerHandlerToAsync {
         let h = self.handler.clone();
         ::grpc::rt::sync_to_async_unary(&self.cpupool, p, move |p| {
             h.Disassemble(p)
+        })
+    }
+
+    fn Breakpoint(&self, p: super::debugger_server::BreakpointRequest) -> ::grpc::futures_grpc::GrpcFutureSend<super::debugger_server::OkReply> {
+        let h = self.handler.clone();
+        ::grpc::rt::sync_to_async_unary(&self.cpupool, p, move |p| {
+            h.Breakpoint(p)
         })
     }
 }
@@ -253,6 +279,18 @@ impl DebuggerAsyncServer {
                     {
                         let handler_copy = handler_arc.clone();
                         ::grpc::server::MethodHandlerUnary::new(move |p| handler_copy.Disassemble(p))
+                    },
+                ),
+                ::grpc::server::ServerMethod::new(
+                    ::std::sync::Arc::new(::grpc::method::MethodDescriptor {
+                        name: "/Debugger/Breakpoint".to_string(),
+                        streaming: ::grpc::method::GrpcStreaming::Unary,
+                        req_marshaller: Box::new(::grpc::grpc_protobuf::MarshallerProtobuf),
+                        resp_marshaller: Box::new(::grpc::grpc_protobuf::MarshallerProtobuf),
+                    }),
+                    {
+                        let handler_copy = handler_arc.clone();
+                        ::grpc::server::MethodHandlerUnary::new(move |p| handler_copy.Breakpoint(p))
                     },
                 ),
             ],

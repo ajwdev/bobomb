@@ -13,43 +13,29 @@ use nes::ExecutorLock;
 use nes::cpu::Cpu;
 use nes::interconnect::Interconnect;
 use nes::cpu::disassemble::Disassembler;
-use nes::address::Addressable;
+use nes::address::{Address,Addressable};
 
 // NOTE You'll see a lot of code where we cast NES addresses which are normally u16 to u32. This is
 // because u32 is the smallest datatype Protobufs natively support (as far as I can tell)
 
-pub struct DebuggerImpl {
-    attached: bool,
-    cursor: u16,
+#[derive(Clone)]
+pub struct DebuggerShim {
     lock_pair: ExecutorLock,
     cpu: Arc<Mutex<Cpu>>,
     interconnect: Arc<Mutex<Interconnect>>,
+    breakpoints: Arc<Mutex<HashSet<u16>>>,
 }
 
-impl DebuggerImpl {
+impl DebuggerShim {
     pub fn new(c: Arc<Mutex<Cpu>>, i: Arc<Mutex<Interconnect>>, lock_pair: ExecutorLock) -> Self {
-        let attached;
-        {
-            let &(ref lock, ref cvar) = &*lock_pair;
-            attached = *lock.lock().unwrap();
-        }
-
-        DebuggerImpl {
-            attached: attached,
-            cursor: 0,
-            lock_pair: lock_pair,
+        DebuggerShim {
             cpu: c,
             interconnect: i,
+            lock_pair: lock_pair,
+
+            breakpoints: Arc::new(Mutex::new(HashSet::new())),
+            // internal_lock_pair: ExecutorLock,
         }
-    }
-
-    pub fn update_cursor<T: Addressable>(&mut self, addr: T) {
-        self.cursor = self.cpu.lock().unwrap()
-            .get_pc().into();
-    }
-
-    pub fn is_attached(&self) -> bool {
-        self.attached
     }
 
     #[inline]
@@ -68,6 +54,28 @@ impl DebuggerImpl {
     pub fn start_execution(&self) {
         self.set_execution_lock(true);
     }
+
+    // pub fn is_breakpoint<T: Addressable>(&self, addr: T) -> bool {
+    pub fn is_breakpoint(&self, addr: u16) -> bool {
+        self.breakpoints.lock().contains(&addr)
+    }
+
+}
+
+pub struct DebuggerImpl {
+    shim: Arc<DebuggerShim>,
+}
+
+impl DebuggerImpl {
+    pub fn new(shim: Arc<DebuggerShim>) -> Self {
+        DebuggerImpl {
+            shim: shim,
+        }
+    }
+
+    // pub fn update_cursor<T: Addressable>(&mut self, addr: T) {
+    //     self.cursor = self.shim.cpu.lock().get_pc().into();
+    // }
 
     fn create_disassemble_msg<T: Addressable>(&self, address: T) -> Result<DisassembleMsg, String> {
         let mem = self.shim.interconnect.lock();
@@ -102,15 +110,31 @@ impl Debugger for DebuggerImpl {
     }
 
     fn Stop(&self, req: StopRequest) -> GrpcResult<OkReply> {
-        self.stop_execution();
+        self.shim.stop_execution();
         let mut r = OkReply::new();
-        r.set_message(format!("0x{:04X}", self.cpu.lock().unwrap().get_pc()));
+        r.set_message(format!("0x{:04X}", self.shim.cpu.lock().get_pc()));
 
         Ok(r)
     }
 
     fn Continue(&self, req: ContinueRequest) -> GrpcResult<OkReply> {
-        self.start_execution();
+        self.shim.start_execution();
+        Ok(OkReply::new())
+    }
+
+    fn Breakpoint(&self, req: BreakpointRequest) -> GrpcResult<OkReply> {
+        for a in req.get_addresses() {
+            let tmp = *a as u16;
+            match req.action {
+                BreakpointRequest_Action::SET => {
+                    self.shim.breakpoints.lock().insert(tmp);
+                }
+                BreakpointRequest_Action::CLEAR => {
+                    self.shim.breakpoints.lock().remove(&tmp);
+                }
+            }
+        }
+
         Ok(OkReply::new())
     }
 
@@ -129,8 +153,8 @@ impl Debugger for DebuggerImpl {
                     address += (msg.instruction_width as u16);
                     r.mut_disassembly().push(msg);
                 }
-                Err(msg) => {
-                    r.last_error = msg;
+                Err(why) => {
+                    r.last_error = why;
                     break;
                 }
             }

@@ -17,6 +17,7 @@ module Debugger
     rpc :Stop, StopRequest, OkReply
     rpc :Continue, ContinueRequest, OkReply
     rpc :Disassemble, DisassembleRequest, DisassembleReply
+    rpc :Breakpoint, BreakpointRequest, OkReply
   end
 
   Stub = Service.rpc_stub_class

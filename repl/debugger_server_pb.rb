@@ -29,6 +29,14 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     repeated :disassembly, :message, 2, "DisassembleMsg"
     optional :last_error, :string, 5
   end
+  add_message "BreakpointRequest" do
+    repeated :addresses, :uint32, 1
+    optional :action, :enum, 2, "BreakpointRequest.Action"
+  end
+  add_enum "BreakpointRequest.Action" do
+    value :SET, 0
+    value :CLEAR, 1
+  end
 end
 
 OkReply = Google::Protobuf::DescriptorPool.generated_pool.lookup("OkReply").msgclass
@@ -38,3 +46,5 @@ PingRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("PingReques
 DisassembleRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("DisassembleRequest").msgclass
 DisassembleMsg = Google::Protobuf::DescriptorPool.generated_pool.lookup("DisassembleMsg").msgclass
 DisassembleReply = Google::Protobuf::DescriptorPool.generated_pool.lookup("DisassembleReply").msgclass
+BreakpointRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("BreakpointRequest").msgclass
+BreakpointRequest::Action = Google::Protobuf::DescriptorPool.generated_pool.lookup("BreakpointRequest.Action").enummodule

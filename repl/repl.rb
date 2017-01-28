@@ -30,6 +30,12 @@ class PryDebug
   def continue
     @stub.continue(ContinueRequest.new)
   end
+
+  def breakpoint(addresses=[], action=:SET)
+    return if addresses.empty?
+
+    @stub.breakpoint(BreakpointRequest.new(addresses: addresses, action: action.to_sym.upcase))
+  end
 end
 
 
@@ -68,6 +74,14 @@ command_set = Pry::CommandSet.new do
 
   command "c" do
     target_self.continue
+  end
+
+  command "break" do |addr|
+    target_self.breakpoint([addr.to_i(16)])
+  end
+
+  command "clear" do |addr|
+    target_self.breakpoint([addr.to_i(16)], :CLEAR)
   end
 end
 

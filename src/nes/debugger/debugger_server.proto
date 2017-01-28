@@ -1,16 +1,17 @@
 syntax = "proto3";
 
 service Debugger {
-  rpc Ping (PingRequest) returns (OkReply) {}
+    rpc Ping (PingRequest) returns (OkReply) {}
 
-  rpc Stop (StopRequest) returns (OkReply) {}
-  rpc Continue (ContinueRequest) returns (OkReply) {}
+    rpc Stop (StopRequest) returns (OkReply) {}
+    rpc Continue (ContinueRequest) returns (OkReply) {}
 
-  rpc Disassemble (DisassembleRequest) returns (DisassembleReply) {}
+    rpc Disassemble (DisassembleRequest) returns (DisassembleReply) {}
+    rpc Breakpoint (BreakpointRequest) returns (OkReply) {}
 }
 
 message OkReply {
-  string message = 1;
+    string message = 1;
 }
 
 message StopRequest {
@@ -21,24 +22,33 @@ message ContinueRequest {
 }
 
 message PingRequest {
-  string message = 1;
+    string message = 1;
 }
 
 
 message DisassembleRequest {
-  uint32 address = 1;
-  uint64 count = 2;
+    uint32 address = 1;
+    uint64 count = 2;
 }
 
 message DisassembleMsg {
-   string line = 1;
-   uint32 instruction_width = 2;
-   uint32 address = 3;
-   // Consider adding AddressMode
+    string line = 1;
+    uint32 instruction_width = 2;
+    uint32 address = 3;
+    // Consider adding AddressMode
 }
 
 message DisassembleReply {
     uint64 length = 1;
     repeated DisassembleMsg disassembly = 2;
     string last_error = 5;
+}
+
+message BreakpointRequest {
+    repeated uint32 addresses = 1;
+    enum Action {
+        SET = 0;
+        CLEAR = 1;
+    }
+    Action action = 2;
 }

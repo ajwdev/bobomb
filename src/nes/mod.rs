@@ -10,7 +10,7 @@ pub mod address;
 pub mod interconnect;
 
 mod debugger;
-use nes::debugger::{DebuggerServer,Debugger,DebuggerImpl};
+use nes::debugger::{DebuggerServer,Debugger,DebuggerImpl,DebuggerShim};
 
 mod executor;
 pub use nes::executor::ExecutorLock;
@@ -114,18 +114,24 @@ impl Nes {
         let ten_millis = time::Duration::from_millis(10);
 
         let mut intr: Option<cpu::Interrupt> = None;
-        let lock_pair: ExecutorLock = Arc::new((Mutex::new(true), Condvar::new()));
-
-        let _server = DebuggerServer::new(
-            "[::]:6502",
-            DebuggerImpl::new(self.cpu.clone(), self.interconnect.clone(), lock_pair.clone())
-        );
-
+        let lock_pair: ExecutorLock = Arc::new((Mutex::new(false), Condvar::new()));
         let &(ref lock, ref cvar) = &*lock_pair;
+
+        let shim = Arc::new(DebuggerShim::new(
+            self.cpu.clone(),
+            self.interconnect.clone(),
+            lock_pair.clone()
+        ));
+        let _server = DebuggerServer::new("[::]:6502", DebuggerImpl::new(shim.clone()));
 
         loop {
             {
-                let running = lock.lock().unwrap();
+                let pc: u16 = self.cpu.lock().get_pc().into();
+                if shim.is_breakpoint(pc) {
+                    shim.stop_execution();
+                }
+
+                let mut running = lock.lock();
                 if !*running {
                     // If we're here, the debugger has blocked us
                     println!("!!! Stopped by debugger ...");
