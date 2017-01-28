@@ -1,4 +1,5 @@
-use std::sync::{Arc,Mutex};
+use parking_lot::Mutex;
+use std::sync::Arc;
 
 #[macro_use]
 mod macros;
@@ -60,7 +61,7 @@ pub struct Cpu {
 impl Cpu {
     pub fn new(interconnect: Arc<Mutex<Interconnect>>) -> Self {
         // See comment at top of file for power on state
-        let pc = interconnect.lock().unwrap().find_reset_vector_address();
+        let pc = interconnect.lock().find_reset_vector_address();
         Cpu {
             X: 0,
             Y: 0,
@@ -82,20 +83,12 @@ impl Cpu {
     }
 
     pub fn write_at<T: Addressable>(&mut self, addr: T, value: u8) {
-        let mut mem = match self.interconnect.lock() {
-            Ok(guard) => guard,
-            Err(poisoned) => poisoned.into_inner(),
-        };
-
+        let mut mem = self.interconnect.lock();
         mem.write_word(addr.nes_address(), value);
     }
 
     pub fn read_at<T: Addressable>(&self, addr: T) -> u8 {
-        let mut mem = match self.interconnect.lock() {
-            Ok(guard) => guard,
-            Err(poisoned) => poisoned.into_inner(),
-        };
-
+        let mut mem = self.interconnect.lock();
         mem.read_word(addr.nes_address())
     }
 
@@ -282,10 +275,7 @@ impl Cpu {
         self.push_address(pc);
         self.push_word(sr);
 
-        let mut interconnect = match self.interconnect.lock() {
-            Ok(guard) => guard,
-            Err(poisoned) => poisoned.into_inner(),
-        };
+        let mut interconnect = self.interconnect.lock();
 
         match intr {
             Interrupt::Nmi => {
@@ -314,10 +304,7 @@ impl Cpu {
 
         // On a real NES, what happens if an interrupt fires during DMA?
         {
-            let mut interconnect = match self.interconnect.lock() {
-                Ok(guard) => guard,
-                Err(poisoned) => poisoned.into_inner(),
-            };
+            let mut interconnect = self.interconnect.lock();
 
             if interconnect.dma_in_progress {
                 let next_byte = self.read_at(

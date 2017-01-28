@@ -11,6 +11,8 @@ extern crate grpc;
 extern crate futures;
 extern crate futures_cpupool;
 
+extern crate parking_lot;
+
 mod nes;
 
 use std::env;

@@ -1,4 +1,5 @@
-use std::sync::{Arc,Mutex,Condvar};
+use parking_lot::{Mutex,Condvar};
+use std::sync::Arc;
 use std::{thread, time};
 
 pub mod cpu;
@@ -128,17 +129,18 @@ impl Nes {
                 if !*running {
                     // If we're here, the debugger has blocked us
                     println!("!!! Stopped by debugger ...");
-                    cvar.wait(running).unwrap();
+                    cvar.wait(&mut running);
                 }
             }
 
-            let cycles = self.cpu.lock().unwrap().step(intr);
+            let cycles = self.cpu.lock().step(intr);
+            println!("CPU");
             intr = None;
 
             let ppu_cycles = cycles * 3;
-            for n in 0..ppu_cycles {
+            for _ in 0..ppu_cycles {
                 // This feels gross
-                if let Some(x) = self.interconnect.lock().unwrap().ppu.step() {
+                if let Some(x) = self.interconnect.lock().ppu.step() {
                     intr = Some(x);
                 }
             }

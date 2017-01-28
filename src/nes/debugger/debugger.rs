@@ -1,4 +1,6 @@
-use std::sync::{Arc,Mutex};
+use parking_lot::{Mutex,Condvar};
+use std::sync::Arc;
+use std::collections::HashSet;
 
 extern crate grpc;
 use grpc::result::GrpcResult;
@@ -53,7 +55,7 @@ impl DebuggerImpl {
     #[inline]
     fn set_execution_lock(&self, value: bool) {
         let &(ref lock, ref cvar) = &*self.lock_pair;
-        let mut running = lock.lock().unwrap();
+        let mut running = lock.lock();
         *running = value;
 
         cvar.notify_all();
@@ -68,14 +70,8 @@ impl DebuggerImpl {
     }
 
     fn create_disassemble_msg<T: Addressable>(&self, address: T) -> Result<DisassembleMsg, String> {
-        let mem = match self.interconnect.lock() {
-            Ok(guard) => guard,
-            Err(poisoned) => poisoned.into_inner(),
-        };
-        let cpu = match self.cpu.lock() {
-            Ok(guard) => guard,
-            Err(poisoned) => poisoned.into_inner(),
-        };
+        let mem = self.shim.interconnect.lock();
+        let cpu = self.shim.cpu.lock();
 
         let mut msg = DisassembleMsg::new();
 
