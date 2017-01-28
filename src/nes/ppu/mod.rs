@@ -112,16 +112,16 @@ impl Ppu {
             self.cycles = 0;
             return None;
         } else if self.cycles == ((CYCLES_PER_SCANLINE * VBLANK_SCANLINE) + 1) {
-            probe!(vblank, begin);
+            probe!(bobomb_ppu, vblank_begin);
 
             if self.control.nmi_during_vblank {
-                probe!(interrupt, nmi);
+                probe!(bobomb_interrupt, nmi);
                 intr = Some(Interrupt::Nmi);
             }
 
             self.is_vblank.set(true);
         } else if self.cycles == ((CYCLES_PER_SCANLINE * 261) + 1) {
-            probe!(vblank, end);
+            probe!(bobomb_ppu, vblank_end);
 
             self.is_vblank.set(false);
         }
@@ -136,7 +136,6 @@ impl Ppu {
                 let mut result = self.last_write & 0x1f;
 
                 if self.is_vblank.get() {
-                    println!("reset vblank through status");
                     result |= 1 << 7
                 }
                 if self.sprite_overflow.get() {

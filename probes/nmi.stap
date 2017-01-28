@@ -1,7 +1,7 @@
 probe begin {
-  println("Starting NMI tracing...");
+    println("Starting NMI tracing...");
 }
 
-probe process.mark("nmi") {
-  printf("NMI fired\n");
+probe process.provider("bobomb_interrupt").mark("nmi") {
+    println("NMI fired");
 }

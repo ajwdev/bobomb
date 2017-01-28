@@ -114,7 +114,7 @@ impl Nes {
         let ten_millis = time::Duration::from_millis(10);
 
         let mut intr: Option<cpu::Interrupt> = None;
-        let lock_pair: ExecutorLock = Arc::new((Mutex::new(false), Condvar::new()));
+        let lock_pair: ExecutorLock = Arc::new((Mutex::new(true), Condvar::new()));
         let &(ref lock, ref cvar) = &*lock_pair;
 
         let shim = Arc::new(DebuggerShim::new(
@@ -124,6 +124,7 @@ impl Nes {
         ));
         let _server = DebuggerServer::new("[::]:6502", DebuggerImpl::new(shim.clone()));
 
+        probe!(bobomb, start_emulation);
         loop {
             {
                 let pc: u16 = self.cpu.lock().get_pc().into();
@@ -140,7 +141,6 @@ impl Nes {
             }
 
             let cycles = self.cpu.lock().step(intr);
-            println!("CPU");
             intr = None;
 
             let ppu_cycles = cycles * 3;

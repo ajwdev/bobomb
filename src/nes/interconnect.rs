@@ -51,6 +51,8 @@ impl Interconnect {
     // TODO Make this work
     // pub fn read_word<T: Addressable>(&self, addr: T) -> u8 {
     pub fn read_word(&self, addr: u16) -> u8 {
+        probe!(bobomb_memory, read, addr);
+
         match addr {
             0x0000...0x07ff => {
                 self.ram[addr as usize] // Includes zero page, stack, and ram
@@ -66,19 +68,16 @@ impl Interconnect {
             }
             // PPU
             0x2002 => {
-                println!("PPU status (0x2002)");
                 self.ppu.read_at(addr)
             }
             // Controllers
             0x4016 => {
-                println!("controller 1 read");
                 {
                     let mut controller = self.controller1.borrow_mut();
                     controller.read() as u8
                 }
             }
             0x4017 => {
-                println!("Controller 2 read");
                 {
                     let mut controller = self.controller2.borrow_mut();
                     controller.read() as u8
@@ -95,6 +94,8 @@ impl Interconnect {
     }
 
     pub fn write_word(&mut self, addr: u16, value: u8) {
+        probe!(bobomb_memory, write, addr, value);
+
         match addr {
             // RAM
             0x00...0x07ff => {
@@ -109,40 +110,40 @@ impl Interconnect {
             0x1800...0x1fff => {
                 self.ram[(addr-0x1800) as usize] = value; // Mirror 3
             }
-            // PPU
+            // PPU Control
             0x2000 => {
-                println!("PPU Control (0x2000) Write: {:#X}", value);
                 self.ppu.write_register(ppu::PpuRegister::Control, value);
             }
+            // PPU Mask
             0x2001 => {
-                println!("PPU Mask (0x2001) Write: {:#X}", value);
                 self.ppu.write_register(ppu::PpuRegister::Mask, value);
             }
             0x2002 => {
                 panic!("ppu not implemented yet. write access at {:#x}", addr);
             }
+            // PPU OAMADDR
             0x2003 => {
-                println!("PPU Oamaddr (0x2003) Write: {:#X}", value);
                 self.ppu.write_register(ppu::PpuRegister::Oamaddr, value);
             }
             0x2004 => {
                 panic!("ppu not implemented yet. write access at {:#x}", addr);
             }
+            // PPU Scroll
             0x2005 => {
-                println!("PPU Scroll (0x2005) Write: {:#X}", value);
                 self.ppu.write_register(ppu::PpuRegister::Scroll, value);
             }
+            // PPU Addr
             0x2006 => {
-                // println!("PPU Address Write: {:#X}", value);
                 self.ppu.write_register(ppu::PpuRegister::Addr, value);
             }
+            // PPU Data
             0x2007 => {
-                // println!("PPU Data Write: {:#X}", value);
                 self.ppu.write_register(ppu::PpuRegister::Data, value);
             }
             // PPU
             0x4014 => {
-                println!("DMA started");
+                // NOTE dma_end probe is in the CPU
+                probe!(bobomb_memory, dma_start);
                 self.dma_high_byte = value;
             }
             // APU
@@ -151,7 +152,6 @@ impl Interconnect {
             }
             // Controllers
             0x4016 => {
-                println!("Controller write {:#X}", value);
                 {
                     let mut controller = self.controller1.borrow_mut();
                     controller.write(value);
