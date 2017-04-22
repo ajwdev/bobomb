@@ -437,6 +437,9 @@ impl Cpu {
             0x69 => {
                 Adc::from_immediate(self)
             }
+            0xe0 => {
+                Cpx::from_immediate(self)
+            }
             0xe5 => {
                 Sbc::from_address(self, AddressMode::ZeroPage)
             }

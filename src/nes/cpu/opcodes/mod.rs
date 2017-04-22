@@ -35,7 +35,9 @@ pub use self::iny::Iny;
 pub use self::inx::Inx;
 
 mod cpy;
+mod cpx;
 pub use self::cpy::Cpy;
+pub use self::cpx::Cpx;
 
 mod adc;
 mod sbc;
