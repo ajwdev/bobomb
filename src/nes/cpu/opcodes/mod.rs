@@ -2,6 +2,9 @@ mod load;
 mod store;
 mod branch;
 
+mod bit;
+pub use self::bit::Bit;
+
 mod lda;
 mod ldx;
 mod ldy;

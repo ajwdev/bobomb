@@ -389,6 +389,12 @@ impl Cpu {
             0x20 => {
                 Jsr::absolute(self) as u32
             }
+            0x24 => {
+                Bit::from_address(self, AddressMode::ZeroPage)
+            }
+            0x2c => {
+                Bit::from_address(self, AddressMode::Absolute)
+            }
             0x40 => {
                 Rti::from_implied(self)
             }
