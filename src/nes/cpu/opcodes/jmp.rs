@@ -1,4 +1,4 @@
-use nes::cpu::{Cpu,Absolute};
+use nes::cpu::{Cpu,Absolute,FromAddress,AddressMode};
 
 pub struct Jmp { }
 
@@ -9,6 +9,19 @@ impl Absolute for Jmp {
         cpu.PC = addr;
 
         3
+    }
+}
+
+impl FromAddress for Jmp {
+    fn from_address(cpu: &mut Cpu, mode: AddressMode) -> u32 {
+        let (src, _) = cpu.translate_address(mode);
+        cpu.PC = src.into();
+
+        match mode {
+            AddressMode::Absolute => 3,
+            AddressMode::Indirect => 5,
+            _ => { panic!("unimplemented address mode {:?} for JMP", mode); }
+        }
     }
 }
 

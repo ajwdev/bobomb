@@ -298,6 +298,7 @@ impl Cpu {
         previous
     }
 
+    #[no_mangle]
     pub fn step(&mut self, pending_interrupt: Option<Interrupt>) -> u32 {
         let mut burned_cycles = 0;
         self.last_pc = self.PC;
@@ -386,6 +387,12 @@ impl Cpu {
             0xc9 => {
                 Cmp::immediate(self) as u32
             }
+            0xd9 => {
+                Cmp::from_address(self, AddressMode::AbsoluteY)
+            }
+            0xcd => {
+                Cmp::from_address(self, AddressMode::Absolute)
+            }
             0x20 => {
                 Jsr::absolute(self) as u32
             }
@@ -408,7 +415,10 @@ impl Cpu {
                 Lsr::from_address(self, AddressMode::ZeroPage)
             }
             0x4c => {
-                Jmp::absolute(self) as u32
+                Jmp::from_address(self, AddressMode::Absolute)
+            }
+            0x6c => {
+                Jmp::from_address(self, AddressMode::Indirect)
             }
             0x48 => {
                 Pha::implied(self) as u32
@@ -428,6 +438,9 @@ impl Cpu {
             0x35 => {
                 And::from_address(self, AddressMode::ZeroPageX)
             }
+            0x3d => {
+                And::from_address(self, AddressMode::AbsoluteX)
+            }
             0x05 => {
                 Ora::from_address(self, AddressMode::ZeroPage)
             }
@@ -443,6 +456,9 @@ impl Cpu {
             0x69 => {
                 Adc::from_immediate(self)
             }
+            0x79 => {
+                Adc::from_address(self, AddressMode::AbsoluteY)
+            }
             0xe0 => {
                 Cpx::from_immediate(self)
             }
@@ -452,14 +468,23 @@ impl Cpu {
             0xe9 => {
                 Sbc::from_immediate(self)
             }
+            0xf9 => {
+                Sbc::from_address(self, AddressMode::AbsoluteY)
+            }
             0x66 => {
                 Ror::from_address(self, AddressMode::ZeroPage)
+            }
+            0x7e => {
+                Ror::from_address(self, AddressMode::AbsoluteX)
             }
             0x6a => {
                 Ror::from_accumulator(self)
             }
             0x2a => {
                 Rol::from_accumulator(self)
+            }
+            0x26 => {
+                Rol::from_address(self, AddressMode::ZeroPage)
             }
             0x38 => {
                 Sec::from_implied(self)
@@ -494,8 +519,14 @@ impl Cpu {
             0xa4 => {
                 Ldy::from_address(self, AddressMode::ZeroPage)
             }
+            0xac => {
+                Ldy::from_address(self, AddressMode::Absolute)
+            }
             0xb4 => {
                 Ldy::from_address(self, AddressMode::ZeroPageX)
+            }
+            0xbe => {
+                Ldy::from_address(self, AddressMode::AbsoluteY)
             }
             0xa2 => {
                 Ldx::from_immediate(self)
@@ -568,6 +599,9 @@ impl Cpu {
             }
             0xce => {
                 Dec::from_address(self, AddressMode::Absolute)
+            }
+            0xde => {
+                Dec::from_address(self, AddressMode::AbsoluteX)
             }
             0xe6 => {
                 Inc::from_address(self, AddressMode::ZeroPage)

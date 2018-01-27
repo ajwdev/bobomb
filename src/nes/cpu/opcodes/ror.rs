@@ -30,7 +30,7 @@ impl Ror {
 
 impl FromAddress for Ror {
     fn from_address(cpu: &mut Cpu, mode: AddressMode) -> u32 {
-        let (src, _) = cpu.translate_address(mode);
+        let (src, extra_cycles) = cpu.translate_address(mode);
         let word = cpu.read_at(src);
 
         let result = Ror::rotate_right(cpu, word);
@@ -39,6 +39,7 @@ impl FromAddress for Ror {
 
         match mode {
             AddressMode::ZeroPage => 5,
+            AddressMode::AbsoluteX => { 4 + (extra_cycles as u32) },
             _ => { panic!("unimplemented address mode {:?} for ROR", mode); }
         }
     }

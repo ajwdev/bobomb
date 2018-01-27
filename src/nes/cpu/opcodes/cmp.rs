@@ -38,10 +38,11 @@ impl FromAddress for Cmp {
         match mode {
             AddressMode::ZeroPage => 3,
             AddressMode::ZeroPageX => 4,
+            AddressMode::Absolute =>  4,
             AddressMode::AbsoluteX => { 4 + (extra_cycles as u32) },
             AddressMode::AbsoluteY => { 4 + (extra_cycles as u32) },
             AddressMode::IndirectY => { 5 + (extra_cycles as u32) },
-            _ => { panic!("unimplemented address mode {:?} for AND", mode); }
+            _ => { panic!("unimplemented address mode {:?} for CMP", mode); }
         }
     }
 }

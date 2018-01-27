@@ -24,6 +24,7 @@ impl FromAddress for Dec {
             AddressMode::ZeroPage => 5,
             AddressMode::ZeroPageX => 6,
             AddressMode::Absolute => 6,
+            AddressMode::AbsoluteX => 7,
             _ => { panic!("unimplemented address mode {:?} for DEC", mode); }
         }
     }
