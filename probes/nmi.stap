@@ -5,3 +5,11 @@ probe begin {
 probe process.provider("bobomb_interrupt").mark("nmi") {
     println("NMI fired");
 }
+
+probe process.provider("bobomb_ppu").mark("vblank_begin") {
+    println("VBlank Begin");
+}
+
+probe process.provider("bobomb_ppu").mark("vblank_end") {
+    println("VBlank End");
+}

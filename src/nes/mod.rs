@@ -111,7 +111,7 @@ impl Nes {
     }
 
     pub fn start_emulation(&mut self) {
-        let ten_millis = time::Duration::from_millis(10);
+        // let one_milli = time::Duration::from_millis(1);
 
         let mut intr: Option<cpu::Interrupt> = None;
         let lock_pair: ExecutorLock = Arc::new((Mutex::new(true), Condvar::new()));
@@ -153,7 +153,7 @@ impl Nes {
 
             // We'll need to figure out the timings latter. For now, lets
             // not burn our cpu so much
-            thread::sleep(ten_millis);
+            // thread::sleep(one_milli);
         }
     }
 }

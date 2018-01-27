@@ -2,6 +2,8 @@ use nes::address::Address;
 use nes::cpu::Interrupt;
 use std::cell::Cell;
 
+use std::process;
+
 // TODO This file is a mess. We need to heavily refactor after we're
 // confident about the implementation
 
@@ -36,7 +38,8 @@ pub enum PpuRegister {
 #[allow(non_snake_case)]
 #[derive(Debug)]
 pub struct Ppu {
-    vram: Vec<u8>,
+    // vram: Vec<u8>,
+    vram: Box<[u8]>,
     oam: Vec<u8>,
 
     // OAM == Object Attribute Memory. Its for sprites
@@ -72,7 +75,8 @@ pub struct Ppu {
 impl Ppu {
     pub fn new() -> Self {
         Ppu {
-            vram: vec![0; VRAM_SIZE],
+            // vram: vec![0; VRAM_SIZE],
+            vram: Box::new([0; VRAM_SIZE]),
             oam: vec![0; 256],
             oamaddr: 0,
             Oamdata: 0,
@@ -119,6 +123,10 @@ impl Ppu {
                 intr = Some(Interrupt::Nmi);
             }
 
+            println!("{:?}", self.vram);
+            println!("");
+            println!("");
+            // process::exit(0);
             self.is_vblank.set(true);
         } else if self.cycles == ((CYCLES_PER_SCANLINE * 261) + 1) {
             probe!(bobomb_ppu, vblank_end);
@@ -146,6 +154,9 @@ impl Ppu {
                 self.addr_latch_first_write_done.set(false);
 
                 result
+            }
+            0x2007 => { // Data
+                panic!("ppu data read not implemented yet. access at {:#x}", address);
             }
             _ => {
                 panic!("ppu not implemented yet. access at {:#x}", address);
@@ -215,6 +226,7 @@ impl Ppu {
         let idx = (self.vram_address.get() % 0x4000) as usize;
         self.vram[idx] = value;
 
+        println!("HERE!!!");
         self.increment_vram_address();
     }
 

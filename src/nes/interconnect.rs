@@ -67,7 +67,7 @@ impl Interconnect {
                 self.ram[(addr-0x1800) as usize] // Mirror 3
             }
             // PPU
-            0x2002 => {
+            0x2002|0x2007 => {
                 self.ppu.read_at(addr)
             }
             // Controllers
@@ -148,7 +148,8 @@ impl Interconnect {
             }
             // APU
             0x4015 => {
-                println!("Write APU status not implemented. Skipping");
+                probe!(bobomb_memory, apu_status);
+                // println!("Write APU status not implemented. Skipping");
             }
             // Controllers
             0x4016 => {
@@ -163,10 +164,10 @@ impl Interconnect {
             }
             // APU
             0x4000...0x4008 => {
-                println!("Write APU thing not implemented. Skipping");
+                // println!("Write APU thing not implemented. Skipping");
             }
             0x400A...0x4017 => {
-                println!("Write APU thing not implemented. Skipping");
+                // println!("Write APU thing not implemented. Skipping");
             }
             _ => {
                 panic!("unimplemented write address {:#x}", addr);
