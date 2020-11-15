@@ -75,7 +75,7 @@ impl DebuggerImpl {
 
     fn create_disassemble_msg<T: Addressable>(&self, address: T) -> Result<DisassembleMsg, String> {
         let mem = self.shim.interconnect.lock();
-        let cpu = self.shim.cpu.lock();
+        let _cpu = self.shim.cpu.lock();
 
         let mut msg = DisassembleMsg::new();
 

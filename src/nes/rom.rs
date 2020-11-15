@@ -56,11 +56,11 @@ impl Index<u16> for Rom {
 
     fn index(&self, addr: u16) -> &u8 {
         match addr {
-            ROM_LOWER_START...ROM_LOWER_END => {    // Lower Bank
+            ROM_LOWER_START..=ROM_LOWER_END => {    // Lower Bank
                 let reladdr: u16 = addr - ROM_LOWER_START;
                 &self.lower_bank.as_ref().unwrap()[reladdr as usize]
             }
-            ROM_UPPER_START...ROM_UPPER_END => {    // Upper Bank
+            ROM_UPPER_START..=ROM_UPPER_END => {    // Upper Bank
                 let reladdr: u16 = addr - (ROM_LOWER_START + ROM_BANK_SIZE);
                 if self.upper_bank.is_some() {
                     &self.upper_bank.as_ref().unwrap()[reladdr as usize]

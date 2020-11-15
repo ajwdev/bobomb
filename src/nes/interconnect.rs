@@ -54,16 +54,16 @@ impl Interconnect {
         probe!(bobomb_memory, read, addr);
 
         match addr {
-            0x0000...0x07ff => {
+            0x0000..=0x07ff => {
                 self.ram[addr as usize] // Includes zero page, stack, and ram
             }
-            0x0800...0x0fff => {
+            0x0800..=0x0fff => {
                 self.ram[(addr-0x0800) as usize] // Mirror 1
             }
-            0x1000...0x17ff => {
+            0x1000..=0x17ff => {
                 self.ram[(addr-0x1000) as usize] // Mirror 2
             }
-            0x1800...0x1fff => {
+            0x1800..=0x1fff => {
                 self.ram[(addr-0x1800) as usize] // Mirror 3
             }
             // PPU
@@ -84,7 +84,7 @@ impl Interconnect {
                 }
             }
             // ROM
-            0x8000...0xFFFF => {
+            0x8000..=0xFFFF => {
                 self.rom[addr]
             }
             _ => {
@@ -98,16 +98,16 @@ impl Interconnect {
 
         match addr {
             // RAM
-            0x00...0x07ff => {
+            0x00..=0x07ff => {
                 self.ram[addr as usize] = value;
             }
-            0x0800...0x0fff => {
+            0x0800..=0x0fff => {
                 self.ram[(addr-0x0800) as usize] = value; // Mirror 1
             }
-            0x1000...0x17ff => {
+            0x1000..=0x17ff => {
                 self.ram[(addr-0x1000) as usize] = value; // Mirror 2
             }
-            0x1800...0x1fff => {
+            0x1800..=0x1fff => {
                 self.ram[(addr-0x1800) as usize] = value; // Mirror 3
             }
             // PPU Control
@@ -163,10 +163,10 @@ impl Interconnect {
                 }
             }
             // APU
-            0x4000...0x4008 => {
+            0x4000..=0x4008 => {
                 // println!("Write APU thing not implemented. Skipping");
             }
-            0x400A...0x4017 => {
+            0x400A..=0x4017 => {
                 // println!("Write APU thing not implemented. Skipping");
             }
             _ => {

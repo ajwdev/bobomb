@@ -5,7 +5,7 @@ pub struct Cpy { }
 
 impl FromImmediate for Cpy {
     fn from_immediate(cpu: &mut Cpu) -> u32 {
-        let word = cpu.read_word_and_increment();;
+        let word = cpu.read_word_and_increment();
         let result = cpu.Y.wrapping_sub(word);
 
         cpu.zero_and_negative_status(result);
@@ -23,7 +23,6 @@ impl FromImmediate for Cpy {
 #[cfg(test)]
 mod test {
     use crate::nes::cpu::test::*;
-    use crate::nes::cpu::Registers;
     use crate::nes::cpu::status::Flags;
 
     #[test]

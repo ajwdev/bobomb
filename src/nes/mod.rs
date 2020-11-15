@@ -121,13 +121,13 @@ impl Nes {
             self.interconnect.clone(),
             lock_pair.clone()
         ));
-        // let _server = DebuggerServer::new("[::]:6502", DebuggerImpl::new(shim.clone()));
+
         let service_def = DebuggerServer::new_service_def(DebuggerImpl::new(shim.clone()));
         let mut server_builder = grpc::ServerBuilder::new_plain();
         server_builder.add_service(service_def);
         server_builder.http.set_port(6502);
         // TODO Not sure what to do here
-        let server = server_builder.build().expect("server builder fail");
+        let _server = server_builder.build().expect("server builder fail");
 
         probe!(bobomb, start_emulation);
         loop {
