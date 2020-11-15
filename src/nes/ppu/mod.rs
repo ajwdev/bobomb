@@ -1,5 +1,5 @@
-use nes::address::Address;
-use nes::cpu::Interrupt;
+use crate::nes::address::Address;
+use crate::nes::cpu::Interrupt;
 use std::cell::Cell;
 
 use std::process;
@@ -11,7 +11,7 @@ use std::process;
 // the address latch and where bits get shifted into place
 
 mod control;
-use nes::ppu::control::{ControlRegister,VramIncrement};
+use crate::nes::ppu::control::{ControlRegister,VramIncrement};
 
 const VRAM_SIZE: usize = 16 * 1024;
 const COLUMNS_PER_SCANLINE: usize = 340;

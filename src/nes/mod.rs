@@ -1,6 +1,5 @@
 use parking_lot::{Mutex,Condvar};
 use std::sync::Arc;
-use std::{thread, time};
 
 pub mod cpu;
 pub mod ppu;
@@ -10,10 +9,10 @@ pub mod address;
 pub mod interconnect;
 
 mod debugger;
-use nes::debugger::{DebuggerServer,Debugger,DebuggerImpl,DebuggerShim};
+use crate::nes::debugger::{DebuggerServer,Debugger,DebuggerImpl,DebuggerShim};
 
 mod executor;
-pub use nes::executor::ExecutorLock;
+pub use crate::nes::executor::ExecutorLock;
 
 pub struct Nes {
     cpu: Arc<Mutex<cpu::Cpu>>,
@@ -122,7 +121,13 @@ impl Nes {
             self.interconnect.clone(),
             lock_pair.clone()
         ));
-        let _server = DebuggerServer::new("[::]:6502", DebuggerImpl::new(shim.clone()));
+        // let _server = DebuggerServer::new("[::]:6502", DebuggerImpl::new(shim.clone()));
+        let service_def = DebuggerServer::new_service_def(DebuggerImpl::new(shim.clone()));
+        let mut server_builder = grpc::ServerBuilder::new_plain();
+        server_builder.add_service(service_def);
+        server_builder.http.set_port(6502);
+        // TODO Not sure what to do here
+        let server = server_builder.build().expect("server builder fail");
 
         probe!(bobomb, start_emulation);
         loop {

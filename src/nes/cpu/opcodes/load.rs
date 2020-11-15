@@ -1,4 +1,4 @@
-use nes::cpu::{Cpu,Registers};
+use crate::nes::cpu::{Cpu,Registers};
 
 pub struct Load { }
 

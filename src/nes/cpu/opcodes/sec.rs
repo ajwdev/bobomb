@@ -1,5 +1,5 @@
-use nes::cpu::{Cpu,FromImplied};
-use nes::cpu::status::Flags;
+use crate::nes::cpu::{Cpu,FromImplied};
+use crate::nes::cpu::status::Flags;
 use super::store::Store;
 
 pub struct Sec { }
@@ -13,8 +13,8 @@ impl FromImplied for Sec {
 
 #[cfg(test)]
 mod test {
-    use nes::cpu::test::*;
-    use nes::cpu::status::Flags;
+    use crate::nes::cpu::test::*;
+    use crate::nes::cpu::status::Flags;
 
     #[test]
     fn test_sec() {

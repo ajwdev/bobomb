@@ -1,4 +1,4 @@
-use nes::cpu::{Cpu,FromImmediate,FromAddress,AddressMode};
+use crate::nes::cpu::{Cpu,FromImmediate,FromAddress,AddressMode};
 
 pub struct Eor { }
 
@@ -40,9 +40,9 @@ impl FromAddress for Eor {
 
 #[cfg(test)]
 mod test {
-    use nes::cpu::test::*;
-    use nes::cpu::Registers;
-    use nes::cpu::status::Flags;
+    use crate::nes::cpu::test::*;
+    use crate::nes::cpu::Registers;
+    use crate::nes::cpu::status::Flags;
 
     #[test]
     fn test_eor() {

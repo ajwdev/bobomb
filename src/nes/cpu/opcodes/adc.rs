@@ -1,6 +1,6 @@
-use nes::cpu::{Cpu,AddressMode,FromAddress,FromImmediate};
-use nes::cpu::status::Flags;
-use nes::address::Address;
+use crate::nes::cpu::{Cpu,AddressMode,FromAddress,FromImmediate};
+use crate::nes::cpu::status::Flags;
+use crate::nes::address::Address;
 
 pub struct Adc { }
 
@@ -59,9 +59,9 @@ impl FromAddress for Adc {
 
 #[cfg(test)]
 mod test {
-    use nes::cpu::test::*;
-    use nes::cpu::Registers;
-    use nes::cpu::status::Flags;
+    use crate::nes::cpu::test::*;
+    use crate::nes::cpu::Registers;
+    use crate::nes::cpu::status::Flags;
 
     // TODO Write tests by figuring out a better way to make a mock CPU
     // now that we have abstracted out the address resolution stuff

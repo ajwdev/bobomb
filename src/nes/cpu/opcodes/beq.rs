@@ -1,5 +1,5 @@
-use nes::cpu::{Cpu,Relative};
-use nes::cpu::status::Flags;
+use crate::nes::cpu::{Cpu,Relative};
+use crate::nes::cpu::status::Flags;
 use super::branch::Branch;
 
 pub struct Beq { }
@@ -12,7 +12,7 @@ impl Relative for Beq {
 
 #[cfg(test)]
 mod test {
-    use nes::cpu::test::*;
+    use crate::nes::cpu::test::*;
 
     #[test]
     fn test_beq_skip() {

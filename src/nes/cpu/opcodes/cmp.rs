@@ -1,5 +1,5 @@
-use nes::cpu::{Cpu,AddressMode,Immediate,FromAddress};
-use nes::cpu::status::Flags;
+use crate::nes::cpu::{Cpu,AddressMode,Immediate,FromAddress};
+use crate::nes::cpu::status::Flags;
 
 pub struct Cmp { }
 
@@ -49,9 +49,9 @@ impl FromAddress for Cmp {
 
 #[cfg(test)]
 mod test {
-    use nes::cpu::test::*;
-    use nes::cpu::status::Flags;
-    use nes::cpu::Registers;
+    use crate::nes::cpu::test::*;
+    use crate::nes::cpu::status::Flags;
+    use crate::nes::cpu::Registers;
 
     #[test]
     fn test_cmp_equal() {

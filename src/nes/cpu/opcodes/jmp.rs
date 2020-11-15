@@ -1,4 +1,4 @@
-use nes::cpu::{Cpu,Absolute,FromAddress,AddressMode};
+use crate::nes::cpu::{Cpu,Absolute,FromAddress,AddressMode};
 
 pub struct Jmp { }
 
@@ -27,7 +27,7 @@ impl FromAddress for Jmp {
 
 #[cfg(test)]
 mod test {
-    use nes::cpu::test::*;
+    use crate::nes::cpu::test::*;
 
     #[test]
     fn test_jmp() {

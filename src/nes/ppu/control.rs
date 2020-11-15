@@ -2,7 +2,7 @@ use std::ops::BitAnd;
 use std::cmp::PartialEq;
 use std::fmt;
 
-use nes::address::Address;
+use crate::nes::address::Address;
 
 pub enum VramIncrement {
     AcrossOne,

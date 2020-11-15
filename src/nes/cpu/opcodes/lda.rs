@@ -1,4 +1,4 @@
-use nes::cpu::{Cpu,Registers,AddressMode,FromImmediate,FromAddress};
+use crate::nes::cpu::{Cpu,Registers,AddressMode,FromImmediate,FromAddress};
 
 pub struct Lda { }
 
@@ -40,8 +40,8 @@ impl FromAddress for Lda {
 
 #[cfg(test)]
 mod test {
-    use nes::cpu::test::*;
-    use nes::cpu::Registers;
+    use crate::nes::cpu::test::*;
+    use crate::nes::cpu::Registers;
 
     #[test]
     fn test_lda_abs() {

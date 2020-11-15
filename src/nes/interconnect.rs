@@ -1,10 +1,10 @@
 use std::ops::{Index,IndexMut};
 use std::cell::{RefCell,RefMut};
 
-use nes::ppu;
-use nes::controller;
-use nes::address::{Address,Addressable};
-use nes::rom::{Rom,Bank};
+use crate::nes::ppu;
+use crate::nes::controller;
+use crate::nes::address::{Address,Addressable};
+use crate::nes::rom::{Rom,Bank};
 
 const SYSTEM_RAM: usize = 2 * 1024;
 
@@ -179,8 +179,8 @@ impl Interconnect {
 #[cfg(test)]
 mod test {
     use super::Interconnect;
-    use nes::ppu::Ppu;
-    use nes::rom::{Bank,Rom};
+    use crate::nes::ppu::Ppu;
+    use crate::nes::rom::{Bank,Rom};
 
     #[test]
     fn test_write_word() {

@@ -1,4 +1,4 @@
-use nes::cpu::{Cpu,Registers,FromAddress,AddressMode};
+use crate::nes::cpu::{Cpu,Registers,FromAddress,AddressMode};
 use super::store::Store;
 
 pub struct Sta { }
@@ -23,7 +23,7 @@ impl FromAddress for Sta {
 
 #[cfg(test)]
 mod test {
-    use nes::cpu::test::*;
+    use crate::nes::cpu::test::*;
 
     #[test]
     fn test_sta_zeropage() {

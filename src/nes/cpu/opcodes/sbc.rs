@@ -1,6 +1,6 @@
-use nes::cpu::{Cpu,AddressMode,FromAddress,FromImmediate};
-use nes::cpu::status::Flags;
-use nes::address::Address;
+use crate::nes::cpu::{Cpu,AddressMode,FromAddress,FromImmediate};
+use crate::nes::cpu::status::Flags;
+use crate::nes::address::Address;
 
 pub struct Sbc { }
 

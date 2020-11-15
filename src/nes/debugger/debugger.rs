@@ -1,19 +1,15 @@
-use parking_lot::{Mutex,Condvar};
+use parking_lot::Mutex;
 use std::sync::Arc;
 use std::collections::HashSet;
 
-extern crate grpc;
-use grpc::result::GrpcResult;
-use grpc::error::GrpcError;
+use crate::nes::debugger::debugger_server::*;
+use crate::nes::debugger::debugger_server_grpc::*;
 
-use nes::debugger::debugger_server::*;
-use nes::debugger::debugger_server_grpc::*;
-
-use nes::ExecutorLock;
-use nes::cpu::Cpu;
-use nes::interconnect::Interconnect;
-use nes::cpu::disassemble::Disassembler;
-use nes::address::{Address,Addressable};
+use crate::nes::ExecutorLock;
+use crate::nes::cpu::Cpu;
+use crate::nes::interconnect::Interconnect;
+use crate::nes::cpu::disassemble::Disassembler;
+use crate::nes::address::Addressable;
 
 // NOTE You'll see a lot of code where we cast NES addresses which are normally u16 to u32. This is
 // because u32 is the smallest datatype Protobufs natively support (as far as I can tell)
@@ -103,29 +99,49 @@ impl DebuggerImpl {
 }
 
 impl Debugger for DebuggerImpl {
-    fn Ping(&self, req: PingRequest) -> GrpcResult<OkReply> {
+    fn ping(
+        &self,
+        _ctx: ::grpc::ServerHandlerContext,
+        req: ::grpc::ServerRequestSingle<PingRequest>,
+        resp: ::grpc::ServerResponseUnarySink<OkReply>) -> ::grpc::Result<()>
+    {
         let mut r = OkReply::new();
-        r.set_message(format!("Pong: {}", req.message));
-        Ok(r)
+        r.set_message(format!("Pong: {}", req.message.message));
+        resp.finish(r)
     }
 
-    fn Stop(&self, req: StopRequest) -> GrpcResult<OkReply> {
+    fn stop(
+        &self,
+        _ctx: ::grpc::ServerHandlerContext,
+        _req: ::grpc::ServerRequestSingle<StopRequest>,
+        resp: ::grpc::ServerResponseUnarySink<OkReply>) -> ::grpc::Result<()>
+    {
         self.shim.stop_execution();
         let mut r = OkReply::new();
         r.set_message(format!("0x{:04X}", self.shim.cpu.lock().get_pc()));
 
-        Ok(r)
+        resp.finish(r)
     }
 
-    fn Continue(&self, req: ContinueRequest) -> GrpcResult<OkReply> {
+    fn cont(
+        &self,
+        _ctx: ::grpc::ServerHandlerContext,
+        _req: ::grpc::ServerRequestSingle<ContinueRequest>,
+        resp: ::grpc::ServerResponseUnarySink<OkReply>) -> ::grpc::Result<()>
+    {
         self.shim.start_execution();
-        Ok(OkReply::new())
+        resp.finish(OkReply::new())
     }
 
-    fn Breakpoint(&self, req: BreakpointRequest) -> GrpcResult<OkReply> {
-        for a in req.get_addresses() {
+    fn breakpoint(
+        &self,
+        _ctx: ::grpc::ServerHandlerContext,
+        req: ::grpc::ServerRequestSingle<BreakpointRequest>,
+        resp: ::grpc::ServerResponseUnarySink<OkReply>) -> ::grpc::Result<()>
+    {
+        for a in req.message.get_addresses() {
             let tmp = *a as u16;
-            match req.action {
+            match req.message.action {
                 BreakpointRequest_Action::SET => {
                     self.shim.breakpoints.lock().insert(tmp);
                 }
@@ -135,22 +151,27 @@ impl Debugger for DebuggerImpl {
             }
         }
 
-        Ok(OkReply::new())
+        resp.finish(OkReply::new())
     }
 
-    fn Disassemble(&self, req: DisassembleRequest) -> GrpcResult<DisassembleReply> {
+    fn disassemble(
+        &self,
+        _ctx: ::grpc::ServerHandlerContext,
+        req: ::grpc::ServerRequestSingle<DisassembleRequest>,
+        resp: ::grpc::ServerResponseUnarySink<DisassembleReply>) -> ::grpc::Result<()>
+    {
         let mut r = DisassembleReply::new();
-        let count = if req.count == 0 {
+        let count = if req.message.count == 0 {
             1
         } else {
-            req.count
+            req.message.count
         };
-        let mut address = req.address as u16;
+        let mut address = req.message.address as u16;
 
         for _ in 0..count {
             match self.create_disassemble_msg(address) {
                 Ok(msg) => {
-                    address += (msg.instruction_width as u16);
+                    address += msg.instruction_width as u16;
                     r.mut_disassembly().push(msg);
                 }
                 Err(why) => {
@@ -163,6 +184,6 @@ impl Debugger for DebuggerImpl {
         let len = r.mut_disassembly().len();
         r.length = len as u64;
 
-        Ok(r)
+        resp.finish(r)
     }
 }

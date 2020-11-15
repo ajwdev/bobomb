@@ -1,4 +1,4 @@
-use nes::cpu::{Cpu,FromAddress,AddressMode};
+use crate::nes::cpu::{Cpu,FromAddress,AddressMode};
 
 pub struct Inc { }
 
@@ -32,7 +32,7 @@ impl FromAddress for Inc {
 
 // #[cfg(test)]
 // mod test {
-//     use nes::cpu::test::*;
+//     use crate::nes::cpu::test::*;
 
 //     #[test]
 //     fn test_dec_zero() {

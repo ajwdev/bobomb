@@ -1,4 +1,4 @@
-use nes::cpu::{Cpu,FromImplied,AddressMode};
+use crate::nes::cpu::{Cpu,FromImplied,AddressMode};
 
 pub struct Inx { }
 
@@ -16,9 +16,9 @@ impl FromImplied for Inx {
 
 #[cfg(test)]
 mod test {
-    use nes::cpu::test::*;
-    use nes::cpu::Registers;
-    use nes::cpu::status::Flags;
+    use crate::nes::cpu::test::*;
+    use crate::nes::cpu::Registers;
+    use crate::nes::cpu::status::Flags;
 
     #[test]
     fn test_inx() {

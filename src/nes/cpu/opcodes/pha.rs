@@ -1,4 +1,4 @@
-use nes::cpu::{Cpu,Registers,Implied};
+use crate::nes::cpu::{Cpu,Registers,Implied};
 
 pub struct Pha { }
 
@@ -13,7 +13,7 @@ impl Implied for Pha {
 
 #[cfg(test)]
 mod test {
-    use nes::cpu::test::*;
+    use crate::nes::cpu::test::*;
 
     #[test]
     fn test_pha() {

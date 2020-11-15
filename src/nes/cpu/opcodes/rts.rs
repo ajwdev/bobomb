@@ -1,5 +1,5 @@
-use nes::cpu::{Cpu,FromImplied};
-use nes::address::Address;
+use crate::nes::cpu::{Cpu,FromImplied};
+use crate::nes::address::Address;
 
 pub struct Rts { }
 
@@ -18,8 +18,8 @@ impl FromImplied for Rts {
 
 #[cfg(test)]
 mod test {
-    use nes::cpu::test::*;
-    use nes::cpu::Registers;
+    use crate::nes::cpu::test::*;
+    use crate::nes::cpu::Registers;
 
     #[test]
     fn test_rts() {

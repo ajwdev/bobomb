@@ -1,4 +1,4 @@
-use nes::cpu::{Cpu,FromImplied};
+use crate::nes::cpu::{Cpu,FromImplied};
 
 pub struct Tax { }
 
@@ -17,9 +17,9 @@ impl FromImplied for Tax {
 
 #[cfg(test)]
 mod test {
-    use nes::cpu::test::*;
-    use nes::cpu::Registers;
-    use nes::cpu::status::Flags;
+    use crate::nes::cpu::test::*;
+    use crate::nes::cpu::Registers;
+    use crate::nes::cpu::status::Flags;
 
     #[test]
     fn test_tax() {

@@ -10,12 +10,12 @@ mod status;
 mod opcodes;
 mod address_modes;
 
-pub use nes::cpu::address_modes::*;
+pub use crate::nes::cpu::address_modes::*;
 
-use nes::address::{Address,Addressable};
-use nes::interconnect::Interconnect;
-use nes::cpu::status::{Flags,StatusRegister};
-use nes::cpu::opcodes::*;
+use crate::nes::address::{Address,Addressable};
+use crate::nes::interconnect::Interconnect;
+use crate::nes::cpu::status::{Flags,StatusRegister};
+use crate::nes::cpu::opcodes::*;
 
 // TODO Consider breaking the CPU logic out into its own private module and re-exporting it. This
 // will require adjusting the visibility on a lot of methods.
@@ -658,9 +658,9 @@ impl Cpu {
 #[cfg(test)]
 mod test {
     use super::Cpu;
-    use nes::ppu::Ppu;
-    use nes::rom::{Bank,Rom};
-    use nes::interconnect::Interconnect;
+    use crate::nes::ppu::Ppu;
+    use crate::nes::rom::{Bank,Rom};
+    use crate::nes::interconnect::Interconnect;
 
 
     pub fn rom_with_pc_at_start(words: &[u8]) -> Vec<u8> {

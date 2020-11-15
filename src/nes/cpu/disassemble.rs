@@ -1,6 +1,6 @@
-use nes::cpu::AddressMode;
-use nes::cpu::opcodes;
-use nes::address::{Address,Addressable};
+use crate::nes::cpu::AddressMode;
+use crate::nes::cpu::opcodes;
+use crate::nes::address::{Address,Addressable};
 
 pub struct Disassembler { }
 

@@ -1,4 +1,4 @@
-use nes::cpu::{Cpu,Registers,FromAddress,AddressMode};
+use crate::nes::cpu::{Cpu,Registers,FromAddress,AddressMode};
 use super::store::Store;
 
 pub struct Sty { }
@@ -20,7 +20,7 @@ impl FromAddress for Sty {
 
 #[cfg(test)]
 mod test {
-    use nes::cpu::test::*;
+    use crate::nes::cpu::test::*;
 
     #[test]
     fn test_sty_zero() {

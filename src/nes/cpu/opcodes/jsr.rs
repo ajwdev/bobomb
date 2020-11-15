@@ -1,5 +1,5 @@
-use nes::cpu::{Cpu,Absolute};
-use nes::address::Address;
+use crate::nes::cpu::{Cpu,Absolute};
+use crate::nes::address::Address;
 
 pub struct Jsr { }
 
@@ -22,7 +22,7 @@ impl Absolute for Jsr {
 
 #[cfg(test)]
 mod test {
-    use nes::cpu::test::*;
+    use crate::nes::cpu::test::*;
 
     #[test]
     fn test_jsr() {

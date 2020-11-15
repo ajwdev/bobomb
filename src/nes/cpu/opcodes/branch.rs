@@ -1,4 +1,4 @@
-use nes::cpu::Cpu;
+use crate::nes::cpu::Cpu;
 
 pub struct Branch { }
 

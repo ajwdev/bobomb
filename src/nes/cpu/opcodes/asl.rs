@@ -1,5 +1,5 @@
-use nes::cpu::{Cpu,FromAddress,FromAccumulator,AddressMode};
-use nes::cpu::status::Flags;
+use crate::nes::cpu::{Cpu,FromAddress,FromAccumulator,AddressMode};
+use crate::nes::cpu::status::Flags;
 
 pub struct Asl { }
 
@@ -51,9 +51,9 @@ impl FromAccumulator for Asl {
 
 // #[cfg(test)]
 // mod test {
-//     use nes::cpu::test::*;
-//     use nes::cpu::Registers;
-//     use nes::cpu::status::Flags;
+//     use crate::nes::cpu::test::*;
+//     use crate::nes::cpu::Registers;
+//     use crate::nes::cpu::status::Flags;
 
 //     #[test]
 //     fn test_eor() {

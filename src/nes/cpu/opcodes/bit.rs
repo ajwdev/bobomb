@@ -1,5 +1,5 @@
-use nes::cpu::{Cpu,AddressMode,FromAddress};
-use nes::cpu::status::Flags;
+use crate::nes::cpu::{Cpu,AddressMode,FromAddress};
+use crate::nes::cpu::status::Flags;
 
 pub struct Bit { }
 

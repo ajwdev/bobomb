@@ -1,5 +1,5 @@
-use nes::cpu::{Cpu,Relative};
-use nes::cpu::status::Flags;
+use crate::nes::cpu::{Cpu,Relative};
+use crate::nes::cpu::status::Flags;
 use super::branch::Branch;
 
 pub struct Bne { }
@@ -14,8 +14,8 @@ impl Relative for Bne {
 
 #[cfg(test)]
 mod test {
-    use nes::cpu::test::*;
-    use nes::cpu::status::Flags;
+    use crate::nes::cpu::test::*;
+    use crate::nes::cpu::status::Flags;
 
     #[test]
     fn test_bne_skip() {

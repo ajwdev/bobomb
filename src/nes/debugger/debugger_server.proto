@@ -4,7 +4,8 @@ service Debugger {
     rpc Ping (PingRequest) returns (OkReply) {}
 
     rpc Stop (StopRequest) returns (OkReply) {}
-    rpc Continue (ContinueRequest) returns (OkReply) {}
+    /* rpc Continue (ContinueRequest) returns (OkReply) {} */
+    rpc Cont (ContinueRequest) returns (OkReply) {}
 
     rpc Disassemble (DisassembleRequest) returns (DisassembleReply) {}
     rpc Breakpoint (BreakpointRequest) returns (OkReply) {}
