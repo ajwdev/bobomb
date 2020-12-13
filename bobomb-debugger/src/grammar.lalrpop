@@ -5,7 +5,7 @@ use crate::ast::*;
 
 grammar;
 
-pub Expr: Box<Expression> = {
+Expr: Box<Expression> = {
     Expr OrOp XorExpr => Box::new(Expression::Op(<>)),
     XorExpr,
 };
@@ -91,7 +91,7 @@ Int32: i32 = {
 // display their output. This syntax was borrowed from GDB:
 // https://sourceware.org/gdb/current/onlinedocs/gdb/Expressions.html#Expressions
 
-pub FmtExpr: Format = {
+FmtExpr: Format = {
     <s:r"/-?[0-9]+[xdi]"> => {
         let n = i32::from_str(&s[1..s.len()-1]).unwrap();
         let d = &s[s.len()-1..];
