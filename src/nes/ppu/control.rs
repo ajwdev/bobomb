@@ -84,7 +84,7 @@ impl ControlRegister {
     }
 
     pub fn write_register(&mut self, word: u8) {
-        self.base_nametable_address = match (word & 0b00000011) {
+        self.base_nametable_address = match word & 0b00000011 {
             0x00 => { Address(0x2000) }
             0x01 => { Address(0x2400) }
             0x02 => { Address(0x2800) }

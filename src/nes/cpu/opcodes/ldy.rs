@@ -22,6 +22,7 @@ impl FromAddress for Ldy {
             AddressMode::ZeroPageX => 4,
             AddressMode::Absolute => 4,
             AddressMode::AbsoluteY => { 4 + (extra_cycles as u32) },
+            AddressMode::AbsoluteX => { 4 + (extra_cycles as u32) },
             _ => { panic!("unimplemented address mode {:?} for LDY", mode); }
         }
     }

@@ -6,7 +6,7 @@ pub struct Bpl { }
 
 impl Relative for Bpl {
     fn relative(cpu: &mut Cpu) -> usize {
-        Branch::branch_on_true(cpu, |c| !c.SR.is_set(Flags::Negative));
+        Branch::branch_on_true(cpu, |c| c.SR.is_clear(Flags::Negative));
 
         2
     }

@@ -1,6 +1,10 @@
+use minifb::{Key, Window, WindowOptions};
 use parking_lot::{Mutex,Condvar};
 use std::sync::Arc;
+use std::thread;
+use std::time::{Duration,Instant};
 
+pub mod macros;
 pub mod cpu;
 pub mod ppu;
 pub mod rom;
@@ -22,6 +26,8 @@ pub struct Nes {
 
     rom_header: [u8; 16],
     cycles: u32,
+
+    window: Window,
 }
 
 impl Nes {
@@ -55,8 +61,14 @@ impl Nes {
         let cpu = Arc::new(Mutex::new(cpu::Cpu::new(interconnect.clone())));
 
         Nes {
-            cpu: cpu,
-            interconnect: interconnect,
+            cpu,
+            interconnect,
+            window: Window::new("Bobomb", 256, 240, WindowOptions{
+                title: true,
+                resize: false,
+                scale: minifb::Scale::X2,
+               ..WindowOptions::default()
+            }).unwrap(),
 
             rom_header: header,
             cycles: 0,
@@ -112,8 +124,6 @@ impl Nes {
     }
 
     pub fn start_emulation(&mut self) {
-        // let one_milli = time::Duration::from_millis(1);
-
         let mut intr: Option<cpu::Interrupt> = None;
         let lock_pair: ExecutorLock = Arc::new((Mutex::new(true), Condvar::new()));
         let &(ref lock, ref cvar) = &*lock_pair;
@@ -131,8 +141,11 @@ impl Nes {
         // TODO Not sure what to do here
         let _server = server_builder.build().expect("server builder fail");
 
+        // Limit to max ~60 fps update rate
+        // self.window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
+
         probe!(bobomb, start_emulation);
-        loop {
+        while self.window.is_open() && !self.window.is_key_down(Key::Escape) {
             {
                 let pc: u16 = self.cpu.lock().get_pc().into();
                 if shim.is_breakpoint(pc) {
@@ -150,17 +163,28 @@ impl Nes {
             let cycles = self.cpu.lock().step(intr);
             intr = None;
 
+            let mut x = self.interconnect.lock();
             let ppu_cycles = cycles * 3;
             for _ in 0..ppu_cycles {
                 // This feels gross
-                if let Some(x) = self.interconnect.lock().ppu.step() {
+                let result = x.ppu.step();
+                if let Some(x) = result.interrupt {
                     intr = Some(x);
+                }
+                if result.should_redraw {
+                    self.window.update_with_buffer(
+                        &x.ppu.front, 256, 240).unwrap();
                 }
             }
 
             // We'll need to figure out the timings latter. For now, lets
             // not burn our cpu so much
+            // let one_milli = Duration::from_millis(3);
             // thread::sleep(one_milli);
         }
+
+        println!("FRAME COUNT {}", self.interconnect.lock().ppu.frames);
+        println!("CYCLE {}", self.interconnect.lock().ppu.cycle);
+        println!("SCAN {}", self.interconnect.lock().ppu.scanline);
     }
 }

@@ -1,7 +1,7 @@
 use crate::nes::cpu::Cpu;
 
 // http://www.emulator101.com.s3-website-us-east-1.amazonaws.com/6502-addressing-modes.html
-#[derive(Debug,Copy,Clone)]
+#[derive(Debug, Copy, Clone)]
 pub enum AddressMode {
     Implied,
     Immediate,
@@ -18,7 +18,26 @@ pub enum AddressMode {
     IndirectY,
 }
 
-#[deprecated(note="please use `FromImplied` trait instead")]
+impl AddressMode {
+    pub fn len(&self) -> usize {
+        match *self {
+            AddressMode::Implied | AddressMode::Accumulator => 1,
+
+            AddressMode::Relative
+            | AddressMode::Immediate
+            | AddressMode::Indirect
+            | AddressMode::IndirectY
+            | AddressMode::IndirectX
+            | AddressMode::ZeroPage
+            | AddressMode::ZeroPageX
+            | AddressMode::ZeroPageY => 2,
+
+            AddressMode::Absolute | AddressMode::AbsoluteX | AddressMode::AbsoluteY => 3,
+        }
+    }
+}
+
+#[deprecated(note = "please use `FromImplied` trait instead")]
 pub trait Implied {
     fn implied(cpu: &mut Cpu) -> usize;
 }
@@ -27,7 +46,7 @@ pub trait FromImplied {
     fn from_implied(cpu: &mut Cpu) -> u32;
 }
 
-#[deprecated(note="please use `FromRelative` trait instead")]
+#[deprecated(note = "please use `FromRelative` trait instead")]
 pub trait Relative {
     fn relative(cpu: &mut Cpu) -> usize;
 }
@@ -36,7 +55,7 @@ pub trait FromRelative {
     fn from_relative(cpu: &mut Cpu) -> u32;
 }
 
-#[deprecated(note="please use `FromImmediate` trait instead")]
+#[deprecated(note = "please use `FromImmediate` trait instead")]
 pub trait Immediate {
     fn immediate(cpu: &mut Cpu) -> usize;
 }
@@ -53,22 +72,27 @@ pub trait FromAddress {
     fn from_address(cpu: &mut Cpu, mode: AddressMode) -> u32;
 }
 
-#[deprecated(note="please use `FromAddress` trait instead")]
+#[deprecated(note = "please use `FromAddress` trait instead")]
 pub trait Absolute {
     fn absolute(cpu: &mut Cpu) -> usize;
 }
 
-#[deprecated(note="please use `FromAddress` trait instead")]
+#[deprecated(note = "please use `FromAddress` trait instead")]
 pub trait ZeroPage {
     fn zero_page(cpu: &mut Cpu) -> usize;
 }
 
-#[deprecated(note="please use `FromAddress` trait instead")]
+#[deprecated(note = "please use `FromAddress` trait instead")]
 pub trait IndirectY {
     fn indirect_y(cpu: &mut Cpu) -> usize;
 }
 
-#[deprecated(note="please use `FromAccumulator` trait instead")]
+#[deprecated(note = "please use `FromAccumulator` trait instead")]
 pub trait Accumulator {
     fn accumulator(cpu: &mut Cpu) -> usize;
 }
+
+// pub trait Opcode {
+//     fn execute(cpu: &mut Cpu, mode: AddressMode) -> u32;
+//     fn
+// }
