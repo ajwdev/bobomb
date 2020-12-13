@@ -1,0 +1,90 @@
+syntax = "proto3";
+
+service BobombDebugger {
+    rpc Stop (StopRequest) returns (StopReply) {}
+    rpc Resume (ResumeRequest) returns (stream ResumeReply) {}
+
+    rpc PutBreakpoint (PutBreakpointRequest) returns (BreakpointReply) {}
+    rpc DeleteBreakpoint (DeleteBreakpointRequest) returns (BreakpointReply) {}
+
+    rpc ReadMemory (ReadMemoryRequest) returns (ReadMemoryReply) {}
+    // TODO WriteMemory
+    rpc ReadCPU (ReadCPURequest) returns (ReadCPUReply) {}
+    // TODO WriteCPU
+    // TODO ReadPPU / WritePPU
+    // TODO Whatever for sound
+
+    rpc Status (StatusRequest) returns (StatusReply) {}
+}
+
+message StopRequest { }
+message StopReply {
+    CPUState cpu = 1;
+}
+
+message ResumeRequest { }
+message ResumeReply {
+    uint32 program_counter = 1;
+}
+
+message PutBreakpointRequest {
+    uint32 address = 1;
+    bool temporary = 2;
+}
+
+message DeleteBreakpointRequest {
+    uint32 address = 1;
+}
+
+message BreakpointReply {
+    uint32 address = 1;
+    bool temporary = 2;
+}
+
+message ReadMemoryRequest {
+    uint32 start = 1;
+    int32 count = 2;
+    bool count_by_instruction = 3;
+}
+
+message ReadMemoryReply {
+    uint32 start = 1;
+    bytes data = 2;
+    uint32 count = 3;
+    uint32 program_counter = 4;
+}
+
+message StatusRequest { }
+message StatusReply {
+    string rom_name = 1;
+
+    enum EmulationState {
+        UNKNOWN = 0;
+        RUNNING = 1;
+        STOPPED = 2;
+    }
+    EmulationState emulation_state = 2;
+}
+
+message ReadCPURequest { }
+message ReadCPUReply {
+    CPUState cpu = 1;
+}
+
+message CPUState {
+    uint32 x = 1;
+    uint32 y = 2;
+    uint32 ac = 3;
+
+    message CpuStatusRegister {
+        bool negative = 1;
+        bool overflow = 2;
+        bool interrupt = 3;
+        bool zero = 4;
+        bool carry = 5;
+    }
+    CpuStatusRegister status = 4;
+
+    uint32 program_counter = 5;
+    uint32 stack_pointer = 6;
+}

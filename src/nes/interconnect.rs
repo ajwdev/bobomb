@@ -5,6 +5,7 @@ use crate::nes::ppu;
 use crate::nes::controller;
 use crate::nes::address::{Address,Addressable};
 use crate::nes::rom::{Rom,Bank};
+use crate::nes::cpu::disassemble::OPCODES;
 
 const SYSTEM_RAM: usize = 2 * 1024;
 
@@ -91,6 +92,71 @@ impl Interconnect {
                 panic!("unknown address {:#x}", addr);
             }
         }
+    }
+
+    pub fn read_range(&self, mut start: u16, count: i16) -> (Vec<u8>, u16, usize) {
+        let end = if count >= 0 {
+            start + (count as u16)
+        } else {
+            let e = start+1;
+            start = (start + 1) - (-count as u16);
+            e
+        };
+
+        let mut result: Vec<u8> = Vec::new();
+        let mut real_count = 0;
+        for i in start..end {
+            // XXX This is super inefficient but since this is only used by the debugger I'm not
+            // super concerned. Its unlikely that we'll read large amounts of memory where the
+            // function call cost will be noticeable.
+            result.push(self.read_word(i));
+            real_count += 1;
+        }
+
+        (result, start, real_count)
+    }
+
+    pub fn read_range_by_instruction(&self, start: u16, count: i16) -> (Vec<u8>, u16, usize) {
+        let mut addr = start;
+        let abs_count = if count > 0 {
+            count as usize
+        } else {
+            addr = (start + 1) - (-count as u16);
+            -count as usize
+        };
+
+        let mut result: Vec<u8> = Vec::new();
+        let mut i = 0;
+
+        while i < abs_count {
+            let b0 = self.read_word(addr);
+            addr += 1;
+
+            match OPCODES[b0 as usize] {
+                Some(op) => {
+                    result.push(b0);
+                    match op.1.len() {
+                        2 => {
+                            result.push(self.read_word(addr));
+                            addr += 1;
+                        }
+                        3 => {
+                            result.push(self.read_word(addr));
+                            addr += 1;
+                            result.push(self.read_word(addr));
+                            addr += 1;
+                        }
+                        _ => {}
+                    }
+
+                }
+                None => break,
+            }
+
+            i += 1;
+        }
+
+        (result, start, i)
     }
 
     pub fn write_word(&mut self, addr: u16, value: u8) {
@@ -211,6 +277,42 @@ mod test {
         assert_eq!(0xFF, interconnect.read_word(0x10));
         assert_eq!(0xFF, interconnect.read_word(0x7ff));
         assert_eq!(0, interconnect.read_word(0x01));
+    }
+
+    #[test]
+    fn test_read_range() {
+        let rom = Rom::new_double_bank(Bank::new(&[0; 16384]), Bank::new(&[0; 16384]));
+        let ppu = Ppu::new();
+        let mut interconnect = Interconnect::new(ppu, rom);
+
+        interconnect.ram[0x0080] = 0xFF;
+        interconnect.ram[0x0081] = 0xFF;
+        interconnect.ram[0x0082] = 0xFF;
+        interconnect.ram[0x0083] = 0xFF;
+        interconnect.ram[0x0084] = 0xFF;
+        interconnect.ram[0x0085] = 0xFF;
+        interconnect.ram[0x0086] = 0xFF;
+        interconnect.ram[0x0087] = 0xFF;
+        interconnect.ram[0x0088] = 0xFF;
+        interconnect.ram[0x0089] = 0xFF;
+        interconnect.ram[0x008a] = 0xAA;
+        interconnect.ram[0x008b] = 0xAA;
+        interconnect.ram[0x008c] = 0xAA;
+        interconnect.ram[0x008d] = 0xAA;
+        interconnect.ram[0x008e] = 0xAA;
+        interconnect.ram[0x008f] = 0xAA;
+
+        let (result, start, count) = interconnect.read_range(0x0080, 10);
+        assert!(result.len() == 10, "expected length of 10m got {}", result.len());
+        assert!(result.iter().all(|x| *x == 0xFF), "not all elements equal 0xFF: {:?}", &result);
+        assert!(start == 0x0080, "starting address is wrong; expect 0x0080, got {}", start);
+        assert!(count == 10, "count is wrong; expect 10, got {}", count);
+
+        let (result2, start2, count2) = interconnect.read_range(0x008f, -6);
+        assert!(result2.len() == 6, "expected length of 6, got {}", result2.len());
+        assert!(result2.iter().all(|x| *x == 0xAA), "not all elements equal 0xAA: {:?}", &result2);
+        assert!(start2 == 0x008a, "starting address is wrong; expect 0x008a, got {:#04x}", start2);
+        assert!(count2 == 6, "count is wrong; expect 6, got {}", count2);
     }
 
     #[test]

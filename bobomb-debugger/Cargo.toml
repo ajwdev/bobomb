@@ -1,0 +1,24 @@
+[package]
+name = "bobomb-debugger"
+version = "0.1.0"
+authors = ["Andrew Williams <williams.andrew@gmail.com>"]
+edition = "2018"
+build = "build.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[build-dependencies]
+lalrpop = { version = "0.19.0", features = ["lexer"] }
+
+[dependencies]
+lazy_static = "1.4.0"
+lalrpop-util = "0.19.0"
+regex = "1"
+futures = "0.3.8"
+rustyline = "7.0.0"
+anyhow = "1.0.34"
+bytes = "0.5.6"
+ansi_term = "0.12"
+
+# bobomb = { path = "../" }
+bobomb-grpc = { path = "../bobomb-grpc" }

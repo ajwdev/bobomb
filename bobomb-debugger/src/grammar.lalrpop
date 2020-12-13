@@ -1,0 +1,193 @@
+use std::str::FromStr;
+use std::i32;
+
+use crate::ast::*;
+
+grammar;
+
+pub Expr: Box<Expression> = {
+    Expr OrOp XorExpr => Box::new(Expression::Op(<>)),
+    XorExpr,
+};
+
+OrOp: BinaryOp = {
+    "|" => BinaryOp::Or,
+}
+
+XorExpr: Box<Expression> = {
+    XorExpr XorOp AndExpr => Box::new(Expression::Op(<>)),
+    AndExpr,
+};
+
+XorOp: BinaryOp = {
+    "^" => BinaryOp::Xor,
+}
+
+AndExpr: Box<Expression> = {
+    AndExpr AndOp ShiftExpr => Box::new(Expression::Op(<>)),
+    ShiftExpr,
+};
+
+AndOp: BinaryOp = {
+    "&" => BinaryOp::And,
+}
+
+ShiftExpr: Box<Expression> = {
+    ShiftExpr ShiftOp ArithmaticExpr => Box::new(Expression::Op(<>)),
+    ArithmaticExpr,
+};
+
+ShiftOp: BinaryOp = {
+    "<<" => BinaryOp::LShift,
+    ">>" => BinaryOp::RShift,
+};
+
+
+ArithmaticExpr: Box<Expression> = {
+    ArithmaticExpr ArithmaticOp FactorExpr => Box::new(Expression::Op(<>)),
+    FactorExpr,
+};
+
+ArithmaticOp: BinaryOp = {
+    "+" => BinaryOp::Add,
+    "-" => BinaryOp::Sub,
+};
+
+FactorExpr: Box<Expression> = {
+    FactorExpr FactorOp Atom => Box::new(Expression::Op(<>)),
+    Atom,
+};
+
+FactorOp: BinaryOp = {
+    "*" => BinaryOp::Mul,
+    "/" => BinaryOp::Div,
+};
+
+Atom: Box<Expression> = {
+    Var => Box::new(Expression::Variable(<>)),
+    Num => Box::new(Expression::Number(<>)),
+    "(" <Expr> ")"
+};
+
+Var: String = {
+    r"\$[a-zA-Z0-9][a-zA-Z0-9.]*[a-zA-Z0-9]*" => String::from(<>)
+}
+
+Num: i32 = {
+    <s:r"0[xX][0-9a-fA-F]+"> => {
+        let lower = s.to_lowercase();
+        let digits = lower.trim_start_matches("0x");
+        i32::from_str_radix(digits, 16).unwrap()
+    },
+    Int32,
+};
+
+Int32: i32 = {
+    <s:r"[0-9]+"> => i32::from_str(s).unwrap(),
+}
+
+
+// Format expressions. This controls how examine ("x") and print commands
+// display their output. This syntax was borrowed from GDB:
+// https://sourceware.org/gdb/current/onlinedocs/gdb/Expressions.html#Expressions
+
+pub FmtExpr: Format = {
+    <s:r"/-?[0-9]+[xdi]"> => {
+        let n = i32::from_str(&s[1..s.len()-1]).unwrap();
+        let d = &s[s.len()-1..];
+        match d {
+            "d" => Format{display: Some(Display::Decimal), count: Some(n)},
+            "x" => Format{display: Some(Display::Hex), count: Some(n)},
+            "i" => Format{display: Some(Display::Instruction), count: Some(n)},
+            _ => panic!("unknown display character {}", d),
+        }
+    },
+    <s:r"/[xdi]"> => {
+        let d = &s[s.len()-1..];
+        match d {
+            "d" => Format{display: Some(Display::Decimal), count: None},
+            "x" => Format{display: Some(Display::Hex), count: None},
+            "i" => Format{display: Some(Display::Instruction), count: None},
+            _ => panic!("unknown display character {}", d),
+        }
+    },
+    <s:r"/-?[0-9]+"> => {
+        let n = i32::from_str(&s[1..s.len()]).unwrap();
+        Format{display: None, count: Some(n)}
+    },
+};
+
+
+// Now we get into the actual commands you can type in at the repl. This is
+// a bit overkill but works since we expect a certain order of arguments.
+
+pub Command: Cmd = {
+    ExamineCmd,
+    PrintCmd,
+    BreakCmd,
+    ClearCmd,
+    StatusCmd,
+    ContinueCmd,
+    StopCmd,
+    SetCmd,
+    StackCmd,
+}
+
+ExamineCmd: Cmd = {
+    "x" <f:FmtExpr> <e:Expr> => Cmd::Examine(Some(e), Some(f)),
+    "x" <f:FmtExpr> => Cmd::Examine(None, Some(f)),
+    "x" <e:Expr> => Cmd::Examine(Some(e), None),
+    "x" => Cmd::Examine(None, None),
+};
+
+PrintCmd: Cmd = {
+    "print" <f:FmtExpr> <e:Expr> => Cmd::Print(Some(e), Some(f)),
+    "print" <f:FmtExpr> => Cmd::Print(None, Some(f)),
+    "print" <e:Expr> => Cmd::Print(Some(e), None),
+    "print" => Cmd::Print(None, None),
+    "p" <f:FmtExpr> <e:Expr> => Cmd::Print(Some(e), Some(f)),
+    "p" <f:FmtExpr> => Cmd::Print(None, Some(f)),
+    "p" <e:Expr> => Cmd::Print(Some(e), None),
+    "p" => Cmd::Print(None, None),
+};
+
+BreakCmd: Cmd = {
+    "break" <e:Expr> => Cmd::Break(Some(e)),
+    "break" => Cmd::Break(None),
+    "b" <e:Expr> => Cmd::Break(Some(e)),
+    "b" => Cmd::Break(None),
+}
+
+ClearCmd: Cmd = {
+    "clear" <n:Num> => Cmd::Clear(n),
+}
+
+StatusCmd: Cmd = {
+    "status" => Cmd::Status,
+    "st" => Cmd::Status,
+}
+
+StopCmd: Cmd = {
+    "stop" => Cmd::Stop,
+}
+
+ContinueCmd: Cmd = {
+    "continue" => Cmd::Continue,
+    "c" => Cmd::Continue,
+}
+
+SetCmd: Cmd = {
+    "set" <v:Var> "=" <e:Expr> => Cmd::SetVar(v, e),
+    "set" <v:Var>=> Cmd::PrintVar(Some(v)),
+    "set" => Cmd::PrintVar(None),
+    DisplayCmd,
+}
+
+DisplayCmd: Cmd = {
+    "display" <v:Var>=> Cmd::PrintVar(Some(v)),
+    "display" => Cmd::PrintVar(None),
+}
+
+StackCmd: Cmd = {
+    "stack" => Cmd::PrintStack,
+}

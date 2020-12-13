@@ -3,18 +3,16 @@ name = "bobomb"
 version = "0.1.0"
 authors = ["Andrew Williams <williams.andrew@gmail.com>"]
 edition = "2018"
-build = "build.rs"
 
 [dependencies]
-grpc            = "=0.8.2"
-grpc-protobuf   = "=0.8.2"
-protobuf        = "~2"
-futures         = "~0.3"
-futures-cpupool = "0.1"
+futures         = "0.3.8"
+futures-cpupool = "0.1.8"
 parking_lot     = "0.3.6"
+minifb          = "0.19.1"
+anyhow          = "1.0.34"
+bytes           = "0.5.6"
 
-[build-dependencies]
-protoc-rust-grpc = "~0.8"
+bobomb-grpc = { path = "./bobomb-grpc" }
 
 [dependencies.probe]
 git = "https://github.com/cuviper/rust-libprobe.git"
