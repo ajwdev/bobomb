@@ -1,0 +1,16 @@
+[package]
+name = "bobomb-grpc"
+version = "0.1.0"
+authors = ["Andrew Williams <williams.andrew@gmail.com>"]
+edition = "2018"
+build = "build.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+grpc            = "=0.8.2"
+grpc-protobuf   = "=0.8.2"
+protobuf        = "~2"
+
+[build-dependencies]
+protoc-rust-grpc = "~0.8"
