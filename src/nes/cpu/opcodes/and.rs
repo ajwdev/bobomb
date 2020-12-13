@@ -2,6 +2,19 @@ use crate::nes::cpu::{Cpu,FromImmediate,FromAddress,AddressMode};
 
 pub struct And { }
 
+macro_rules! from_immediate {
+    ($s:ident, $c:expr, $fn:ident) => {
+        impl FromImmediate for $s {
+            fn from_immediate(cpu: &mut Cpu) -> u32 {
+                let word = cpu.read_word_and_increment();
+                $s::$fn(cpu, word);
+
+                $c
+            }
+        }
+    };
+}
+
 impl And {
     #[inline]
     fn and(cpu: &mut Cpu, word: u8) {
@@ -12,14 +25,15 @@ impl And {
     }
 }
 
-impl FromImmediate for And {
-    fn from_immediate(cpu: &mut Cpu) -> u32 {
-        let word = cpu.read_word_and_increment();
-        Self::and(cpu, word);
+// impl FromImmediate for $s {
+    // fn from_immediate(cpu: &mut Cpu) -> u32 {
+    //     let word = cpu.read_word_and_increment();
+    //     Self::and(cpu, word);
 
-        2
-    }
-}
+    //     2
+    // }
+    from_immediate!(And, 2, and);
+// }
 
 impl FromAddress for And {
     fn from_address(cpu: &mut Cpu, mode: AddressMode) -> u32 {

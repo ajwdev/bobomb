@@ -363,6 +363,12 @@ impl Cpu {
             0x0a => {
                 Asl::from_accumulator(self)
             }
+            0x08 => {
+                Php::from_address(self, AddressMode::Implied)
+            }
+            0x28 => {
+                Plp::from_address(self, AddressMode::Implied)
+            }
             0x09 => {
                 Ora::from_immediate(self)
             }
@@ -381,8 +387,17 @@ impl Cpu {
             0x30 => {
                 Bmi::from_relative(self)
             }
+            0x50 => {
+                Bvc::relative(self) as u32
+            }
+            0x70 => {
+                Bvs::relative(self) as u32
+            }
             0x90 => {
                 Bcc::from_relative(self)
+            }
+            0xc5 => {
+                Cmp::from_address(self, AddressMode::ZeroPage)
             }
             0xc9 => {
                 Cmp::immediate(self) as u32
@@ -392,6 +407,9 @@ impl Cpu {
             }
             0xcd => {
                 Cmp::from_address(self, AddressMode::Absolute)
+            }
+            0xdd => {
+                Cmp::from_address(self, AddressMode::AbsoluteX)
             }
             0x20 => {
                 Jsr::absolute(self) as u32
@@ -429,6 +447,9 @@ impl Cpu {
             0x49 => {
                 Eor::from_immediate(self)
             }
+            0x4d => {
+                Eor::from_address(self, AddressMode::Absolute)
+            }
             0x68 => {
                 Pla::from_implied(self)
             }
@@ -438,11 +459,23 @@ impl Cpu {
             0x35 => {
                 And::from_address(self, AddressMode::ZeroPageX)
             }
+            0x39 => {
+                And::from_address(self, AddressMode::AbsoluteY)
+            }
             0x3d => {
                 And::from_address(self, AddressMode::AbsoluteX)
             }
             0x05 => {
                 Ora::from_address(self, AddressMode::ZeroPage)
+            }
+            0x0d => {
+                Ora::from_address(self, AddressMode::Absolute)
+            }
+            0x11 => {
+                Ora::from_address(self, AddressMode::IndirectY)
+            }
+            0x19 => {
+                Ora::from_address(self, AddressMode::AbsoluteY)
             }
             0x29 => {
                 And::from_immediate(self)
@@ -459,6 +492,9 @@ impl Cpu {
             0x79 => {
                 Adc::from_address(self, AddressMode::AbsoluteY)
             }
+            0x7d => {
+                Adc::from_address(self, AddressMode::AbsoluteX)
+            }
             0xe0 => {
                 Cpx::from_immediate(self)
             }
@@ -468,8 +504,18 @@ impl Cpu {
             0xe9 => {
                 Sbc::from_immediate(self)
             }
+            0xea => {
+                // This is a nop
+                2
+            }
+            0xed => {
+                Sbc::from_address(self, AddressMode::Absolute)
+            }
             0xf9 => {
                 Sbc::from_address(self, AddressMode::AbsoluteY)
+            }
+            0xfd => {
+                Sbc::from_address(self, AddressMode::AbsoluteX)
             }
             0x66 => {
                 Ror::from_address(self, AddressMode::ZeroPage)
@@ -479,6 +525,9 @@ impl Cpu {
             }
             0x6a => {
                 Ror::from_accumulator(self)
+            }
+            0x6e => {
+                Ror::from_address(self, AddressMode::Absolute)
             }
             0x2a => {
                 Rol::from_accumulator(self)
@@ -524,6 +573,9 @@ impl Cpu {
             }
             0xb4 => {
                 Ldy::from_address(self, AddressMode::ZeroPageX)
+            }
+            0xbc => {
+                Ldy::from_address(self, AddressMode::AbsoluteX)
             }
             0xbe => {
                 Ldy::from_address(self, AddressMode::AbsoluteY)
@@ -624,6 +676,12 @@ impl Cpu {
             0xc0 => {
                 Cpy::from_immediate(self)
             }
+            0xc4 => {
+                Cpy::from_address(self, AddressMode::ZeroPage)
+            }
+            0xcc => {
+                Cpy::from_address(self, AddressMode::Absolute)
+            }
             0xc8 => {
                 Iny::from_implied(self)
             }
@@ -641,7 +699,7 @@ impl Cpu {
             }
             _ => {
                 self.debug_stack();
-                panic!("unrecognized opcode {:#x}, {:#x} {:#x}, PC: {:#x}",
+                panic!("unrecognized opcode {:#04x}, {:#04x} {:#04x}, PC: {:#06x}",
                    instr,
                    self.read_at(self.PC),
                    self.read_at(self.PC + 1),

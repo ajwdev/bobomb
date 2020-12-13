@@ -1,13 +1,13 @@
-use crate::nes::cpu::{Cpu,FromRelative};
+use crate::nes::cpu::{Cpu,Relative};
 use crate::nes::cpu::status::Flags;
 use super::branch::Branch;
 
-pub struct Bcc { }
+pub struct Bvc { }
 
-impl FromRelative for Bcc {
-    fn from_relative(cpu: &mut Cpu) -> u32 {
-        Branch::branch_on_true(cpu, |c| c.SR.is_clear(Flags::Carry));
-
+impl Relative for Bvc {
+    fn relative(cpu: &mut Cpu) -> usize {
+        Branch::branch_on_true(cpu, |c| c.SR.is_clear(Flags::Overflow)) as usize;
+        // TODO Add two cycles if new page
         2
     }
 }
@@ -15,13 +15,12 @@ impl FromRelative for Bcc {
 // #[cfg(test)]
 // mod test {
 //     use crate::nes::cpu::test::*;
-//     use crate::nes::cpu::status::Flags;
 
 //     #[test]
 //     fn test_beq_skip() {
-//         let mut cpu = mock_cpu(&[0x30, 0xff]);
+//         let mut cpu = mock_cpu(&[0xf0, 0xff]);
 
-//         cpu.SR.reset(Flags::Negative);
+//         cpu.SR.reset_zero();
 //         assert!(cpu.PC == 0x8000, "expected 0x8000, got {:#x}", cpu.PC);
 //         cpu.step(None);
 //         assert!(cpu.PC == 0x8002, "expected 0x8002, got {:#x}", cpu.PC);
@@ -29,9 +28,9 @@ impl FromRelative for Bcc {
 
 //     #[test]
 //     fn test_beq_take_positive() {
-//         let mut cpu = mock_cpu(&[0x30, 0x2a]);
+//         let mut cpu = mock_cpu(&[0xf0, 0x2a]);
 
-//         cpu.SR.set(Flags::Negative);
+//         cpu.SR.set_zero();
 //         assert!(cpu.PC == 0x8000, "expected 0x8000, got {:#x}", cpu.PC);
 //         cpu.step(None); // Two byte instruction so *add* two below
 //         assert!(cpu.PC == 0x802c, "expected 0x802a, got {:#x}", cpu.PC);
@@ -39,9 +38,9 @@ impl FromRelative for Bcc {
 
 //     #[test]
 //     fn test_beq_take_negative() {
-//         let mut cpu = mock_cpu(&[0x30, 0x82]); // hex 0x82 is signed -126
+//         let mut cpu = mock_cpu(&[0xf0, 0x82]); // hex 0x82 is signed -126
 
-//         cpu.SR.set(Flags::Negative);
+//         cpu.SR.set_zero();
 //         assert!(cpu.PC == 0x8000, "expected 0x8000, got {:#x}", cpu.PC);
 //         cpu.step(None); // Two byte instruction so *substract* two bytes below
 
@@ -51,6 +50,4 @@ impl FromRelative for Bcc {
 //         assert!(cpu.PC == 0x7f84, "expected 0x7f82, got {:#x}", cpu.PC);
 //     }
 // }
-
-
 

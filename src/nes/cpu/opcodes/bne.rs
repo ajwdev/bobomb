@@ -6,7 +6,7 @@ pub struct Bne { }
 
 impl Relative for Bne {
     fn relative(cpu: &mut Cpu) -> usize {
-        Branch::branch_on_true(cpu, |c| !c.SR.is_set(Flags::Zero));
+        Branch::branch_on_true(cpu, |c| c.SR.is_clear(Flags::Zero));
 
         2
     }

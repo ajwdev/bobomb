@@ -19,7 +19,7 @@ impl Sbc {
             cpu.SR.reset(Flags::Carry);
         }
 
-        if ((word >> 7) != (result >> 7)) {
+        if (word >> 7) != (result >> 7) {
             cpu.SR.set(Flags::Overflow);
         } else {
             cpu.SR.reset(Flags::Overflow);

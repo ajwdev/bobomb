@@ -1,3 +1,4 @@
+pub use self::sta::Sta;
 mod load;
 mod store;
 mod branch;
@@ -15,7 +16,6 @@ pub use self::ldy::Ldy;
 mod sta;
 mod stx;
 mod sty;
-pub use self::sta::Sta;
 pub use self::sty::Sty;
 pub use self::stx::Stx;
 
@@ -53,12 +53,16 @@ mod bmi;
 mod beq;
 mod bne;
 mod bpl;
+mod bvc;
+mod bvs;
 pub use self::bcs::Bcs;
 pub use self::bcc::Bcc;
 pub use self::bmi::Bmi;
 pub use self::beq::Beq;
 pub use self::bne::Bne;
 pub use self::bpl::Bpl;
+pub use self::bvc::Bvc;
+pub use self::bvs::Bvs;
 
 mod jsr;
 mod jmp;
@@ -71,8 +75,12 @@ pub use self::rti::Rti;
 
 mod pha;
 mod pla;
+mod php;
+mod plp;
 pub use self::pha::Pha;
 pub use self::pla::Pla;
+pub use self::php::Php;
+pub use self::plp::Plp;
 
 mod cmp;
 pub use self::cmp::Cmp;

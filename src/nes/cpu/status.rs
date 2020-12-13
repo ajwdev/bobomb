@@ -82,6 +82,10 @@ impl StatusRegister {
         self.find_flag(flag)
     }
 
+    pub fn is_clear(&self, flag: Flags) -> bool {
+        !self.find_flag(flag)
+    }
+
     #[inline]
     pub fn set(&mut self, flag: Flags) {
         let mut reg = self.find_flag_mut(flag);

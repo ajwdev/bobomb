@@ -1,11 +1,12 @@
 use crate::nes::cpu::{Cpu,FromImmediate};
+use crate::nes::cpu::{FromAddress,AddressMode};
 use crate::nes::cpu::status::Flags;
 
-pub struct Cpy { }
+pub struct Cpy {}
 
-impl FromImmediate for Cpy {
-    fn from_immediate(cpu: &mut Cpu) -> u32 {
-        let word = cpu.read_word_and_increment();
+impl Cpy {
+    #[inline]
+    fn copy(cpu: &mut Cpu, word: u8) {
         let result = cpu.Y.wrapping_sub(word);
 
         cpu.zero_and_negative_status(result);
@@ -15,8 +16,30 @@ impl FromImmediate for Cpy {
         } else {
             cpu.SR.reset(Flags::Carry);
         }
+    }
+}
+
+impl FromImmediate for Cpy {
+    fn from_immediate(cpu: &mut Cpu) -> u32 {
+        let word = cpu.read_word_and_increment();
+        Self::copy(cpu, word);
 
         2
+    }
+}
+
+impl FromAddress for Cpy {
+    fn from_address(cpu: &mut Cpu, mode: AddressMode) -> u32 {
+        let (src, _) = cpu.translate_address(mode);
+        let word = cpu.read_at(src.to_u16());
+
+        Self::copy(cpu, word);
+
+        match mode {
+            AddressMode::ZeroPage => 3,
+            AddressMode::Absolute => 4,
+            _ => { panic!("unimplemented address mode {:?} for CPY", mode); }
+        }
     }
 }
 

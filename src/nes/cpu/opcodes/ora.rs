@@ -30,6 +30,7 @@ impl FromAddress for Ora {
 
         match mode {
             AddressMode::ZeroPage => 3,
+            AddressMode::Absolute => 4,
             AddressMode::AbsoluteX => { 4 + (extra_cycles as u32) },
             AddressMode::AbsoluteY => { 4 + (extra_cycles as u32) },
             AddressMode::IndirectY => { 5 + (extra_cycles as u32) },

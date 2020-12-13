@@ -39,6 +39,7 @@ impl FromAddress for Ror {
 
         match mode {
             AddressMode::ZeroPage => 5,
+            AddressMode::Absolute =>  6,
             AddressMode::AbsoluteX => { 4 + (extra_cycles as u32) },
             _ => { panic!("unimplemented address mode {:?} for ROR", mode); }
         }
