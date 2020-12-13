@@ -4,9 +4,11 @@ use std::sync::Arc;
 #[macro_use]
 mod macros;
 
+use crate::dbg_hex;
+
 pub mod disassemble;
 
-mod status;
+pub(crate) mod status;
 mod opcodes;
 mod address_modes;
 
@@ -44,12 +46,12 @@ pub enum Registers {
 pub struct Cpu {
     pub interconnect: Arc<Mutex<Interconnect>>,
 
-    PC: u16, // Program counter
-    X: u8, // General purpose register
-    Y: u8, // General purpose register
-    AC: u8, // Accumlator register
-    SP: u8, // Stack pointer
-    SR: StatusRegister, // Status register
+    pub PC: u16, // Program counter
+    pub X: u8, // General purpose register
+    pub Y: u8, // General purpose register
+    pub AC: u8, // Accumlator register
+    pub SP: u8, // Stack pointer
+    pub SR: StatusRegister, // Status register
 
     cycles: u32,
 
@@ -259,7 +261,12 @@ impl Cpu {
                 pages_differ = Cpu::page_crossed(self.PC, result);
             },
             AddressMode::AbsoluteY => {
-                result = self.read_dword_and_increment() + self.Y as u16;
+                // result = self.read_dword_and_increment() + self.Y as u16;
+                let x = self.read_dword_and_increment();
+                // dbg!(x, self.Y);
+                // result = x + self.Y as u16;
+                result = x.wrapping_add(self.Y as u16);
+
                 pages_differ = Cpu::page_crossed(self.PC, result);
             },
             _ => { panic!("unimplemented {:?} for translate_address", mode); }
@@ -708,6 +715,8 @@ impl Cpu {
             }
         };
 
+        // dbg_hex!(self.PC);
+
         self.cycles += burned_cycles;
         burned_cycles
     }
@@ -715,6 +724,9 @@ impl Cpu {
 
 #[cfg(test)]
 mod test {
+    use parking_lot::Mutex;
+    use std::sync::Arc;
+
     use super::Cpu;
     use crate::nes::ppu::Ppu;
     use crate::nes::rom::{Bank,Rom};
@@ -757,7 +769,7 @@ mod test {
     pub fn mock_cpu(words: &[u8]) -> Cpu {
         let mock_rom = rom_with_pc_at_start(words);
         let interconnect = memory_from_rom(mock_rom, true);
-        Cpu::new(interconnect)
+        Cpu::new(Arc::new(Mutex::new(interconnect)))
     }
 
     #[test]
