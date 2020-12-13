@@ -1,5 +1,4 @@
 use crate::nes::cpu::AddressMode;
-use crate::nes::cpu::opcodes;
 use crate::nes::address::{Address,Addressable};
 
 pub struct Disassembler { }

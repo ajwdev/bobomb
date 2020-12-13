@@ -7,9 +7,11 @@ pub mod rom;
 pub mod controller;
 pub mod address;
 pub mod interconnect;
+pub mod debugger;
 
-mod debugger;
-use crate::nes::debugger::{DebuggerServer,Debugger,DebuggerImpl,DebuggerShim};
+use bobomb_grpc::api_grpc;
+use bobomb_grpc::grpc::ServerBuilder;
+
 
 mod executor;
 pub use crate::nes::executor::ExecutorLock;
@@ -116,16 +118,16 @@ impl Nes {
         let lock_pair: ExecutorLock = Arc::new((Mutex::new(true), Condvar::new()));
         let &(ref lock, ref cvar) = &*lock_pair;
 
-        let shim = Arc::new(DebuggerShim::new(
+        let shim = Arc::new(debugger::DebuggerShim::new(
             self.cpu.clone(),
             self.interconnect.clone(),
             lock_pair.clone()
         ));
 
-        let service_def = DebuggerServer::new_service_def(DebuggerImpl::new(shim.clone()));
-        let mut server_builder = grpc::ServerBuilder::new_plain();
+        let service_def = api_grpc::BobombDebuggerServer::new_service_def(debugger::Server::new(shim.clone()));
+        let mut server_builder = ServerBuilder::new_plain();
         server_builder.add_service(service_def);
-        server_builder.http.set_port(6502);
+        server_builder.http.set_addr("127.0.0.1:6502").unwrap();
         // TODO Not sure what to do here
         let _server = server_builder.build().expect("server builder fail");
 
