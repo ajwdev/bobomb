@@ -24,25 +24,25 @@
 // const _PROTOBUF_VERSION_CHECK: () = ::protobuf::VERSION_2_18_1;
 
 #[derive(PartialEq,Clone,Default)]
-pub struct StopRequest {
+pub struct AttachRequest {
     // special fields
     pub unknown_fields: ::protobuf::UnknownFields,
     pub cached_size: ::protobuf::CachedSize,
 }
 
-impl<'a> ::std::default::Default for &'a StopRequest {
-    fn default() -> &'a StopRequest {
-        <StopRequest as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a AttachRequest {
+    fn default() -> &'a AttachRequest {
+        <AttachRequest as ::protobuf::Message>::default_instance()
     }
 }
 
-impl StopRequest {
-    pub fn new() -> StopRequest {
+impl AttachRequest {
+    pub fn new() -> AttachRequest {
         ::std::default::Default::default()
     }
 }
 
-impl ::protobuf::Message for StopRequest {
+impl ::protobuf::Message for AttachRequest {
     fn is_initialized(&self) -> bool {
         true
     }
@@ -99,48 +99,48 @@ impl ::protobuf::Message for StopRequest {
         Self::descriptor_static()
     }
 
-    fn new() -> StopRequest {
-        StopRequest::new()
+    fn new() -> AttachRequest {
+        AttachRequest::new()
     }
 
     fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
         static descriptor: ::protobuf::rt::LazyV2<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::LazyV2::INIT;
         descriptor.get(|| {
             let fields = ::std::vec::Vec::new();
-            ::protobuf::reflect::MessageDescriptor::new_pb_name::<StopRequest>(
-                "StopRequest",
+            ::protobuf::reflect::MessageDescriptor::new_pb_name::<AttachRequest>(
+                "AttachRequest",
                 fields,
                 file_descriptor_proto()
             )
         })
     }
 
-    fn default_instance() -> &'static StopRequest {
-        static instance: ::protobuf::rt::LazyV2<StopRequest> = ::protobuf::rt::LazyV2::INIT;
-        instance.get(StopRequest::new)
+    fn default_instance() -> &'static AttachRequest {
+        static instance: ::protobuf::rt::LazyV2<AttachRequest> = ::protobuf::rt::LazyV2::INIT;
+        instance.get(AttachRequest::new)
     }
 }
 
-impl ::protobuf::Clear for StopRequest {
+impl ::protobuf::Clear for AttachRequest {
     fn clear(&mut self) {
         self.unknown_fields.clear();
     }
 }
 
-impl ::std::fmt::Debug for StopRequest {
+impl ::std::fmt::Debug for AttachRequest {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for StopRequest {
+impl ::protobuf::reflect::ProtobufValue for AttachRequest {
     fn as_ref(&self) -> ::protobuf::reflect::ReflectValueRef {
         ::protobuf::reflect::ReflectValueRef::Message(self)
     }
 }
 
 #[derive(PartialEq,Clone,Default)]
-pub struct StopReply {
+pub struct AttachReply {
     // message fields
     pub cpu: ::protobuf::SingularPtrField<CPUState>,
     // special fields
@@ -148,14 +148,14 @@ pub struct StopReply {
     pub cached_size: ::protobuf::CachedSize,
 }
 
-impl<'a> ::std::default::Default for &'a StopReply {
-    fn default() -> &'a StopReply {
-        <StopReply as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a AttachReply {
+    fn default() -> &'a AttachReply {
+        <AttachReply as ::protobuf::Message>::default_instance()
     }
 }
 
-impl StopReply {
-    pub fn new() -> StopReply {
+impl AttachReply {
+    pub fn new() -> AttachReply {
         ::std::default::Default::default()
     }
 
@@ -193,7 +193,7 @@ impl StopReply {
     }
 }
 
-impl ::protobuf::Message for StopReply {
+impl ::protobuf::Message for AttachReply {
     fn is_initialized(&self) -> bool {
         for v in &self.cpu {
             if !v.is_initialized() {
@@ -267,8 +267,8 @@ impl ::protobuf::Message for StopReply {
         Self::descriptor_static()
     }
 
-    fn new() -> StopReply {
-        StopReply::new()
+    fn new() -> AttachReply {
+        AttachReply::new()
     }
 
     fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
@@ -277,37 +277,37 @@ impl ::protobuf::Message for StopReply {
             let mut fields = ::std::vec::Vec::new();
             fields.push(::protobuf::reflect::accessor::make_singular_ptr_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<CPUState>>(
                 "cpu",
-                |m: &StopReply| { &m.cpu },
-                |m: &mut StopReply| { &mut m.cpu },
+                |m: &AttachReply| { &m.cpu },
+                |m: &mut AttachReply| { &mut m.cpu },
             ));
-            ::protobuf::reflect::MessageDescriptor::new_pb_name::<StopReply>(
-                "StopReply",
+            ::protobuf::reflect::MessageDescriptor::new_pb_name::<AttachReply>(
+                "AttachReply",
                 fields,
                 file_descriptor_proto()
             )
         })
     }
 
-    fn default_instance() -> &'static StopReply {
-        static instance: ::protobuf::rt::LazyV2<StopReply> = ::protobuf::rt::LazyV2::INIT;
-        instance.get(StopReply::new)
+    fn default_instance() -> &'static AttachReply {
+        static instance: ::protobuf::rt::LazyV2<AttachReply> = ::protobuf::rt::LazyV2::INIT;
+        instance.get(AttachReply::new)
     }
 }
 
-impl ::protobuf::Clear for StopReply {
+impl ::protobuf::Clear for AttachReply {
     fn clear(&mut self) {
         self.cpu.clear();
         self.unknown_fields.clear();
     }
 }
 
-impl ::std::fmt::Debug for StopReply {
+impl ::std::fmt::Debug for AttachReply {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for StopReply {
+impl ::protobuf::reflect::ProtobufValue for AttachReply {
     fn as_ref(&self) -> ::protobuf::reflect::ReflectValueRef {
         ::protobuf::reflect::ReflectValueRef::Message(self)
     }
@@ -432,7 +432,7 @@ impl ::protobuf::reflect::ProtobufValue for ResumeRequest {
 #[derive(PartialEq,Clone,Default)]
 pub struct ResumeReply {
     // message fields
-    pub program_counter: u32,
+    pub cpu: ::protobuf::SingularPtrField<CPUState>,
     // special fields
     pub unknown_fields: ::protobuf::UnknownFields,
     pub cached_size: ::protobuf::CachedSize,
@@ -449,24 +449,47 @@ impl ResumeReply {
         ::std::default::Default::default()
     }
 
-    // uint32 program_counter = 1;
+    // .CPUState cpu = 1;
 
 
-    pub fn get_program_counter(&self) -> u32 {
-        self.program_counter
+    pub fn get_cpu(&self) -> &CPUState {
+        self.cpu.as_ref().unwrap_or_else(|| <CPUState as ::protobuf::Message>::default_instance())
     }
-    pub fn clear_program_counter(&mut self) {
-        self.program_counter = 0;
+    pub fn clear_cpu(&mut self) {
+        self.cpu.clear();
+    }
+
+    pub fn has_cpu(&self) -> bool {
+        self.cpu.is_some()
     }
 
     // Param is passed by value, moved
-    pub fn set_program_counter(&mut self, v: u32) {
-        self.program_counter = v;
+    pub fn set_cpu(&mut self, v: CPUState) {
+        self.cpu = ::protobuf::SingularPtrField::some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_cpu(&mut self) -> &mut CPUState {
+        if self.cpu.is_none() {
+            self.cpu.set_default();
+        }
+        self.cpu.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_cpu(&mut self) -> CPUState {
+        self.cpu.take().unwrap_or_else(|| CPUState::new())
     }
 }
 
 impl ::protobuf::Message for ResumeReply {
     fn is_initialized(&self) -> bool {
+        for v in &self.cpu {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
         true
     }
 
@@ -475,11 +498,7 @@ impl ::protobuf::Message for ResumeReply {
             let (field_number, wire_type) = is.read_tag_unpack()?;
             match field_number {
                 1 => {
-                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
-                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
-                    }
-                    let tmp = is.read_uint32()?;
-                    self.program_counter = tmp;
+                    ::protobuf::rt::read_singular_message_into(wire_type, is, &mut self.cpu)?;
                 },
                 _ => {
                     ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
@@ -493,8 +512,9 @@ impl ::protobuf::Message for ResumeReply {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u32 {
         let mut my_size = 0;
-        if self.program_counter != 0 {
-            my_size += ::protobuf::rt::value_size(1, self.program_counter, ::protobuf::wire_format::WireTypeVarint);
+        if let Some(ref v) = self.cpu.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
         self.cached_size.set(my_size);
@@ -502,8 +522,10 @@ impl ::protobuf::Message for ResumeReply {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::ProtobufResult<()> {
-        if self.program_counter != 0 {
-            os.write_uint32(1, self.program_counter)?;
+        if let Some(ref v) = self.cpu.as_ref() {
+            os.write_tag(1, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+            os.write_raw_varint32(v.get_cached_size())?;
+            v.write_to_with_cached_sizes(os)?;
         }
         os.write_unknown_fields(self.get_unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -543,10 +565,10 @@ impl ::protobuf::Message for ResumeReply {
         static descriptor: ::protobuf::rt::LazyV2<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::LazyV2::INIT;
         descriptor.get(|| {
             let mut fields = ::std::vec::Vec::new();
-            fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeUint32>(
-                "program_counter",
-                |m: &ResumeReply| { &m.program_counter },
-                |m: &mut ResumeReply| { &mut m.program_counter },
+            fields.push(::protobuf::reflect::accessor::make_singular_ptr_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<CPUState>>(
+                "cpu",
+                |m: &ResumeReply| { &m.cpu },
+                |m: &mut ResumeReply| { &mut m.cpu },
             ));
             ::protobuf::reflect::MessageDescriptor::new_pb_name::<ResumeReply>(
                 "ResumeReply",
@@ -564,7 +586,7 @@ impl ::protobuf::Message for ResumeReply {
 
 impl ::protobuf::Clear for ResumeReply {
     fn clear(&mut self) {
-        self.program_counter = 0;
+        self.cpu.clear();
         self.unknown_fields.clear();
     }
 }

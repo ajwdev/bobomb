@@ -29,6 +29,8 @@ lazy_static! {
         ["$PC", "$X", "$Y", "$AC", "SP"].iter().cloned().collect();
 }
 
+const PROMPT: &'static str = "(bobomb) ";
+
 pub struct Repl {
     client: BobombDebuggerClient,
     viewstamp: String,
@@ -77,30 +79,24 @@ impl Repl {
             eprintln!("Unable to load history: {}", why);
         }
 
-        match block_on(self.do_status()) {
-            Ok(status) => {
-                println!("Emulation state: {:?}", status.emulation_state);
-                if status.emulation_state == StatusReply_EmulationState::STOPPED {
-                    let cpu_resp = block_on(self.do_read_cpu()).unwrap();
-                    self.update_env_with_cpu(&cpu_resp.cpu.unwrap());
-                }
-            }
-            Err(why) => panic!("error on start {}", why),
+        if let Err(why) = block_on(self.attach()) {
+            print_error(format!("unable to attach debugger: {}", why));
         }
 
         loop {
-            let readline = rl.readline("(bobomb) ");
-            match readline {
+            match rl.readline(PROMPT) {
                 Ok(line) => {
-                    rl.add_history_entry(line.as_str());
+                    if !line.trim_end().is_empty() {
+                        rl.add_history_entry(line.as_str());
 
-                    match self.parse_line(&line) {
-                        Ok(ast) => {
-                            if let Err(why) = block_on(self.process(ast)) {
-                                print_error(why)
+                        match self.parse_line(&line) {
+                            Ok(ast) => {
+                                if let Err(why) = block_on(self.process(ast)) {
+                                    print_error(why)
+                                }
                             }
+                            Err(why) => print_error(why),
                         }
-                        Err(why) => print_error(why),
                     }
 
                 }
@@ -110,8 +106,8 @@ impl Repl {
                 Err(ReadlineError::Eof) => {
                     break;
                 }
-                Err(err) => {
-                    eprintln!("error: {}", err);
+                Err(why) => {
+                    print_error(why);
                 }
             }
         }
@@ -176,6 +172,19 @@ impl Repl {
     fn print_disassembly(&self, start: usize, pc: usize, data: &Vec<u8>) -> Result<()> {
         let dis = Disassembly::disassemble(start, &mut data.iter())?;
         dis.print(pc);
+        Ok(())
+    }
+
+    async fn attach(&mut self) -> Result<()> {
+        let status = self.do_status().await?;
+
+        if status.emulation_state == StatusReply_EmulationState::RUNNING {
+            self.do_attach().await?;
+        }
+
+        let cpu_resp = self.do_read_cpu().await?;
+        self.update_env_with_cpu(&cpu_resp.cpu.unwrap());
+
         Ok(())
     }
 
@@ -285,8 +294,8 @@ impl Repl {
                 self.last_format = fmt;
             }
 
-            Cmd::Stop => {
-                let resp = self.do_stop().await?;
+            Cmd::Attach => {
+                let resp = self.do_attach().await?;
                 self.update_env_with_cpu(&resp.cpu.unwrap());
             }
 
@@ -441,10 +450,10 @@ impl Repl {
         self.map_viewstamp(resp)
     }
 
-    async fn do_stop(&mut self) -> Result<StopReply, grpc::Error> {
+    async fn do_attach(&mut self) -> Result<AttachReply, grpc::Error> {
         let resp = self
             .client
-            .stop(self.req_options(), StopRequest::new())
+            .attach(self.req_options(), AttachRequest::new())
             .join_metadata_result()
             .await;
 

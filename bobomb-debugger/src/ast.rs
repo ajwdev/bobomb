@@ -27,7 +27,7 @@ pub enum Cmd {
     PrintVar(Option<String>),
     PrintStack,
     Status,
-    Stop,
+    Attach,
     Continue,
 }
 

@@ -54,6 +54,10 @@ impl Breakpoints {
         }
     }
 
+    pub fn enable_step(&self) {
+        self.stop_from_step.store(true, atomic::Ordering::Relaxed);
+    }
+
     fn check_step(&self) -> bool {
         self.stop_from_step.compare_and_swap(
             true,
@@ -212,20 +216,20 @@ impl BobombDebugger for Server {
         }
     }
 
-    fn stop(
+    fn attach(
         &self,
         ctx: grpc::ServerHandlerContext,
-        _req: grpc::ServerRequestSingle<StopRequest>,
-        mut resp: grpc::ServerResponseUnarySink<StopReply>,
+        _req: grpc::ServerRequestSingle<AttachRequest>,
+        mut resp: grpc::ServerResponseUnarySink<AttachReply>,
     ) -> grpc::Result<()> {
         match self.viewstamp.try_lock_for(LOCK_TIMEOUT) {
             Some(mut viewstamp) => {
                 viewstamp_bail!(ctx, &*viewstamp.as_bytes(), resp);
 
-                self.ctx.stop_execution();
+                self.ctx.breakpoints.lock().enable_step();
                 *viewstamp = new_viewstamp();
 
-                let reply = StopReply {
+                let reply = AttachReply {
                     cpu: protobuf::SingularPtrField::some(self.build_cpu_msg()),
                     ..Default::default()
                 };
@@ -247,14 +251,9 @@ impl BobombDebugger for Server {
             Some(mut viewstamp) => {
                 viewstamp_bail!(ctx, &*viewstamp.as_bytes(), resp);
 
-                self.ctx.start_execution();
-                *viewstamp = new_viewstamp();
-
-                resp.send_metadata(dbg_metadata(&*viewstamp))?;
-
+                let fut = self.ctx.subscribe_to_stop();
                 let fut_nes = self.nes.clone();
-                let stream =
-                    self.ctx.subscribe_to_stop()
+                let stream = fut
                     .map(move |_| {
                         // At this point we *should* be stopped. Though technically this is racy
                         // because someone else could start the thread again right after we
@@ -270,6 +269,11 @@ impl BobombDebugger for Server {
                     })
                     .fuse()
                     .into_stream();
+
+                self.ctx.start_execution();
+                *viewstamp = new_viewstamp();
+                resp.send_metadata(dbg_metadata(&*viewstamp))?;
+
                 ctx.pump(stream, resp);
                 Ok(())
             }

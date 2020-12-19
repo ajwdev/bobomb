@@ -22,7 +22,7 @@
 // server interface
 
 pub trait BobombDebugger {
-    fn stop(&self, o: ::grpc::ServerHandlerContext, req: ::grpc::ServerRequestSingle<super::api::StopRequest>, resp: ::grpc::ServerResponseUnarySink<super::api::StopReply>) -> ::grpc::Result<()>;
+    fn attach(&self, o: ::grpc::ServerHandlerContext, req: ::grpc::ServerRequestSingle<super::api::AttachRequest>, resp: ::grpc::ServerResponseUnarySink<super::api::AttachReply>) -> ::grpc::Result<()>;
 
     fn resume(&self, o: ::grpc::ServerHandlerContext, req: ::grpc::ServerRequestSingle<super::api::ResumeRequest>, resp: ::grpc::ServerResponseSink<super::api::ResumeReply>) -> ::grpc::Result<()>;
 
@@ -52,9 +52,9 @@ impl ::grpc::ClientStub for BobombDebuggerClient {
 }
 
 impl BobombDebuggerClient {
-    pub fn stop(&self, o: ::grpc::RequestOptions, req: super::api::StopRequest) -> ::grpc::SingleResponse<super::api::StopReply> {
+    pub fn attach(&self, o: ::grpc::RequestOptions, req: super::api::AttachRequest) -> ::grpc::SingleResponse<super::api::AttachReply> {
         let descriptor = ::grpc::rt::ArcOrStatic::Static(&::grpc::rt::MethodDescriptor {
-            name: ::grpc::rt::StringOrStatic::Static("/BobombDebugger/Stop"),
+            name: ::grpc::rt::StringOrStatic::Static("/BobombDebugger/Attach"),
             streaming: ::grpc::rt::GrpcStreaming::Unary,
             req_marshaller: ::grpc::rt::ArcOrStatic::Static(&::grpc_protobuf::MarshallerProtobuf),
             resp_marshaller: ::grpc::rt::ArcOrStatic::Static(&::grpc_protobuf::MarshallerProtobuf),
@@ -135,14 +135,14 @@ impl BobombDebuggerServer {
             vec![
                 ::grpc::rt::ServerMethod::new(
                     ::grpc::rt::ArcOrStatic::Static(&::grpc::rt::MethodDescriptor {
-                        name: ::grpc::rt::StringOrStatic::Static("/BobombDebugger/Stop"),
+                        name: ::grpc::rt::StringOrStatic::Static("/BobombDebugger/Attach"),
                         streaming: ::grpc::rt::GrpcStreaming::Unary,
                         req_marshaller: ::grpc::rt::ArcOrStatic::Static(&::grpc_protobuf::MarshallerProtobuf),
                         resp_marshaller: ::grpc::rt::ArcOrStatic::Static(&::grpc_protobuf::MarshallerProtobuf),
                     }),
                     {
                         let handler_copy = handler_arc.clone();
-                        ::grpc::rt::MethodHandlerUnary::new(move |ctx, req, resp| (*handler_copy).stop(ctx, req, resp))
+                        ::grpc::rt::MethodHandlerUnary::new(move |ctx, req, resp| (*handler_copy).attach(ctx, req, resp))
                     },
                 ),
                 ::grpc::rt::ServerMethod::new(

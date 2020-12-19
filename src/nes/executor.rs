@@ -148,9 +148,11 @@ impl Executor {
             self.ctx.stop_execution();
             // TODO Consider publishing the state of the CPU here
             self.ctx.publish_stop(pc);
-        }
 
-        self.execution_gate.wait()
+            self.execution_gate.wait()
+        } else {
+            false
+        }
     }
 
     pub fn run(mut self) -> Result<()> {

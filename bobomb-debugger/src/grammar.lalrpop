@@ -128,7 +128,7 @@ pub Command: Cmd = {
     ClearCmd,
     StatusCmd,
     ContinueCmd,
-    StopCmd,
+    AttachCmd,
     SetCmd,
     StackCmd,
 }
@@ -167,8 +167,9 @@ StatusCmd: Cmd = {
     "st" => Cmd::Status,
 }
 
-StopCmd: Cmd = {
-    "stop" => Cmd::Stop,
+AttachCmd: Cmd = {
+    "attach" => Cmd::Attach,
+    "stop" => Cmd::Attach,
 }
 
 ContinueCmd: Cmd = {
