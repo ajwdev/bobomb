@@ -1,4 +1,3 @@
-use minifb::{Key, Window, WindowOptions};
 use parking_lot::{Mutex,Condvar};
 use std::sync::Arc;
 use std::thread;
@@ -13,21 +12,20 @@ pub mod address;
 pub mod interconnect;
 pub mod debugger;
 
-use bobomb_grpc::api_grpc;
-use bobomb_grpc::grpc::ServerBuilder;
-
-
-mod executor;
+pub mod executor;
 pub use crate::nes::executor::ExecutorLock;
 
+#[derive(Default)]
+pub struct StepInfo {
+    program_counter: u16,
+    should_paint: bool,
+}
+
 pub struct Nes {
-    cpu: Arc<Mutex<cpu::Cpu>>,
+    cpu: cpu::Cpu,
     interconnect: Arc<Mutex<interconnect::Interconnect>>,
 
     rom_header: [u8; 16],
-    cycles: u32,
-
-    window: Window,
 }
 
 impl Nes {
@@ -56,22 +54,15 @@ impl Nes {
             rom::Rom::new_single_bank(bank)
         };
 
-        let ppu = ppu::Ppu::new();
-        let interconnect = Arc::new(Mutex::new(interconnect::Interconnect::new(ppu, rom)));
-        let cpu = Arc::new(Mutex::new(cpu::Cpu::new(interconnect.clone())));
+        let interconnect = Arc::new(Mutex::new(
+                interconnect::Interconnect::new(ppu::Ppu::new(), rom)
+        ));
+        let cpu = cpu::Cpu::new(interconnect.clone());
 
         Nes {
             cpu,
             interconnect,
-            window: Window::new("Bobomb", 256, 240, WindowOptions{
-                title: true,
-                resize: false,
-                scale: minifb::Scale::X2,
-               ..WindowOptions::default()
-            }).unwrap(),
-
             rom_header: header,
-            cycles: 0,
         }
     }
 
@@ -123,68 +114,26 @@ impl Nes {
         }
     }
 
-    pub fn start_emulation(&mut self) {
-        let mut intr: Option<cpu::Interrupt> = None;
-        let lock_pair: ExecutorLock = Arc::new((Mutex::new(true), Condvar::new()));
-        let &(ref lock, ref cvar) = &*lock_pair;
+    pub fn step(&mut self) -> StepInfo {
+        let intr = self.interconnect.lock().fetch_interrupt();
+        let cycles = self.cpu.step(intr);
 
-        let shim = Arc::new(debugger::DebuggerShim::new(
-            self.cpu.clone(),
-            self.interconnect.clone(),
-            lock_pair.clone()
-        ));
+        let mut should_paint = false;
+        {
+            let mut interconnect = self.interconnect.lock();
+            for _ in 0..cycles*3 {
+                let result = interconnect.ppu.step();
 
-        let service_def = api_grpc::BobombDebuggerServer::new_service_def(debugger::Server::new(shim.clone()));
-        let mut server_builder = ServerBuilder::new_plain();
-        server_builder.add_service(service_def);
-        server_builder.http.set_addr("127.0.0.1:6502").unwrap();
-        // TODO Not sure what to do here
-        let _server = server_builder.build().expect("server builder fail");
-
-        // Limit to max ~60 fps update rate
-        // self.window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
-
-        probe!(bobomb, start_emulation);
-        while self.window.is_open() && !self.window.is_key_down(Key::Escape) {
-            {
-                let pc: u16 = self.cpu.lock().get_pc().into();
-                if shim.is_breakpoint(pc) {
-                    shim.stop_execution();
-                }
-
-                let mut running = lock.lock();
-                if !*running {
-                    // If we're here, the debugger has blocked us
-                    println!("!!! Stopped by debugger ...");
-                    cvar.wait(&mut running);
-                }
-            }
-
-            let cycles = self.cpu.lock().step(intr);
-            intr = None;
-
-            let mut x = self.interconnect.lock();
-            let ppu_cycles = cycles * 3;
-            for _ in 0..ppu_cycles {
-                // This feels gross
-                let result = x.ppu.step();
-                if let Some(x) = result.interrupt {
-                    intr = Some(x);
-                }
+                interconnect.update_interrupt(result.interrupt);
                 if result.should_redraw {
-                    self.window.update_with_buffer(
-                        &x.ppu.front, 256, 240).unwrap();
+                    should_paint = true;
                 }
             }
-
-            // We'll need to figure out the timings latter. For now, lets
-            // not burn our cpu so much
-            // let one_milli = Duration::from_millis(3);
-            // thread::sleep(one_milli);
         }
 
-        println!("FRAME COUNT {}", self.interconnect.lock().ppu.frames);
-        println!("CYCLE {}", self.interconnect.lock().ppu.cycle);
-        println!("SCAN {}", self.interconnect.lock().ppu.scanline);
+        StepInfo{
+            should_paint,
+            program_counter: self.cpu.PC,
+        }
     }
 }

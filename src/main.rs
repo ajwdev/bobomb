@@ -1,5 +1,7 @@
 #![feature(asm)]
 
+use anyhow::Result;
+
 use std::env;
 use std::fs;
 use std::io::Read;
@@ -9,8 +11,9 @@ use std::io::Read;
 extern crate probe;
 
 mod nes;
+use crate::nes::executor::Executor;
 
-fn main() {
+fn main() -> Result<()> {
     let filename = env::args().nth(1).unwrap();
 
     let mut file = fs::File::open(&filename).unwrap();
@@ -18,5 +21,6 @@ fn main() {
     file.read_to_end(&mut file_buf).unwrap();
 
     let mut nes = nes::Nes::new(file_buf);
-    nes.start_emulation();
+    let mut executor = Executor::new(nes)?;
+    executor.run()
 }
