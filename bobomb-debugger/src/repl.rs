@@ -303,6 +303,11 @@ impl Repl {
                 self.do_continue().await?;
             }
 
+            Cmd::Step => {
+                let resp = self.do_step().await?;
+                self.update_env_with_cpu(&resp.cpu.unwrap());
+            }
+
             Cmd::SetVar(v, e) => {
                 if RESERVED_VARIABLES.contains(v.as_str()) {
                     bail!("variable {} is reserved and cannot be changed", v);
@@ -443,6 +448,17 @@ impl Repl {
         let resp = self
             .client
             .resume(self.req_options(), ResumeRequest::new())
+            .single()
+            .join_metadata_result()
+            .await;
+
+        self.map_viewstamp(resp)
+    }
+
+    async fn do_step(&mut self) -> Result<StepReply, grpc::Error> {
+        let resp = self
+            .client
+            .step(self.req_options(), StepRequest::new())
             .single()
             .join_metadata_result()
             .await;

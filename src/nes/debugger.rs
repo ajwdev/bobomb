@@ -281,6 +281,44 @@ impl BobombDebugger for Server {
         }
     }
 
+    fn step(
+        &self,
+        ctx: grpc::ServerHandlerContext,
+        _req: grpc::ServerRequestSingle<StepRequest>,
+        mut resp: grpc::ServerResponseSink<StepReply>,
+    ) -> grpc::Result<()> {
+        emulation_running_bail!(self.ctx, resp);
+
+        match self.viewstamp.try_lock_for(LOCK_TIMEOUT) {
+            Some(mut viewstamp) => {
+                let fut = self.ctx.subscribe_to_stop();
+                let fut_nes = self.nes.clone();
+
+                let stream = fut
+                    .map(move |_| {
+                        // TODO DRY this up
+                        Ok(StepReply {
+                            cpu: protobuf::SingularPtrField::some(Self::build_cpu_msg_from_nes(
+                                &fut_nes.lock(),
+                            )),
+                            ..Default::default()
+                        })
+                    })
+                    .fuse()
+                    .into_stream();
+
+                self.ctx.breakpoints.lock().enable_step();
+                self.ctx.start_execution();
+                *viewstamp = new_viewstamp();
+                resp.send_metadata(dbg_metadata(&*viewstamp))?;
+
+                ctx.pump(stream, resp);
+                Ok(())
+            }
+            None => lock_error!(resp),
+        }
+    }
+
     fn put_breakpoint(
         &self,
         ctx: grpc::ServerHandlerContext,

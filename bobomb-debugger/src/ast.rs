@@ -29,6 +29,7 @@ pub enum Cmd {
     Status,
     Attach,
     Continue,
+    Step,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]

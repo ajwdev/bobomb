@@ -4,6 +4,8 @@ service BobombDebugger {
     rpc Attach (AttachRequest) returns (AttachReply) {}
     rpc Resume (ResumeRequest) returns (stream ResumeReply) {}
 
+    rpc Step (StepRequest) returns (stream StepReply) {}
+
     rpc PutBreakpoint (PutBreakpointRequest) returns (BreakpointReply) {}
     rpc DeleteBreakpoint (DeleteBreakpointRequest) returns (BreakpointReply) {}
 
@@ -24,6 +26,11 @@ message AttachReply {
 
 message ResumeRequest { }
 message ResumeReply {
+    CPUState cpu = 1;
+}
+
+message StepRequest { }
+message StepReply {
     CPUState cpu = 1;
 }
 
