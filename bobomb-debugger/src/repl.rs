@@ -1,8 +1,14 @@
 use std::u32;
 use std::collections::{HashMap,HashSet};
+use std::sync::Arc;
+use parking_lot::Mutex;
+use ctrlc;
 
 use anyhow::*;
 use bytes::Bytes;
+use futures::select;
+use futures::channel::oneshot;
+use futures::future::{BoxFuture, FutureExt};
 use futures::executor::block_on;
 
 use rustyline::error::ReadlineError;
@@ -30,6 +36,38 @@ lazy_static! {
 }
 
 const PROMPT: &'static str = "(bobomb) ";
+const CTRLC: &'static str = "^C";
+
+struct CtrlCHandler {
+    ch: Arc<Mutex<Option<oneshot::Sender<()>>>>,
+}
+
+impl CtrlCHandler {
+    pub fn new() -> Self {
+        Self {
+            ch: Arc::new(Mutex::new(None)),
+        }
+    }
+
+    pub fn register(&self) -> Result<(),ctrlc::Error> {
+        let ch_cloned = self.ch.clone();
+        ctrlc::set_handler(move || {
+            let owned_ch = ch_cloned.lock().take();
+            if let Some(ch) = owned_ch {
+                if let Err(why) = ch.send(()) {
+                    eprintln!("channel error: {:?}", why);
+                }
+            }
+        })
+    }
+
+    pub fn notify(&mut self) -> oneshot::Receiver<()> {
+        let (snd, recv) = oneshot::channel::<()>();
+        let mut x = self.ch.lock();
+        *x = Some(snd);
+        recv
+    }
+}
 
 pub struct Repl {
     client: BobombDebuggerClient,
@@ -54,8 +92,12 @@ impl Repl {
         let client_conf = Default::default();
         let client = BobombDebuggerClient::new_plain(host, port, client_conf)?;
 
+        let handler = CtrlCHandler::new();
+        CtrlCHandler::register(&handler)?;
+
         Ok(Self {
             client,
+            ctrlc_handler: handler,
             viewstamp: String::new(),
             variable_counter: 1,
             last_examine: None,
@@ -104,7 +146,7 @@ impl Repl {
 
                 }
                 Err(ReadlineError::Interrupted) => {
-                    println!("^C");
+                    println!("{}", CTRLC);
                 }
                 Err(ReadlineError::Eof) => {
                     break;
@@ -334,7 +376,12 @@ impl Repl {
             }
 
             Cmd::Continue => {
-                self.do_continue().await?;
+                let sigch = self.ctrlc_handler.notify();
+                select! {
+                    resp = self.do_continue().fuse() => resp?,
+                    _ = sigch.fuse() => bail!("Cancelled. Must re-attach debugger"),
+                };
+                self.display_on_stop().await?;
             }
 
             Cmd::Step => {

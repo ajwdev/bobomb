@@ -144,7 +144,7 @@ impl Executor {
 
     fn block_execution(&mut self, pc: u16) -> bool {
         if self.ctx.breakpoints.lock().check(pc) {
-            println!("Breakpoint reached at {:#06x}", pc);
+            println!("Stopped at {:#06x}", pc);
             self.ctx.stop_execution();
             // TODO Consider publishing the state of the CPU here
             self.ctx.publish_stop(pc);
