@@ -19,6 +19,8 @@ rustyline = "7.0.0"
 anyhow = "1.0.34"
 bytes = "0.5.6"
 ansi_term = "0.12"
+ctrlc = "3.1.7"
+parking_lot = "0.11.1"
 
 # bobomb = { path = "../" }
 bobomb-grpc = { path = "../bobomb-grpc" }
