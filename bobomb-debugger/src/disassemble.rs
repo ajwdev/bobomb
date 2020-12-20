@@ -57,7 +57,7 @@ impl Instruction {
 
     pub fn to_string(&self) -> String {
         format!(
-            "{} {yellow}{:>6}:{yellow_end}  {} {:>7}  ; {}",
+            "{} {yellow}{:>6}:{yellow_end}  {} {:>7}  | {:<8} |",
             Blue.paint(self.format_location()),
             self.format_offset(),
             self.name,
