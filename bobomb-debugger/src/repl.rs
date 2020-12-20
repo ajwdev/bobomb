@@ -33,6 +33,7 @@ const PROMPT: &'static str = "(bobomb) ";
 
 pub struct Repl {
     client: BobombDebuggerClient,
+    ctrlc_handler: CtrlCHandler,
     viewstamp: String,
     env: HashMap<String,i32>,
     print_chunk_size: usize,
@@ -41,6 +42,7 @@ pub struct Repl {
     last_examine: Option<usize>,
     last_print: Option<u32>,
     last_format: Format,
+    display_commands: Vec<Option<(Cmd,String)>>,
 }
 
 fn print_error<E: std::fmt::Display>(why: E) {
@@ -64,6 +66,7 @@ impl Repl {
             },
             print_chunk_size: 8,
             env: HashMap::new(),
+            display_commands: Vec::new(),
         })
     }
 
@@ -91,7 +94,7 @@ impl Repl {
 
                         match self.parse_line(&line) {
                             Ok(ast) => {
-                                if let Err(why) = block_on(self.process(ast)) {
+                                if let Err(why) = block_on(self.process(ast, Some(&line))) {
                                     print_error(why)
                                 }
                             }
@@ -218,11 +221,41 @@ impl Repl {
         }
     }
 
-    pub async fn process<'input>(&mut self, ast: Cmd) -> Result<()> {
+    pub async fn process(&mut self, ast: Cmd, line: Option<&str>) -> Result<()> {
         match ast {
             Cmd::Status => {
                 let status = self.do_status().await?;
                 println!("Status {:#?}", status);
+            }
+
+            Cmd::Display(opt_cmd) => {
+                match opt_cmd {
+                    Some(cmd) => {
+                        match *cmd {
+                            Cmd::Print(_,_) | Cmd::Examine(_,_) => {
+                                self.display_commands.push(
+                                    Some((*cmd, line.expect("line cannot be None").to_string()))
+                                );
+                                println!("[{}] {}", self.display_commands.len()-1, line.unwrap());
+                            }
+                            _ => bail!("Command {} cannot be used with 'display'", cmd.name()),
+                        }
+                    }
+                    None => {
+                        for (i,c) in self.display_commands.iter().enumerate() {
+                            if let Some((_, cmd_str)) = c {
+                                println!("[{}] {}", i, cmd_str);
+                            }
+                        }
+                    }
+                }
+            }
+
+            Cmd::Undisplay(num) => {
+                if let Some(x) = self.display_commands.get_mut(num as usize) {
+                    println!("Cleared display {}", num);
+                    *x = None;
+                }
             }
 
             Cmd::Examine(expr, f) => {
@@ -297,6 +330,7 @@ impl Repl {
             Cmd::Attach => {
                 let resp = self.do_attach().await?;
                 self.update_env_with_cpu(&resp.cpu.unwrap());
+                self.display_on_stop().await?;
             }
 
             Cmd::Continue => {
@@ -306,6 +340,7 @@ impl Repl {
             Cmd::Step => {
                 let resp = self.do_step().await?;
                 self.update_env_with_cpu(&resp.cpu.unwrap());
+                self.display_on_stop().await?;
             }
 
             Cmd::SetVar(v, e) => {
@@ -357,6 +392,24 @@ impl Repl {
         }
 
         Ok(())
+    }
+
+    fn display_on_stop(&mut self) -> BoxFuture<Result<()>> {
+        // NOTE See the Rustlang docs on recursive futures to understand why
+        // we have to do this boxed future magic
+        // https://rust-lang.github.io/async-book/07_workarounds/04_recursion.html
+        async move {
+            let cmds = &self.display_commands.iter()
+                .filter_map(|x| x.clone())
+                .collect::<Vec<(Cmd,String)>>();
+
+            for (cmd, cstr) in cmds {
+                println!("{}", cstr);
+                self.process(cmd.clone(), None).await?;
+            }
+
+            Ok(())
+        }.boxed()
     }
 
     fn update_env_with_cpu(&mut self, msg: &CPUState) {

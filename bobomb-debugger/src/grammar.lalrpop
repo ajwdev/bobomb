@@ -132,6 +132,18 @@ pub Command: Cmd = {
     AttachCmd,
     SetCmd,
     StackCmd,
+    DisplayCmd,
+    UndisplayCmd,
+}
+
+DisplayCmd: Cmd = {
+    "display" <c:ExamineCmd> => Cmd::Display(Some(Box::new(c))),
+    "display" <c:PrintCmd> => Cmd::Display(Some(Box::new(c))),
+    "display" => Cmd::Display(None),
+}
+
+UndisplayCmd: Cmd = {
+  "undisplay" <n:Num> => Cmd::Undisplay(n),
 }
 
 ExamineCmd: Cmd = {
@@ -189,12 +201,6 @@ SetCmd: Cmd = {
     "set" <v:Var> "=" <e:Expr> => Cmd::SetVar(v, e),
     "set" <v:Var>=> Cmd::PrintVar(Some(v)),
     "set" => Cmd::PrintVar(None),
-    DisplayCmd,
-}
-
-DisplayCmd: Cmd = {
-    "display" <v:Var>=> Cmd::PrintVar(Some(v)),
-    "display" => Cmd::PrintVar(None),
 }
 
 StackCmd: Cmd = {
