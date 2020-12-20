@@ -1,122 +1,138 @@
-use parking_lot::Mutex;
-use std::sync::Arc;
-use std::collections::HashSet;
+use std::collections::HashMap;
 use std::string::String;
+use std::sync::Arc;
+use std::sync::atomic;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
 use bytes::Bytes;
+use parking_lot::Mutex;
+use futures::future::FutureExt;
 
-use futures::stream;
-use std::time::{Duration,SystemTime,UNIX_EPOCH};
-
-use bobomb_grpc::protobuf;
-use bobomb_grpc::grpc;
-use bobomb_grpc::grpc::prelude::*;
 use bobomb_grpc::api::*;
 use bobomb_grpc::api_grpc::BobombDebugger;
+use bobomb_grpc::grpc;
+use bobomb_grpc::protobuf;
 use bobomb_grpc::VIEWSTAMP_KEY;
 
-use crate::nes::ExecutorLock;
-use crate::nes::cpu::Cpu;
+use crate::nes::Nes;
 use crate::nes::cpu::status::Flags;
-use crate::nes::interconnect::Interconnect;
+use crate::nes::executor::ExecutorContext;
 
 const LOCK_TIMEOUT: Duration = Duration::from_secs(10);
 
 // NOTE You'll see a lot of code where we cast NES addresses which are normally u16 to u32. This is
 // because u32 is the smallest datatype Protobufs natively support (as far as I can tell)
 
-#[derive(Clone)]
-pub struct DebuggerShim {
-    lock_pair: ExecutorLock,
-    cpu: Arc<Mutex<Cpu>>,
-    interconnect: Arc<Mutex<Interconnect>>,
-    breakpoints: Arc<Mutex<HashSet<u16>>>,
+pub struct Breakpoints {
+    map: HashMap<u16, bool>,
+    stop_from_step: atomic::AtomicBool,
 }
 
-impl DebuggerShim {
-    pub fn new(c: Arc<Mutex<Cpu>>, i: Arc<Mutex<Interconnect>>, lock_pair: ExecutorLock) -> Self {
-        DebuggerShim {
-            cpu: c,
-            interconnect: i,
-            lock_pair,
-
-            breakpoints: Arc::new(Mutex::new(HashSet::new())),
+impl Breakpoints {
+    pub fn new() -> Self {
+        Self {
+            map: HashMap::new(),
+            stop_from_step: atomic::AtomicBool::new(false),
         }
     }
 
-    #[inline]
-    fn set_execution_lock(&self, value: bool) {
-        let &(ref lock, ref cvar) = &*self.lock_pair;
-        let mut running = lock.lock();
-        *running = value;
+    pub fn check(&mut self, key: u16) -> bool {
+        // Check to see if we should stop for stepping
+        if self.check_step() {
+            return true
+        }
 
-        cvar.notify_all();
+        match self.map.get(&key) {
+            Some(temp) => {
+                // Found a breakpoint, is it temporary?
+                if *temp {
+                    self.remove(key);
+                }
+                true
+            }
+            None => false,
+        }
     }
 
-    pub fn stop_execution(&self) {
-        self.set_execution_lock(false);
+    pub fn enable_step(&self) {
+        self.stop_from_step.store(true, atomic::Ordering::Relaxed);
     }
 
-    pub fn start_execution(&self) {
-        self.set_execution_lock(true);
+    fn check_step(&self) -> bool {
+        self.stop_from_step.compare_and_swap(
+            true,
+            false,
+            atomic::Ordering::Relaxed,
+        )
     }
 
-    pub fn is_executing(&self) -> bool {
-        let &(ref lock, _) = &*self.lock_pair;
-        let running = lock.lock();
-        *running
+    pub fn get(&mut self, key: u16) -> Option<bool> {
+        self.map.get(&key).map(|b| *b)
     }
 
-    pub fn block_until_running(&self) {
-        let &(ref lock, ref cvar) = &*self.lock_pair;
-        let mut running = lock.lock();
-
-        if !*running { cvar.wait(&mut running); }
+    pub fn set(&mut self, key: u16, temp: bool) {
+        match self.map.get_mut(&key) {
+            Some(t) => {
+                if *t && !temp {
+                    // Change temporary breakpoint to a persistent breakpoint
+                    *t = temp;
+                }
+            }
+            None => {
+                self.map.insert(key, temp);
+            }
+        }
     }
 
-    pub fn is_breakpoint(&mut self, addr: u16) -> bool {
-        self.breakpoints.lock().contains(&addr)
+    pub fn remove(&mut self, key: u16) {
+        self.map.remove(&key);
     }
 }
 
 pub struct Server {
-    shim: Arc<DebuggerShim>,
+    nes: Arc<Mutex<Nes>>,
+    ctx: Arc<ExecutorContext>,
     viewstamp: Arc<Mutex<String>>,
 }
 
 impl Server {
-    pub fn new(shim: Arc<DebuggerShim>) -> Self {
+    pub fn new(nes: Arc<Mutex<Nes>>, ctx: Arc<ExecutorContext>) -> Self {
         Self {
-            shim,
+            nes,
+            ctx,
             viewstamp: Arc::new(Mutex::new(new_viewstamp())),
         }
     }
 
-    fn build_cpu_msg(&self) -> CPUState {
-        let c = self.shim.cpu.lock();
-
+    fn build_cpu_msg_from_nes(nes: &Nes) -> CPUState {
         let mut cpu_msg = CPUState::new();
-        cpu_msg.x = c.X as u32;
-        cpu_msg.y = c.Y as u32;
-        cpu_msg.ac = c.AC as u32;
-        cpu_msg.program_counter = c.PC as u32;
-        cpu_msg.stack_pointer = c.SP as u32;
+        cpu_msg.x = nes.cpu.X as u32;
+        cpu_msg.y = nes.cpu.Y as u32;
+        cpu_msg.ac = nes.cpu.AC as u32;
+        cpu_msg.program_counter = nes.cpu.PC as u32;
+        cpu_msg.stack_pointer = nes.cpu.SP as u32;
 
-        let status = CPUState_CpuStatusRegister{
-            negative: c.SR.is_set(Flags::Negative),
-            overflow: c.SR.is_set(Flags::Overflow),
-            interrupt: c.SR.is_set(Flags::Interrupt),
-            zero: c.SR.is_set(Flags::Zero),
-            carry: c.SR.is_set(Flags::Carry),
+        let status = CPUState_CpuStatusRegister {
+            negative: nes.cpu.SR.is_set(Flags::Negative),
+            overflow: nes.cpu.SR.is_set(Flags::Overflow),
+            interrupt: nes.cpu.SR.is_set(Flags::Interrupt),
+            zero: nes.cpu.SR.is_set(Flags::Zero),
+            carry: nes.cpu.SR.is_set(Flags::Carry),
             ..Default::default()
         };
         cpu_msg.status = protobuf::SingularPtrField::some(status);
         cpu_msg
     }
+
+    fn build_cpu_msg(&self) -> CPUState {
+        let nes = self.nes.lock();
+        Self::build_cpu_msg_from_nes(&nes)
+    }
 }
 
 fn new_viewstamp() -> String {
-   let d = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
-   d.as_micros().to_string()
+    let d = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
+    d.as_micros().to_string()
 }
 
 fn dbg_metadata(viewstamp: &str) -> grpc::Metadata {
@@ -137,7 +153,7 @@ macro_rules! emulation_running_bail {
                 String::from("emulation is running"),
             );
         }
-    }
+    };
 }
 
 macro_rules! viewstamp_bail {
@@ -181,13 +197,13 @@ impl BobombDebugger for Server {
         &self,
         _ctx: grpc::ServerHandlerContext,
         _req: grpc::ServerRequestSingle<StatusRequest>,
-        mut resp: grpc::ServerResponseUnarySink<StatusReply>) -> grpc::Result<()>
-    {
+        mut resp: grpc::ServerResponseUnarySink<StatusReply>,
+    ) -> grpc::Result<()> {
         match self.viewstamp.try_lock_for(LOCK_TIMEOUT) {
             Some(viewstamp) => {
                 let mut r = StatusReply::new();
 
-                if self.shim.is_executing() {
+                if self.ctx.is_executing() {
                     r.emulation_state = StatusReply_EmulationState::RUNNING;
                 } else {
                     r.emulation_state = StatusReply_EmulationState::STOPPED;
@@ -195,32 +211,32 @@ impl BobombDebugger for Server {
 
                 resp.send_metadata(dbg_metadata(&*viewstamp))?;
                 resp.finish(r)
-            },
+            }
             None => lock_error!(resp),
         }
     }
 
-    fn stop(
+    fn attach(
         &self,
         ctx: grpc::ServerHandlerContext,
-        _req: grpc::ServerRequestSingle<StopRequest>,
-        mut resp: grpc::ServerResponseUnarySink<StopReply>) -> grpc::Result<()>
-    {
+        _req: grpc::ServerRequestSingle<AttachRequest>,
+        mut resp: grpc::ServerResponseUnarySink<AttachReply>,
+    ) -> grpc::Result<()> {
         match self.viewstamp.try_lock_for(LOCK_TIMEOUT) {
             Some(mut viewstamp) => {
                 viewstamp_bail!(ctx, &*viewstamp.as_bytes(), resp);
 
-                self.shim.stop_execution();
+                self.ctx.breakpoints.lock().enable_step();
                 *viewstamp = new_viewstamp();
 
-                let reply = StopReply{
+                let reply = AttachReply {
                     cpu: protobuf::SingularPtrField::some(self.build_cpu_msg()),
                     ..Default::default()
                 };
 
                 resp.send_metadata(dbg_metadata(&*viewstamp))?;
                 resp.finish(reply)
-            },
+            }
             None => lock_error!(resp),
         }
     }
@@ -229,22 +245,76 @@ impl BobombDebugger for Server {
         &self,
         ctx: grpc::ServerHandlerContext,
         _req: grpc::ServerRequestSingle<ResumeRequest>,
-        mut resp: grpc::ServerResponseSink<ResumeReply>) -> grpc::Result<()>
-    {
+        mut resp: grpc::ServerResponseSink<ResumeReply>,
+    ) -> grpc::Result<()> {
         match self.viewstamp.try_lock_for(LOCK_TIMEOUT) {
             Some(mut viewstamp) => {
                 viewstamp_bail!(ctx, &*viewstamp.as_bytes(), resp);
 
-                self.shim.start_execution();
+                let fut = self.ctx.subscribe_to_stop();
+                let fut_nes = self.nes.clone();
+                let stream = fut
+                    .map(move |_| {
+                        // At this point we *should* be stopped. Though technically this is racy
+                        // because someone else could start the thread again right after we
+                        // had stopped. It might be better if the `subscribe_to_stop` future
+                        // returned the state of CPU. The viewstamps should prevent us from getting
+                        // bad data though.
+                        Ok(ResumeReply {
+                            cpu: protobuf::SingularPtrField::some(Self::build_cpu_msg_from_nes(
+                                &fut_nes.lock(),
+                            )),
+                            ..Default::default()
+                        })
+                    })
+                    .fuse()
+                    .into_stream();
+
+                self.ctx.start_execution();
                 *viewstamp = new_viewstamp();
-
                 resp.send_metadata(dbg_metadata(&*viewstamp))?;
-                self.shim.block_until_running();
 
-                let stream = stream::iter(std::iter::once(Ok(ResumeReply::new())));
                 ctx.pump(stream, resp);
                 Ok(())
-            },
+            }
+            None => lock_error!(resp),
+        }
+    }
+
+    fn step(
+        &self,
+        ctx: grpc::ServerHandlerContext,
+        _req: grpc::ServerRequestSingle<StepRequest>,
+        mut resp: grpc::ServerResponseSink<StepReply>,
+    ) -> grpc::Result<()> {
+        emulation_running_bail!(self.ctx, resp);
+
+        match self.viewstamp.try_lock_for(LOCK_TIMEOUT) {
+            Some(mut viewstamp) => {
+                let fut = self.ctx.subscribe_to_stop();
+                let fut_nes = self.nes.clone();
+
+                let stream = fut
+                    .map(move |_| {
+                        // TODO DRY this up
+                        Ok(StepReply {
+                            cpu: protobuf::SingularPtrField::some(Self::build_cpu_msg_from_nes(
+                                &fut_nes.lock(),
+                            )),
+                            ..Default::default()
+                        })
+                    })
+                    .fuse()
+                    .into_stream();
+
+                self.ctx.breakpoints.lock().enable_step();
+                self.ctx.start_execution();
+                *viewstamp = new_viewstamp();
+                resp.send_metadata(dbg_metadata(&*viewstamp))?;
+
+                ctx.pump(stream, resp);
+                Ok(())
+            }
             None => lock_error!(resp),
         }
     }
@@ -253,24 +323,24 @@ impl BobombDebugger for Server {
         &self,
         ctx: grpc::ServerHandlerContext,
         req: grpc::ServerRequestSingle<PutBreakpointRequest>,
-        mut resp: grpc::ServerResponseUnarySink<BreakpointReply>) -> grpc::Result<()>
-    {
-        emulation_running_bail!(self.shim, resp);
+        mut resp: grpc::ServerResponseUnarySink<BreakpointReply>,
+    ) -> grpc::Result<()> {
+        emulation_running_bail!(self.ctx, resp);
 
         match self.viewstamp.try_lock_for(LOCK_TIMEOUT) {
             Some(viewstamp) => {
                 viewstamp_bail!(ctx, &*viewstamp.as_bytes(), resp);
 
-                let addr = req.message.get_address() as u16;
-                self.shim.breakpoints.lock().insert(addr);
+                let addr = req.message.address as u16;
+                self.ctx.breakpoints.lock().set(addr, req.message.temporary);
 
                 let mut reply = BreakpointReply::new();
                 reply.address = addr as u32;
-                // reply.temporary = req.temporary;
+                reply.temporary = req.message.temporary;
 
                 resp.send_metadata(dbg_metadata(&*viewstamp))?;
                 resp.finish(reply)
-            },
+            }
             None => lock_error!(resp),
         }
     }
@@ -279,16 +349,16 @@ impl BobombDebugger for Server {
         &self,
         ctx: grpc::ServerHandlerContext,
         req: grpc::ServerRequestSingle<DeleteBreakpointRequest>,
-        mut resp: grpc::ServerResponseUnarySink<BreakpointReply>) -> grpc::Result<()>
-    {
-        emulation_running_bail!(self.shim, resp);
+        mut resp: grpc::ServerResponseUnarySink<BreakpointReply>,
+    ) -> grpc::Result<()> {
+        emulation_running_bail!(self.ctx, resp);
 
         match self.viewstamp.try_lock_for(LOCK_TIMEOUT) {
             Some(mut viewstamp) => {
                 viewstamp_bail!(ctx, &*viewstamp.as_bytes(), resp);
 
                 let addr = req.message.get_address() as u16;
-                self.shim.breakpoints.lock().remove(&addr);
+                self.ctx.breakpoints.lock().remove(addr);
                 *viewstamp = new_viewstamp();
 
                 let mut reply = BreakpointReply::new();
@@ -296,7 +366,7 @@ impl BobombDebugger for Server {
 
                 resp.send_metadata(dbg_metadata(&*viewstamp))?;
                 resp.finish(reply)
-            },
+            }
             None => lock_error!(resp),
         }
     }
@@ -305,22 +375,22 @@ impl BobombDebugger for Server {
         &self,
         ctx: grpc::ServerHandlerContext,
         _req: grpc::ServerRequestSingle<ReadCPURequest>,
-        mut resp: grpc::ServerResponseUnarySink<ReadCPUReply>) -> grpc::Result<()>
-    {
-        emulation_running_bail!(self.shim, resp);
+        mut resp: grpc::ServerResponseUnarySink<ReadCPUReply>,
+    ) -> grpc::Result<()> {
+        emulation_running_bail!(self.ctx, resp);
 
         match self.viewstamp.try_lock_for(LOCK_TIMEOUT) {
             Some(viewstamp) => {
                 viewstamp_bail!(ctx, &*viewstamp.as_bytes(), resp);
 
-                let reply = ReadCPUReply{
+                let reply = ReadCPUReply {
                     cpu: protobuf::SingularPtrField::some(self.build_cpu_msg()),
                     ..Default::default()
                 };
 
                 resp.send_metadata(dbg_metadata(&*viewstamp))?;
                 resp.finish(reply)
-            },
+            }
             None => lock_error!(resp),
         }
     }
@@ -329,9 +399,9 @@ impl BobombDebugger for Server {
         &self,
         ctx: grpc::ServerHandlerContext,
         req: grpc::ServerRequestSingle<ReadMemoryRequest>,
-        mut resp: grpc::ServerResponseUnarySink<ReadMemoryReply>) -> grpc::Result<()>
-    {
-        emulation_running_bail!(self.shim, resp);
+        mut resp: grpc::ServerResponseUnarySink<ReadMemoryReply>,
+    ) -> grpc::Result<()> {
+        emulation_running_bail!(self.ctx, resp);
 
         match self.viewstamp.try_lock_for(LOCK_TIMEOUT) {
             Some(viewstamp) => {
@@ -339,7 +409,8 @@ impl BobombDebugger for Server {
 
                 let mut reply = ReadMemoryReply::new();
 
-                let interconnect = self.shim.interconnect.lock();
+                let nes = self.nes.lock();
+                let interconnect = nes.interconnect.lock();
                 if req.message.count_by_instruction {
                     let (data, start, count) = interconnect.read_range_by_instruction(
                         req.message.start as u16,
@@ -349,21 +420,18 @@ impl BobombDebugger for Server {
                     reply.start = start as u32;
                     reply.count = count as u32;
                 } else {
-                    let (data, start, count) = interconnect.read_range(
-                        req.message.start as u16,
-                        req.message.count as i16,
-                    );
+                    let (data, start, count) =
+                        interconnect.read_range(req.message.start as u16, req.message.count as i16);
                     reply.data = data;
                     reply.start = start as u32;
                     reply.count = count as u32;
                 }
 
-                let c = self.shim.cpu.lock();
-                reply.program_counter = c.PC.into();
+                reply.program_counter = nes.cpu.PC.into();
 
                 resp.send_metadata(dbg_metadata(&*viewstamp))?;
                 resp.finish(reply)
-            },
+            }
             None => lock_error!(resp),
         }
     }

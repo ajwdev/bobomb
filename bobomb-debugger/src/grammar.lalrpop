@@ -128,9 +128,22 @@ pub Command: Cmd = {
     ClearCmd,
     StatusCmd,
     ContinueCmd,
-    StopCmd,
+    StepCmd,
+    AttachCmd,
     SetCmd,
     StackCmd,
+    DisplayCmd,
+    UndisplayCmd,
+}
+
+DisplayCmd: Cmd = {
+    "display" <c:ExamineCmd> => Cmd::Display(Some(Box::new(c))),
+    "display" <c:PrintCmd> => Cmd::Display(Some(Box::new(c))),
+    "display" => Cmd::Display(None),
+}
+
+UndisplayCmd: Cmd = {
+  "undisplay" <n:Num> => Cmd::Undisplay(n),
 }
 
 ExamineCmd: Cmd = {
@@ -167,8 +180,9 @@ StatusCmd: Cmd = {
     "st" => Cmd::Status,
 }
 
-StopCmd: Cmd = {
-    "stop" => Cmd::Stop,
+AttachCmd: Cmd = {
+    "attach" => Cmd::Attach,
+    "stop" => Cmd::Attach,
 }
 
 ContinueCmd: Cmd = {
@@ -176,16 +190,17 @@ ContinueCmd: Cmd = {
     "c" => Cmd::Continue,
 }
 
+StepCmd: Cmd = {
+    "step" => Cmd::Step,
+    "s" => Cmd::Step,
+    "next" => Cmd::Step,
+    "n" => Cmd::Step,
+}
+
 SetCmd: Cmd = {
     "set" <v:Var> "=" <e:Expr> => Cmd::SetVar(v, e),
     "set" <v:Var>=> Cmd::PrintVar(Some(v)),
     "set" => Cmd::PrintVar(None),
-    DisplayCmd,
-}
-
-DisplayCmd: Cmd = {
-    "display" <v:Var>=> Cmd::PrintVar(Some(v)),
-    "display" => Cmd::PrintVar(None),
 }
 
 StackCmd: Cmd = {

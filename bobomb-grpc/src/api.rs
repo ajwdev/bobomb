@@ -24,25 +24,25 @@
 // const _PROTOBUF_VERSION_CHECK: () = ::protobuf::VERSION_2_18_1;
 
 #[derive(PartialEq,Clone,Default)]
-pub struct StopRequest {
+pub struct AttachRequest {
     // special fields
     pub unknown_fields: ::protobuf::UnknownFields,
     pub cached_size: ::protobuf::CachedSize,
 }
 
-impl<'a> ::std::default::Default for &'a StopRequest {
-    fn default() -> &'a StopRequest {
-        <StopRequest as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a AttachRequest {
+    fn default() -> &'a AttachRequest {
+        <AttachRequest as ::protobuf::Message>::default_instance()
     }
 }
 
-impl StopRequest {
-    pub fn new() -> StopRequest {
+impl AttachRequest {
+    pub fn new() -> AttachRequest {
         ::std::default::Default::default()
     }
 }
 
-impl ::protobuf::Message for StopRequest {
+impl ::protobuf::Message for AttachRequest {
     fn is_initialized(&self) -> bool {
         true
     }
@@ -99,48 +99,48 @@ impl ::protobuf::Message for StopRequest {
         Self::descriptor_static()
     }
 
-    fn new() -> StopRequest {
-        StopRequest::new()
+    fn new() -> AttachRequest {
+        AttachRequest::new()
     }
 
     fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
         static descriptor: ::protobuf::rt::LazyV2<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::LazyV2::INIT;
         descriptor.get(|| {
             let fields = ::std::vec::Vec::new();
-            ::protobuf::reflect::MessageDescriptor::new_pb_name::<StopRequest>(
-                "StopRequest",
+            ::protobuf::reflect::MessageDescriptor::new_pb_name::<AttachRequest>(
+                "AttachRequest",
                 fields,
                 file_descriptor_proto()
             )
         })
     }
 
-    fn default_instance() -> &'static StopRequest {
-        static instance: ::protobuf::rt::LazyV2<StopRequest> = ::protobuf::rt::LazyV2::INIT;
-        instance.get(StopRequest::new)
+    fn default_instance() -> &'static AttachRequest {
+        static instance: ::protobuf::rt::LazyV2<AttachRequest> = ::protobuf::rt::LazyV2::INIT;
+        instance.get(AttachRequest::new)
     }
 }
 
-impl ::protobuf::Clear for StopRequest {
+impl ::protobuf::Clear for AttachRequest {
     fn clear(&mut self) {
         self.unknown_fields.clear();
     }
 }
 
-impl ::std::fmt::Debug for StopRequest {
+impl ::std::fmt::Debug for AttachRequest {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for StopRequest {
+impl ::protobuf::reflect::ProtobufValue for AttachRequest {
     fn as_ref(&self) -> ::protobuf::reflect::ReflectValueRef {
         ::protobuf::reflect::ReflectValueRef::Message(self)
     }
 }
 
 #[derive(PartialEq,Clone,Default)]
-pub struct StopReply {
+pub struct AttachReply {
     // message fields
     pub cpu: ::protobuf::SingularPtrField<CPUState>,
     // special fields
@@ -148,14 +148,14 @@ pub struct StopReply {
     pub cached_size: ::protobuf::CachedSize,
 }
 
-impl<'a> ::std::default::Default for &'a StopReply {
-    fn default() -> &'a StopReply {
-        <StopReply as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a AttachReply {
+    fn default() -> &'a AttachReply {
+        <AttachReply as ::protobuf::Message>::default_instance()
     }
 }
 
-impl StopReply {
-    pub fn new() -> StopReply {
+impl AttachReply {
+    pub fn new() -> AttachReply {
         ::std::default::Default::default()
     }
 
@@ -193,7 +193,7 @@ impl StopReply {
     }
 }
 
-impl ::protobuf::Message for StopReply {
+impl ::protobuf::Message for AttachReply {
     fn is_initialized(&self) -> bool {
         for v in &self.cpu {
             if !v.is_initialized() {
@@ -267,8 +267,8 @@ impl ::protobuf::Message for StopReply {
         Self::descriptor_static()
     }
 
-    fn new() -> StopReply {
-        StopReply::new()
+    fn new() -> AttachReply {
+        AttachReply::new()
     }
 
     fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
@@ -277,37 +277,37 @@ impl ::protobuf::Message for StopReply {
             let mut fields = ::std::vec::Vec::new();
             fields.push(::protobuf::reflect::accessor::make_singular_ptr_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<CPUState>>(
                 "cpu",
-                |m: &StopReply| { &m.cpu },
-                |m: &mut StopReply| { &mut m.cpu },
+                |m: &AttachReply| { &m.cpu },
+                |m: &mut AttachReply| { &mut m.cpu },
             ));
-            ::protobuf::reflect::MessageDescriptor::new_pb_name::<StopReply>(
-                "StopReply",
+            ::protobuf::reflect::MessageDescriptor::new_pb_name::<AttachReply>(
+                "AttachReply",
                 fields,
                 file_descriptor_proto()
             )
         })
     }
 
-    fn default_instance() -> &'static StopReply {
-        static instance: ::protobuf::rt::LazyV2<StopReply> = ::protobuf::rt::LazyV2::INIT;
-        instance.get(StopReply::new)
+    fn default_instance() -> &'static AttachReply {
+        static instance: ::protobuf::rt::LazyV2<AttachReply> = ::protobuf::rt::LazyV2::INIT;
+        instance.get(AttachReply::new)
     }
 }
 
-impl ::protobuf::Clear for StopReply {
+impl ::protobuf::Clear for AttachReply {
     fn clear(&mut self) {
         self.cpu.clear();
         self.unknown_fields.clear();
     }
 }
 
-impl ::std::fmt::Debug for StopReply {
+impl ::std::fmt::Debug for AttachReply {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for StopReply {
+impl ::protobuf::reflect::ProtobufValue for AttachReply {
     fn as_ref(&self) -> ::protobuf::reflect::ReflectValueRef {
         ::protobuf::reflect::ReflectValueRef::Message(self)
     }
@@ -432,7 +432,7 @@ impl ::protobuf::reflect::ProtobufValue for ResumeRequest {
 #[derive(PartialEq,Clone,Default)]
 pub struct ResumeReply {
     // message fields
-    pub program_counter: u32,
+    pub cpu: ::protobuf::SingularPtrField<CPUState>,
     // special fields
     pub unknown_fields: ::protobuf::UnknownFields,
     pub cached_size: ::protobuf::CachedSize,
@@ -449,24 +449,47 @@ impl ResumeReply {
         ::std::default::Default::default()
     }
 
-    // uint32 program_counter = 1;
+    // .CPUState cpu = 1;
 
 
-    pub fn get_program_counter(&self) -> u32 {
-        self.program_counter
+    pub fn get_cpu(&self) -> &CPUState {
+        self.cpu.as_ref().unwrap_or_else(|| <CPUState as ::protobuf::Message>::default_instance())
     }
-    pub fn clear_program_counter(&mut self) {
-        self.program_counter = 0;
+    pub fn clear_cpu(&mut self) {
+        self.cpu.clear();
+    }
+
+    pub fn has_cpu(&self) -> bool {
+        self.cpu.is_some()
     }
 
     // Param is passed by value, moved
-    pub fn set_program_counter(&mut self, v: u32) {
-        self.program_counter = v;
+    pub fn set_cpu(&mut self, v: CPUState) {
+        self.cpu = ::protobuf::SingularPtrField::some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_cpu(&mut self) -> &mut CPUState {
+        if self.cpu.is_none() {
+            self.cpu.set_default();
+        }
+        self.cpu.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_cpu(&mut self) -> CPUState {
+        self.cpu.take().unwrap_or_else(|| CPUState::new())
     }
 }
 
 impl ::protobuf::Message for ResumeReply {
     fn is_initialized(&self) -> bool {
+        for v in &self.cpu {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
         true
     }
 
@@ -475,11 +498,7 @@ impl ::protobuf::Message for ResumeReply {
             let (field_number, wire_type) = is.read_tag_unpack()?;
             match field_number {
                 1 => {
-                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
-                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
-                    }
-                    let tmp = is.read_uint32()?;
-                    self.program_counter = tmp;
+                    ::protobuf::rt::read_singular_message_into(wire_type, is, &mut self.cpu)?;
                 },
                 _ => {
                     ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
@@ -493,8 +512,9 @@ impl ::protobuf::Message for ResumeReply {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u32 {
         let mut my_size = 0;
-        if self.program_counter != 0 {
-            my_size += ::protobuf::rt::value_size(1, self.program_counter, ::protobuf::wire_format::WireTypeVarint);
+        if let Some(ref v) = self.cpu.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
         self.cached_size.set(my_size);
@@ -502,8 +522,10 @@ impl ::protobuf::Message for ResumeReply {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::ProtobufResult<()> {
-        if self.program_counter != 0 {
-            os.write_uint32(1, self.program_counter)?;
+        if let Some(ref v) = self.cpu.as_ref() {
+            os.write_tag(1, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+            os.write_raw_varint32(v.get_cached_size())?;
+            v.write_to_with_cached_sizes(os)?;
         }
         os.write_unknown_fields(self.get_unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -543,10 +565,10 @@ impl ::protobuf::Message for ResumeReply {
         static descriptor: ::protobuf::rt::LazyV2<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::LazyV2::INIT;
         descriptor.get(|| {
             let mut fields = ::std::vec::Vec::new();
-            fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeUint32>(
-                "program_counter",
-                |m: &ResumeReply| { &m.program_counter },
-                |m: &mut ResumeReply| { &mut m.program_counter },
+            fields.push(::protobuf::reflect::accessor::make_singular_ptr_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<CPUState>>(
+                "cpu",
+                |m: &ResumeReply| { &m.cpu },
+                |m: &mut ResumeReply| { &mut m.cpu },
             ));
             ::protobuf::reflect::MessageDescriptor::new_pb_name::<ResumeReply>(
                 "ResumeReply",
@@ -564,7 +586,7 @@ impl ::protobuf::Message for ResumeReply {
 
 impl ::protobuf::Clear for ResumeReply {
     fn clear(&mut self) {
-        self.program_counter = 0;
+        self.cpu.clear();
         self.unknown_fields.clear();
     }
 }
@@ -576,6 +598,296 @@ impl ::std::fmt::Debug for ResumeReply {
 }
 
 impl ::protobuf::reflect::ProtobufValue for ResumeReply {
+    fn as_ref(&self) -> ::protobuf::reflect::ReflectValueRef {
+        ::protobuf::reflect::ReflectValueRef::Message(self)
+    }
+}
+
+#[derive(PartialEq,Clone,Default)]
+pub struct StepRequest {
+    // special fields
+    pub unknown_fields: ::protobuf::UnknownFields,
+    pub cached_size: ::protobuf::CachedSize,
+}
+
+impl<'a> ::std::default::Default for &'a StepRequest {
+    fn default() -> &'a StepRequest {
+        <StepRequest as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl StepRequest {
+    pub fn new() -> StepRequest {
+        ::std::default::Default::default()
+    }
+}
+
+impl ::protobuf::Message for StepRequest {
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::ProtobufResult<()> {
+        while !is.eof()? {
+            let (field_number, wire_type) = is.read_tag_unpack()?;
+            match field_number {
+                _ => {
+                    ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u32 {
+        let mut my_size = 0;
+        my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
+        self.cached_size.set(my_size);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::ProtobufResult<()> {
+        os.write_unknown_fields(self.get_unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn get_cached_size(&self) -> u32 {
+        self.cached_size.get()
+    }
+
+    fn get_unknown_fields(&self) -> &::protobuf::UnknownFields {
+        &self.unknown_fields
+    }
+
+    fn mut_unknown_fields(&mut self) -> &mut ::protobuf::UnknownFields {
+        &mut self.unknown_fields
+    }
+
+    fn as_any(&self) -> &dyn (::std::any::Any) {
+        self as &dyn (::std::any::Any)
+    }
+    fn as_any_mut(&mut self) -> &mut dyn (::std::any::Any) {
+        self as &mut dyn (::std::any::Any)
+    }
+    fn into_any(self: ::std::boxed::Box<Self>) -> ::std::boxed::Box<dyn (::std::any::Any)> {
+        self
+    }
+
+    fn descriptor(&self) -> &'static ::protobuf::reflect::MessageDescriptor {
+        Self::descriptor_static()
+    }
+
+    fn new() -> StepRequest {
+        StepRequest::new()
+    }
+
+    fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::LazyV2<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::LazyV2::INIT;
+        descriptor.get(|| {
+            let fields = ::std::vec::Vec::new();
+            ::protobuf::reflect::MessageDescriptor::new_pb_name::<StepRequest>(
+                "StepRequest",
+                fields,
+                file_descriptor_proto()
+            )
+        })
+    }
+
+    fn default_instance() -> &'static StepRequest {
+        static instance: ::protobuf::rt::LazyV2<StepRequest> = ::protobuf::rt::LazyV2::INIT;
+        instance.get(StepRequest::new)
+    }
+}
+
+impl ::protobuf::Clear for StepRequest {
+    fn clear(&mut self) {
+        self.unknown_fields.clear();
+    }
+}
+
+impl ::std::fmt::Debug for StepRequest {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for StepRequest {
+    fn as_ref(&self) -> ::protobuf::reflect::ReflectValueRef {
+        ::protobuf::reflect::ReflectValueRef::Message(self)
+    }
+}
+
+#[derive(PartialEq,Clone,Default)]
+pub struct StepReply {
+    // message fields
+    pub cpu: ::protobuf::SingularPtrField<CPUState>,
+    // special fields
+    pub unknown_fields: ::protobuf::UnknownFields,
+    pub cached_size: ::protobuf::CachedSize,
+}
+
+impl<'a> ::std::default::Default for &'a StepReply {
+    fn default() -> &'a StepReply {
+        <StepReply as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl StepReply {
+    pub fn new() -> StepReply {
+        ::std::default::Default::default()
+    }
+
+    // .CPUState cpu = 1;
+
+
+    pub fn get_cpu(&self) -> &CPUState {
+        self.cpu.as_ref().unwrap_or_else(|| <CPUState as ::protobuf::Message>::default_instance())
+    }
+    pub fn clear_cpu(&mut self) {
+        self.cpu.clear();
+    }
+
+    pub fn has_cpu(&self) -> bool {
+        self.cpu.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_cpu(&mut self, v: CPUState) {
+        self.cpu = ::protobuf::SingularPtrField::some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_cpu(&mut self) -> &mut CPUState {
+        if self.cpu.is_none() {
+            self.cpu.set_default();
+        }
+        self.cpu.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_cpu(&mut self) -> CPUState {
+        self.cpu.take().unwrap_or_else(|| CPUState::new())
+    }
+}
+
+impl ::protobuf::Message for StepReply {
+    fn is_initialized(&self) -> bool {
+        for v in &self.cpu {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::ProtobufResult<()> {
+        while !is.eof()? {
+            let (field_number, wire_type) = is.read_tag_unpack()?;
+            match field_number {
+                1 => {
+                    ::protobuf::rt::read_singular_message_into(wire_type, is, &mut self.cpu)?;
+                },
+                _ => {
+                    ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u32 {
+        let mut my_size = 0;
+        if let Some(ref v) = self.cpu.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
+        self.cached_size.set(my_size);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::ProtobufResult<()> {
+        if let Some(ref v) = self.cpu.as_ref() {
+            os.write_tag(1, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+            os.write_raw_varint32(v.get_cached_size())?;
+            v.write_to_with_cached_sizes(os)?;
+        }
+        os.write_unknown_fields(self.get_unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn get_cached_size(&self) -> u32 {
+        self.cached_size.get()
+    }
+
+    fn get_unknown_fields(&self) -> &::protobuf::UnknownFields {
+        &self.unknown_fields
+    }
+
+    fn mut_unknown_fields(&mut self) -> &mut ::protobuf::UnknownFields {
+        &mut self.unknown_fields
+    }
+
+    fn as_any(&self) -> &dyn (::std::any::Any) {
+        self as &dyn (::std::any::Any)
+    }
+    fn as_any_mut(&mut self) -> &mut dyn (::std::any::Any) {
+        self as &mut dyn (::std::any::Any)
+    }
+    fn into_any(self: ::std::boxed::Box<Self>) -> ::std::boxed::Box<dyn (::std::any::Any)> {
+        self
+    }
+
+    fn descriptor(&self) -> &'static ::protobuf::reflect::MessageDescriptor {
+        Self::descriptor_static()
+    }
+
+    fn new() -> StepReply {
+        StepReply::new()
+    }
+
+    fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::LazyV2<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::LazyV2::INIT;
+        descriptor.get(|| {
+            let mut fields = ::std::vec::Vec::new();
+            fields.push(::protobuf::reflect::accessor::make_singular_ptr_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<CPUState>>(
+                "cpu",
+                |m: &StepReply| { &m.cpu },
+                |m: &mut StepReply| { &mut m.cpu },
+            ));
+            ::protobuf::reflect::MessageDescriptor::new_pb_name::<StepReply>(
+                "StepReply",
+                fields,
+                file_descriptor_proto()
+            )
+        })
+    }
+
+    fn default_instance() -> &'static StepReply {
+        static instance: ::protobuf::rt::LazyV2<StepReply> = ::protobuf::rt::LazyV2::INIT;
+        instance.get(StepReply::new)
+    }
+}
+
+impl ::protobuf::Clear for StepReply {
+    fn clear(&mut self) {
+        self.cpu.clear();
+        self.unknown_fields.clear();
+    }
+}
+
+impl ::std::fmt::Debug for StepReply {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for StepReply {
     fn as_ref(&self) -> ::protobuf::reflect::ReflectValueRef {
         ::protobuf::reflect::ReflectValueRef::Message(self)
     }
@@ -2884,43 +3196,45 @@ impl ::protobuf::reflect::ProtobufValue for CPUState_CpuStatusRegister {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x0fproto/api.proto\"\r\n\x0bStopRequest\"(\n\tStopReply\x12\x1b\n\x03\
-    cpu\x18\x01\x20\x01(\x0b2\t.CPUStateR\x03cpu\"\x0f\n\rResumeRequest\"6\n\
-    \x0bResumeReply\x12'\n\x0fprogram_counter\x18\x01\x20\x01(\rR\x0eprogram\
-    Counter\"N\n\x14PutBreakpointRequest\x12\x18\n\x07address\x18\x01\x20\
-    \x01(\rR\x07address\x12\x1c\n\ttemporary\x18\x02\x20\x01(\x08R\ttemporar\
-    y\"3\n\x17DeleteBreakpointRequest\x12\x18\n\x07address\x18\x01\x20\x01(\
-    \rR\x07address\"I\n\x0fBreakpointReply\x12\x18\n\x07address\x18\x01\x20\
-    \x01(\rR\x07address\x12\x1c\n\ttemporary\x18\x02\x20\x01(\x08R\ttemporar\
-    y\"q\n\x11ReadMemoryRequest\x12\x14\n\x05start\x18\x01\x20\x01(\rR\x05st\
-    art\x12\x14\n\x05count\x18\x02\x20\x01(\x05R\x05count\x120\n\x14count_by\
-    _instruction\x18\x03\x20\x01(\x08R\x12countByInstruction\"z\n\x0fReadMem\
-    oryReply\x12\x14\n\x05start\x18\x01\x20\x01(\rR\x05start\x12\x12\n\x04da\
-    ta\x18\x02\x20\x01(\x0cR\x04data\x12\x14\n\x05count\x18\x03\x20\x01(\rR\
-    \x05count\x12'\n\x0fprogram_counter\x18\x04\x20\x01(\rR\x0eprogramCounte\
-    r\"\x0f\n\rStatusRequest\"\xa7\x01\n\x0bStatusReply\x12\x19\n\x08rom_nam\
-    e\x18\x01\x20\x01(\tR\x07romName\x12D\n\x0femulation_state\x18\x02\x20\
-    \x01(\x0e2\x1b.StatusReply.EmulationStateR\x0eemulationState\"7\n\x0eEmu\
-    lationState\x12\x0b\n\x07UNKNOWN\x10\0\x12\x0b\n\x07RUNNING\x10\x01\x12\
-    \x0b\n\x07STOPPED\x10\x02\"\x10\n\x0eReadCPURequest\"+\n\x0cReadCPUReply\
-    \x12\x1b\n\x03cpu\x18\x01\x20\x01(\x0b2\t.CPUStateR\x03cpu\"\xcf\x02\n\
-    \x08CPUState\x12\x0c\n\x01x\x18\x01\x20\x01(\rR\x01x\x12\x0c\n\x01y\x18\
-    \x02\x20\x01(\rR\x01y\x12\x0e\n\x02ac\x18\x03\x20\x01(\rR\x02ac\x123\n\
-    \x06status\x18\x04\x20\x01(\x0b2\x1b.CPUState.CpuStatusRegisterR\x06stat\
-    us\x12'\n\x0fprogram_counter\x18\x05\x20\x01(\rR\x0eprogramCounter\x12#\
-    \n\rstack_pointer\x18\x06\x20\x01(\rR\x0cstackPointer\x1a\x93\x01\n\x11C\
-    puStatusRegister\x12\x1a\n\x08negative\x18\x01\x20\x01(\x08R\x08negative\
-    \x12\x1a\n\x08overflow\x18\x02\x20\x01(\x08R\x08overflow\x12\x1c\n\tinte\
-    rrupt\x18\x03\x20\x01(\x08R\tinterrupt\x12\x12\n\x04zero\x18\x04\x20\x01\
-    (\x08R\x04zero\x12\x14\n\x05carry\x18\x05\x20\x01(\x08R\x05carry2\xeb\
-    \x02\n\x0eBobombDebugger\x12\"\n\x04Stop\x12\x0c.StopRequest\x1a\n.StopR\
-    eply\"\0\x12*\n\x06Resume\x12\x0e.ResumeRequest\x1a\x0c.ResumeReply\"\00\
-    \x01\x12:\n\rPutBreakpoint\x12\x15.PutBreakpointRequest\x1a\x10.Breakpoi\
-    ntReply\"\0\x12@\n\x10DeleteBreakpoint\x12\x18.DeleteBreakpointRequest\
-    \x1a\x10.BreakpointReply\"\0\x124\n\nReadMemory\x12\x12.ReadMemoryReques\
-    t\x1a\x10.ReadMemoryReply\"\0\x12+\n\x07ReadCPU\x12\x0f.ReadCPURequest\
-    \x1a\r.ReadCPUReply\"\0\x12(\n\x06Status\x12\x0e.StatusRequest\x1a\x0c.S\
-    tatusReply\"\0b\x06proto3\
+    \n\x0fproto/api.proto\"\x0f\n\rAttachRequest\"*\n\x0bAttachReply\x12\x1b\
+    \n\x03cpu\x18\x01\x20\x01(\x0b2\t.CPUStateR\x03cpu\"\x0f\n\rResumeReques\
+    t\"*\n\x0bResumeReply\x12\x1b\n\x03cpu\x18\x01\x20\x01(\x0b2\t.CPUStateR\
+    \x03cpu\"\r\n\x0bStepRequest\"(\n\tStepReply\x12\x1b\n\x03cpu\x18\x01\
+    \x20\x01(\x0b2\t.CPUStateR\x03cpu\"N\n\x14PutBreakpointRequest\x12\x18\n\
+    \x07address\x18\x01\x20\x01(\rR\x07address\x12\x1c\n\ttemporary\x18\x02\
+    \x20\x01(\x08R\ttemporary\"3\n\x17DeleteBreakpointRequest\x12\x18\n\x07a\
+    ddress\x18\x01\x20\x01(\rR\x07address\"I\n\x0fBreakpointReply\x12\x18\n\
+    \x07address\x18\x01\x20\x01(\rR\x07address\x12\x1c\n\ttemporary\x18\x02\
+    \x20\x01(\x08R\ttemporary\"q\n\x11ReadMemoryRequest\x12\x14\n\x05start\
+    \x18\x01\x20\x01(\rR\x05start\x12\x14\n\x05count\x18\x02\x20\x01(\x05R\
+    \x05count\x120\n\x14count_by_instruction\x18\x03\x20\x01(\x08R\x12countB\
+    yInstruction\"z\n\x0fReadMemoryReply\x12\x14\n\x05start\x18\x01\x20\x01(\
+    \rR\x05start\x12\x12\n\x04data\x18\x02\x20\x01(\x0cR\x04data\x12\x14\n\
+    \x05count\x18\x03\x20\x01(\rR\x05count\x12'\n\x0fprogram_counter\x18\x04\
+    \x20\x01(\rR\x0eprogramCounter\"\x0f\n\rStatusRequest\"\xa7\x01\n\x0bSta\
+    tusReply\x12\x19\n\x08rom_name\x18\x01\x20\x01(\tR\x07romName\x12D\n\x0f\
+    emulation_state\x18\x02\x20\x01(\x0e2\x1b.StatusReply.EmulationStateR\
+    \x0eemulationState\"7\n\x0eEmulationState\x12\x0b\n\x07UNKNOWN\x10\0\x12\
+    \x0b\n\x07RUNNING\x10\x01\x12\x0b\n\x07STOPPED\x10\x02\"\x10\n\x0eReadCP\
+    URequest\"+\n\x0cReadCPUReply\x12\x1b\n\x03cpu\x18\x01\x20\x01(\x0b2\t.C\
+    PUStateR\x03cpu\"\xcf\x02\n\x08CPUState\x12\x0c\n\x01x\x18\x01\x20\x01(\
+    \rR\x01x\x12\x0c\n\x01y\x18\x02\x20\x01(\rR\x01y\x12\x0e\n\x02ac\x18\x03\
+    \x20\x01(\rR\x02ac\x123\n\x06status\x18\x04\x20\x01(\x0b2\x1b.CPUState.C\
+    puStatusRegisterR\x06status\x12'\n\x0fprogram_counter\x18\x05\x20\x01(\r\
+    R\x0eprogramCounter\x12#\n\rstack_pointer\x18\x06\x20\x01(\rR\x0cstackPo\
+    inter\x1a\x93\x01\n\x11CpuStatusRegister\x12\x1a\n\x08negative\x18\x01\
+    \x20\x01(\x08R\x08negative\x12\x1a\n\x08overflow\x18\x02\x20\x01(\x08R\
+    \x08overflow\x12\x1c\n\tinterrupt\x18\x03\x20\x01(\x08R\tinterrupt\x12\
+    \x12\n\x04zero\x18\x04\x20\x01(\x08R\x04zero\x12\x14\n\x05carry\x18\x05\
+    \x20\x01(\x08R\x05carry2\x97\x03\n\x0eBobombDebugger\x12(\n\x06Attach\
+    \x12\x0e.AttachRequest\x1a\x0c.AttachReply\"\0\x12*\n\x06Resume\x12\x0e.\
+    ResumeRequest\x1a\x0c.ResumeReply\"\00\x01\x12$\n\x04Step\x12\x0c.StepRe\
+    quest\x1a\n.StepReply\"\00\x01\x12:\n\rPutBreakpoint\x12\x15.PutBreakpoi\
+    ntRequest\x1a\x10.BreakpointReply\"\0\x12@\n\x10DeleteBreakpoint\x12\x18\
+    .DeleteBreakpointRequest\x1a\x10.BreakpointReply\"\0\x124\n\nReadMemory\
+    \x12\x12.ReadMemoryRequest\x1a\x10.ReadMemoryReply\"\0\x12+\n\x07ReadCPU\
+    \x12\x0f.ReadCPURequest\x1a\r.ReadCPUReply\"\0\x12(\n\x06Status\x12\x0e.\
+    StatusRequest\x1a\x0c.StatusReply\"\0b\x06proto3\
 ";
 
 static file_descriptor_proto_lazy: ::protobuf::rt::LazyV2<::protobuf::descriptor::FileDescriptorProto> = ::protobuf::rt::LazyV2::INIT;

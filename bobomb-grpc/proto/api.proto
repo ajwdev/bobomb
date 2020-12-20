@@ -1,8 +1,10 @@
 syntax = "proto3";
 
 service BobombDebugger {
-    rpc Stop (StopRequest) returns (StopReply) {}
+    rpc Attach (AttachRequest) returns (AttachReply) {}
     rpc Resume (ResumeRequest) returns (stream ResumeReply) {}
+
+    rpc Step (StepRequest) returns (stream StepReply) {}
 
     rpc PutBreakpoint (PutBreakpointRequest) returns (BreakpointReply) {}
     rpc DeleteBreakpoint (DeleteBreakpointRequest) returns (BreakpointReply) {}
@@ -17,14 +19,19 @@ service BobombDebugger {
     rpc Status (StatusRequest) returns (StatusReply) {}
 }
 
-message StopRequest { }
-message StopReply {
+message AttachRequest { }
+message AttachReply {
     CPUState cpu = 1;
 }
 
 message ResumeRequest { }
 message ResumeReply {
-    uint32 program_counter = 1;
+    CPUState cpu = 1;
+}
+
+message StepRequest { }
+message StepReply {
+    CPUState cpu = 1;
 }
 
 message PutBreakpointRequest {

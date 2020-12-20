@@ -25,10 +25,33 @@ pub enum Cmd {
     Clear(i32),
     SetVar(String, Box<Expression>),
     PrintVar(Option<String>),
+    Display(Option<Box<Cmd>>),
+    Undisplay(i32),
     PrintStack,
     Status,
-    Stop,
+    Attach,
     Continue,
+    Step,
+}
+
+impl Cmd {
+    pub fn name(&self) -> &'static str {
+        match *self {
+            Cmd::Examine(_,_) => "examine",
+            Cmd::Print(_,_) => "print",
+            Cmd::Break(_) => "break",
+            Cmd::Clear(_) => "clear",
+            Cmd::SetVar(_,_) => "set",
+            Cmd::PrintVar(_) => "print",
+            Cmd::Display(_) => "display",
+            Cmd::Undisplay(_) => "undisplay",
+            Cmd::PrintStack => "stack",
+            Cmd::Status => "status",
+            Cmd::Attach => "attach",
+            Cmd::Continue => "continue",
+            Cmd::Step => "step",
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]

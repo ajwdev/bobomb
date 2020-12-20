@@ -1,8 +1,14 @@
 use std::u32;
 use std::collections::{HashMap,HashSet};
+use std::sync::Arc;
+use parking_lot::Mutex;
+use ctrlc;
 
 use anyhow::*;
 use bytes::Bytes;
+use futures::select;
+use futures::channel::oneshot;
+use futures::future::{BoxFuture, FutureExt};
 use futures::executor::block_on;
 
 use rustyline::error::ReadlineError;
@@ -29,8 +35,43 @@ lazy_static! {
         ["$PC", "$X", "$Y", "$AC", "SP"].iter().cloned().collect();
 }
 
+const PROMPT: &'static str = "(bobomb) ";
+const CTRLC: &'static str = "^C";
+
+struct CtrlCHandler {
+    ch: Arc<Mutex<Option<oneshot::Sender<()>>>>,
+}
+
+impl CtrlCHandler {
+    pub fn new() -> Self {
+        Self {
+            ch: Arc::new(Mutex::new(None)),
+        }
+    }
+
+    pub fn register(&self) -> Result<(),ctrlc::Error> {
+        let ch_cloned = self.ch.clone();
+        ctrlc::set_handler(move || {
+            let owned_ch = ch_cloned.lock().take();
+            if let Some(ch) = owned_ch {
+                if let Err(why) = ch.send(()) {
+                    eprintln!("channel error: {:?}", why);
+                }
+            }
+        })
+    }
+
+    pub fn notify(&mut self) -> oneshot::Receiver<()> {
+        let (snd, recv) = oneshot::channel::<()>();
+        let mut x = self.ch.lock();
+        *x = Some(snd);
+        recv
+    }
+}
+
 pub struct Repl {
     client: BobombDebuggerClient,
+    ctrlc_handler: CtrlCHandler,
     viewstamp: String,
     env: HashMap<String,i32>,
     print_chunk_size: usize,
@@ -39,6 +80,7 @@ pub struct Repl {
     last_examine: Option<usize>,
     last_print: Option<u32>,
     last_format: Format,
+    display_commands: Vec<Option<(Cmd,String)>>,
 }
 
 fn print_error<E: std::fmt::Display>(why: E) {
@@ -50,8 +92,12 @@ impl Repl {
         let client_conf = Default::default();
         let client = BobombDebuggerClient::new_plain(host, port, client_conf)?;
 
+        let handler = CtrlCHandler::new();
+        CtrlCHandler::register(&handler)?;
+
         Ok(Self {
             client,
+            ctrlc_handler: handler,
             viewstamp: String::new(),
             variable_counter: 1,
             last_examine: None,
@@ -62,6 +108,7 @@ impl Repl {
             },
             print_chunk_size: 8,
             env: HashMap::new(),
+            display_commands: Vec::new(),
         })
     }
 
@@ -77,41 +124,35 @@ impl Repl {
             eprintln!("Unable to load history: {}", why);
         }
 
-        match block_on(self.do_status()) {
-            Ok(status) => {
-                println!("Emulation state: {:?}", status.emulation_state);
-                if status.emulation_state == StatusReply_EmulationState::STOPPED {
-                    let cpu_resp = block_on(self.do_read_cpu()).unwrap();
-                    self.update_env_with_cpu(&cpu_resp.cpu.unwrap());
-                }
-            }
-            Err(why) => panic!("error on start {}", why),
+        if let Err(why) = block_on(self.attach()) {
+            print_error(format!("unable to attach debugger: {}", why));
         }
 
         loop {
-            let readline = rl.readline("(bobomb) ");
-            match readline {
+            match rl.readline(PROMPT) {
                 Ok(line) => {
-                    rl.add_history_entry(line.as_str());
+                    if !line.trim_end().is_empty() {
+                        rl.add_history_entry(line.as_str());
 
-                    match self.parse_line(&line) {
-                        Ok(ast) => {
-                            if let Err(why) = block_on(self.process(ast)) {
-                                print_error(why)
+                        match self.parse_line(&line) {
+                            Ok(ast) => {
+                                if let Err(why) = block_on(self.process(ast, Some(&line))) {
+                                    print_error(why)
+                                }
                             }
+                            Err(why) => print_error(why),
                         }
-                        Err(why) => print_error(why),
                     }
 
                 }
                 Err(ReadlineError::Interrupted) => {
-                    println!("^C");
+                    println!("{}", CTRLC);
                 }
                 Err(ReadlineError::Eof) => {
                     break;
                 }
-                Err(err) => {
-                    eprintln!("error: {}", err);
+                Err(why) => {
+                    print_error(why);
                 }
             }
         }
@@ -179,6 +220,19 @@ impl Repl {
         Ok(())
     }
 
+    async fn attach(&mut self) -> Result<()> {
+        let status = self.do_status().await?;
+
+        if status.emulation_state == StatusReply_EmulationState::RUNNING {
+            self.do_attach().await?;
+        }
+
+        let cpu_resp = self.do_read_cpu().await?;
+        self.update_env_with_cpu(&cpu_resp.cpu.unwrap());
+
+        Ok(())
+    }
+
     pub fn parse_line<'input>(&self, line: &'input str) -> Result<Cmd> {
         match PARSER.parse(line) {
             Ok(ast) => Ok(ast),
@@ -209,11 +263,41 @@ impl Repl {
         }
     }
 
-    pub async fn process<'input>(&mut self, ast: Cmd) -> Result<()> {
+    pub async fn process(&mut self, ast: Cmd, line: Option<&str>) -> Result<()> {
         match ast {
             Cmd::Status => {
                 let status = self.do_status().await?;
                 println!("Status {:#?}", status);
+            }
+
+            Cmd::Display(opt_cmd) => {
+                match opt_cmd {
+                    Some(cmd) => {
+                        match *cmd {
+                            Cmd::Print(_,_) | Cmd::Examine(_,_) => {
+                                self.display_commands.push(
+                                    Some((*cmd, line.expect("line cannot be None").to_string()))
+                                );
+                                println!("[{}] {}", self.display_commands.len()-1, line.unwrap());
+                            }
+                            _ => bail!("Command {} cannot be used with 'display'", cmd.name()),
+                        }
+                    }
+                    None => {
+                        for (i,c) in self.display_commands.iter().enumerate() {
+                            if let Some((_, cmd_str)) = c {
+                                println!("[{}] {}", i, cmd_str);
+                            }
+                        }
+                    }
+                }
+            }
+
+            Cmd::Undisplay(num) => {
+                if let Some(x) = self.display_commands.get_mut(num as usize) {
+                    println!("Cleared display {}", num);
+                    *x = None;
+                }
             }
 
             Cmd::Examine(expr, f) => {
@@ -285,13 +369,25 @@ impl Repl {
                 self.last_format = fmt;
             }
 
-            Cmd::Stop => {
-                let resp = self.do_stop().await?;
+            Cmd::Attach => {
+                let resp = self.do_attach().await?;
                 self.update_env_with_cpu(&resp.cpu.unwrap());
+                self.display_on_stop().await?;
             }
 
             Cmd::Continue => {
-                self.do_continue().await?;
+                let sigch = self.ctrlc_handler.notify();
+                select! {
+                    resp = self.do_continue().fuse() => resp?,
+                    _ = sigch.fuse() => bail!("Cancelled. Must re-attach debugger"),
+                };
+                self.display_on_stop().await?;
+            }
+
+            Cmd::Step => {
+                let resp = self.do_step().await?;
+                self.update_env_with_cpu(&resp.cpu.unwrap());
+                self.display_on_stop().await?;
             }
 
             Cmd::SetVar(v, e) => {
@@ -345,13 +441,36 @@ impl Repl {
         Ok(())
     }
 
+    fn display_on_stop(&mut self) -> BoxFuture<Result<()>> {
+        // NOTE See the Rustlang docs on recursive futures to understand why
+        // we have to do this boxed future magic
+        // https://rust-lang.github.io/async-book/07_workarounds/04_recursion.html
+        async move {
+            let cmds = &self.display_commands.iter()
+                .filter_map(|x| x.clone())
+                .collect::<Vec<(Cmd,String)>>();
+
+            for (cmd, cstr) in cmds {
+                println!("{}", cstr);
+                self.process(cmd.clone(), None).await?;
+            }
+
+            Ok(())
+        }.boxed()
+    }
+
     fn update_env_with_cpu(&mut self, msg: &CPUState) {
         self.env.set("$PC", msg.program_counter as i32);
         self.env.set("$SP", msg.stack_pointer as i32);
         self.env.set("$X", msg.x as i32);
         self.env.set("$Y", msg.y as i32);
         self.env.set("$AC", msg.ac as i32);
-        // TODO status registers
+        let st = msg.status.clone().unwrap();
+        self.env.set("$C", st.carry as i32);
+        self.env.set("$Z", st.zero as i32);
+        self.env.set("$I", st.interrupt as i32);
+        self.env.set("$V", st.overflow as i32);
+        self.env.set("$N", st.negative as i32);
     }
 
     fn req_options(&self) -> grpc::RequestOptions {
@@ -441,10 +560,21 @@ impl Repl {
         self.map_viewstamp(resp)
     }
 
-    async fn do_stop(&mut self) -> Result<StopReply, grpc::Error> {
+    async fn do_step(&mut self) -> Result<StepReply, grpc::Error> {
         let resp = self
             .client
-            .stop(self.req_options(), StopRequest::new())
+            .step(self.req_options(), StepRequest::new())
+            .single()
+            .join_metadata_result()
+            .await;
+
+        self.map_viewstamp(resp)
+    }
+
+    async fn do_attach(&mut self) -> Result<AttachReply, grpc::Error> {
+        let resp = self
+            .client
+            .attach(self.req_options(), AttachRequest::new())
             .join_metadata_result()
             .await;
 

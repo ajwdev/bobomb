@@ -1,6 +1,7 @@
 use std::ops::{Index,IndexMut};
 use std::cell::{RefCell,RefMut};
 
+use crate::nes::cpu;
 use crate::nes::ppu;
 use crate::nes::controller;
 use crate::nes::address::{Address,Addressable};
@@ -20,21 +21,49 @@ pub struct Interconnect {
     pub dma_in_progress: bool,
     pub dma_write_iteration: u8,
     pub dma_high_byte: u8,
+
+    interrupt: Option<cpu::Interrupt>,
 }
 
 
 impl Interconnect {
     pub fn new(ppu: ppu::Ppu, rom: Rom) -> Self {
         Interconnect {
-            ppu: ppu,
+            ppu,
+            rom,
             ram: vec![0; SYSTEM_RAM],
-            rom: rom,
             controller1: RefCell::new(controller::Controller::new()),
             controller2: RefCell::new(controller::Controller::new()),
             dma_in_progress: false,
             dma_write_iteration: 0,
             dma_high_byte: 0,
+            interrupt: None,
         }
+    }
+
+    /// set_interrupt set the interrupt on the interconnect
+    pub fn set_interrupt(&mut self, int: Option<cpu::Interrupt>) {
+        self.interrupt = int;
+    }
+
+    /// update_interrupt sets the interrupt only if the provided option is Some(_). This is useful
+    /// for ensuring a previously set Interrupt is not cleared prematurely.
+    pub fn update_interrupt(&mut self, int: Option<cpu::Interrupt>) {
+        if int.is_some() {
+            self.interrupt = int;
+        }
+    }
+
+    /// get_interrupt returns the interrupt on the interconnect
+    pub fn get_interrupt(&self) -> Option<cpu::Interrupt> {
+        self.interrupt
+    }
+
+    /// fetch_interrupt returns, and then resets, the interrupt on the interconnect
+    pub fn fetch_interrupt(&mut self) -> Option<cpu::Interrupt> {
+        let ret = self.interrupt;
+        self.interrupt = None;
+        ret
     }
 
     pub fn find_reset_vector_address(&self) -> Address {
