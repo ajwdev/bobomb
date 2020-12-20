@@ -465,7 +465,12 @@ impl Repl {
         self.env.set("$X", msg.x as i32);
         self.env.set("$Y", msg.y as i32);
         self.env.set("$AC", msg.ac as i32);
-        // TODO status registers
+        let st = msg.status.clone().unwrap();
+        self.env.set("$C", st.carry as i32);
+        self.env.set("$Z", st.zero as i32);
+        self.env.set("$I", st.interrupt as i32);
+        self.env.set("$V", st.overflow as i32);
+        self.env.set("$N", st.negative as i32);
     }
 
     fn req_options(&self) -> grpc::RequestOptions {
