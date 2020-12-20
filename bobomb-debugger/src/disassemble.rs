@@ -111,11 +111,11 @@ impl Instruction {
     fn format_bytes(&self) -> String {
         match (self.byte1, self.byte2) {
             (None, None) =>
-                format!("{:#04x}", self.byte0),
+                format!("{:#>02x}", self.byte0),
             (Some(a), None) =>
-                format!("{:#04x} {:#04x}", self.byte0, a),
+                format!("{:#>02x} {:#>02x}", self.byte0, a),
             (Some(a), Some(b)) =>
-                format!("{:#04x} {:#04x} {:#04x}", self.byte0, a, b),
+                format!("{:#>02x} {:#>02x} {:#>02x}", self.byte0, a, b),
 
             _ => panic!("first byte None but second byte Some")
         }
@@ -126,16 +126,11 @@ impl Instruction {
         match (self.byte1, self.byte2) {
             (None, None) => String::new(),
 
-            (Some(a), None) => {
-                let s = format!("{:#04x}", a);
-                format!("${}", s.strip_prefix("0x").unwrap())
-            }
+            (Some(a), None) => format!("${:#>02x}", a),
 
             (Some(a), Some(b)) => {
-                let addr: u16 = (a as u16) << 8 | (b as u16);
-                let s = format!("{:#06x}", addr);
-
-                format!("${}", s.strip_prefix("0x").unwrap())
+                let addr: u16 = (b as u16) << 8 | (a as u16);
+                format!("${:#>04x}", addr)
             }
 
             _ => panic!("first byte None but second byte Some")
