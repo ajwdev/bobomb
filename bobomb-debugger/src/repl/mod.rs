@@ -32,13 +32,6 @@ lazy_static! {
 const PROMPT: &'static str = "(bobomb) ";
 const CTRLC: &'static str = "^C";
 
-#[derive(Default, Clone, Debug, PartialEq)]
-pub struct Config {
-    pub host: String,
-    pub port: u16,
-    pub debug_requests: bool,
-}
-
 pub struct Repl {
     client: client::ApiClient,
     ctrlc_handler: CtrlCHandler,
@@ -52,7 +45,7 @@ pub struct Repl {
 }
 
 impl Repl {
-    pub fn new(cfg: Config) -> Result<Self> {
+    pub fn new(cfg: crate::Opts) -> Result<Self> {
         let ctrlc_handler = CtrlCHandler::new();
         CtrlCHandler::register(&ctrlc_handler)?;
 
