@@ -1,4 +1,4 @@
-mod printer;
+pub mod printer;
 
 use std::collections::{HashMap, HashSet};
 use std::u32;
@@ -197,10 +197,11 @@ impl Repl {
 
             Cmd::Continue => {
                 let sigch = self.ctrlc_handler.notify();
-                select! {
+                let resp = select! {
                     resp = self.client.do_continue().fuse() => resp?,
                     _ = sigch.fuse() => bail!("Cancelled. Must re-attach debugger"),
                 };
+                self.update_env_with_cpu(&resp.cpu.unwrap());
                 self.display_on_stop().await?;
             }
 
