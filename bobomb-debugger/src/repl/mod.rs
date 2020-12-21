@@ -9,7 +9,8 @@ use futures::future::{BoxFuture, FutureExt};
 use futures::select;
 
 use rustyline::error::ReadlineError;
-use rustyline::{CompletionType, Config, EditMode, Editor};
+use rustyline;
+use rustyline::{CompletionType, EditMode, Editor};
 
 use bobomb_grpc::api::*;
 
@@ -32,6 +33,13 @@ lazy_static! {
 const PROMPT: &'static str = "(bobomb) ";
 const CTRLC: &'static str = "^C";
 
+#[derive(Default, Clone, Debug, PartialEq)]
+pub struct Config {
+    pub host: String,
+    pub port: u16,
+    pub debug_requests: bool,
+}
+
 pub struct Repl {
     client: client::ApiClient,
     ctrlc_handler: CtrlCHandler,
@@ -45,12 +53,12 @@ pub struct Repl {
 }
 
 impl Repl {
-    pub fn new(host: &str, port: u16) -> Result<Self> {
+    pub fn new(cfg: Config) -> Result<Self> {
         let ctrlc_handler = CtrlCHandler::new();
         CtrlCHandler::register(&ctrlc_handler)?;
 
-        let mut client = client::ApiClient::new(host, port)?;
-        client.debug_responses(true);
+        let mut client = client::ApiClient::new(&cfg.host, cfg.port)?;
+        client.debug_responses(cfg.debug_requests);
 
         Ok(Self {
             client,
@@ -65,7 +73,7 @@ impl Repl {
     }
 
     pub fn run(&mut self) {
-        let config = Config::builder()
+        let config = rustyline::Config::builder()
             .history_ignore_space(true)
             .edit_mode(EditMode::Emacs)
             .completion_type(CompletionType::List)
