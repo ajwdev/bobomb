@@ -10,7 +10,7 @@ mod test {
     use super::PARSER;
 
     #[test]
-    fn parse_ok() {
+    fn parse_examine_ok() {
         [
             "x 10",
             "x 0xBEEF",
@@ -19,9 +19,9 @@ mod test {
             "x/10i $PC",
             "x/10i $PC+10-1",
         ].iter().for_each(|s| {
-            assert!(
-                PARSER.parse(s).is_ok(),
-                    "could not parse command: \"{}\"", s);
+            assert!(PARSER.parse(s).is_ok(),
+                "could not parse command: \"{}\"", s
+            );
         })
     }
 }
