@@ -108,7 +108,7 @@ impl<T: Num + fmt::Display + fmt::LowerHex> Printer<T> {
 
 impl crate::ast::Format {
     pub fn merge(&mut self, next: Option<Format>) -> Format {
-        *self = self.clone().merge(next);
+        *self = self.clone().combine(next);
         *self
     }
 
