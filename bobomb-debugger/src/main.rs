@@ -3,6 +3,7 @@ extern crate lalrpop_util;
 lalrpop_mod!(grammar);
 
 mod ast;
+mod parser;
 mod ctrl_c;
 mod client;
 mod disassemble;

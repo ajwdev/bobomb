@@ -16,13 +16,12 @@ use bobomb_grpc::api::*;
 
 use crate::ast::*;
 use crate::client;
-use crate::grammar::CommandParser;
+use crate::parser::PARSER;
 
 use crate::ctrl_c::CtrlCHandler;
 
 use lazy_static::lazy_static;
 lazy_static! {
-    static ref PARSER: CommandParser = CommandParser::new();
     static ref RESERVED_VARIABLES: HashSet<&'static str> =
         ["$PC", "$X", "$Y", "$AC", "SP", "Z", "C", "N", "V", "I"]
             .iter()
