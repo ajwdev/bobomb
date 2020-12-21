@@ -180,3 +180,7 @@ where
         _ => {}
     }
 }
+
+pub fn debug<T: std::fmt::Display>(msg: T) {
+    eprintln!("{}: {}", Blue.bold().paint("Debug"), msg)
+}

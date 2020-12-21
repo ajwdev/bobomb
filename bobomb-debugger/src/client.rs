@@ -4,9 +4,11 @@ use bytes::Bytes;
 use bobomb_grpc::api::*;
 use bobomb_grpc::api_grpc::BobombDebuggerClient;
 use bobomb_grpc::grpc;
-use bobomb_grpc::protobuf;
 use bobomb_grpc::grpc::prelude::*;
+use bobomb_grpc::protobuf;
 use bobomb_grpc::VIEWSTAMP_KEY;
+
+use crate::repl::printer;
 
 // TODO I dont think the client needs to know about these AST nodes. Refactor
 // out their usage
@@ -34,13 +36,16 @@ impl ApiClient {
         self.debug_response = b;
     }
 
-    fn print_debug_response<M,T>(&self, resp: &Result<(M, T, M), grpc::Error>)
-        where T: protobuf::Message + std::fmt::Debug
+    fn print_debug_response<M, T>(&self, resp: &Result<(M, T, M), grpc::Error>)
+    where
+        T: protobuf::Message + std::fmt::Debug,
     {
         if self.debug_response {
             match resp {
                 // TODO A real logging library maybe?
-                Ok((_,msg,_)) => println!("[Debug API] {:?}", msg),
+                Ok((_, msg, _)) => {
+                    printer::debug(format!("{}({:?})", msg.descriptor().full_name(), msg))
+                }
                 Err(why) => println!("[Debug API] error: {:?}", why),
             }
         }
@@ -183,7 +188,10 @@ impl ApiClient {
         self.map_viewstamp(resp)
     }
 
-    pub async fn do_delete_breakpoint(&mut self, addr: u32) -> Result<BreakpointReply, grpc::Error> {
+    pub async fn do_delete_breakpoint(
+        &mut self,
+        addr: u32,
+    ) -> Result<BreakpointReply, grpc::Error> {
         let mut req = DeleteBreakpointRequest::new();
         req.address = addr;
 

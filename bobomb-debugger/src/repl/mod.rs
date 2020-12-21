@@ -1,4 +1,4 @@
-mod printer;
+pub mod printer;
 
 use std::collections::{HashMap, HashSet};
 use std::u32;
