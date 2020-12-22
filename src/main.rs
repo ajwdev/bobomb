@@ -1,5 +1,3 @@
-#![feature(asm)]
-
 use anyhow::Result;
 use clap::{value_t, App, Arg};
 
@@ -7,10 +5,6 @@ use std::env;
 use std::fs;
 use std::io::Read;
 use std::u16;
-
-#[macro_use]
-#[no_link]
-extern crate probe;
 
 mod nes;
 use crate::nes::executor::Executor;

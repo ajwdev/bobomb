@@ -1,19 +1,16 @@
 [package]
 name = "bobomb"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Andrew Williams <williams.andrew@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+anyhow = "1.0.34"
+bytes = "0.5.6"
 clap = "2.33.3"
-futures         = "0.3.8"
+futures = "0.3.8"
 futures-cpupool = "0.1.8"
-parking_lot     = "0.11.1"
-minifb          = "0.19.1"
-anyhow          = "1.0.34"
-bytes           = "0.5.6"
+minifb = "0.19.1"
+parking_lot = "0.11.1"
 
 bobomb-grpc = { path = "./bobomb-grpc" }
-
-[dependencies.probe]
-git = "https://github.com/cuviper/rust-libprobe.git"

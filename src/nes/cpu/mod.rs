@@ -309,7 +309,6 @@ impl Cpu {
         previous
     }
 
-    #[no_mangle]
     pub fn step(&mut self, pending_interrupt: Option<Interrupt>) -> u32 {
         let mut burned_cycles = 0;
         self.last_pc = self.PC;
@@ -330,8 +329,6 @@ impl Cpu {
                 interconnect.dma_write_iteration += 1;
 
                 if interconnect.dma_write_iteration == 255 {
-                    probe!(bobomb_memory, dma_end);
-
                     interconnect.dma_in_progress = false;
                     interconnect.dma_write_iteration = 0;
                     return 3;   // This equal a total of 513 cycles per DMA
