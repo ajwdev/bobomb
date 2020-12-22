@@ -81,8 +81,6 @@ impl Interconnect {
     // TODO Make this work
     // pub fn read_word<T: Addressable>(&self, addr: T) -> u8 {
     pub fn read_word(&self, addr: u16) -> u8 {
-        probe!(bobomb_memory, read, addr);
-
         match addr {
             0x0000..=0x07ff => {
                 self.ram[addr as usize] // Includes zero page, stack, and ram
@@ -189,8 +187,6 @@ impl Interconnect {
     }
 
     pub fn write_word(&mut self, addr: u16, value: u8) {
-        probe!(bobomb_memory, write, addr, value);
-
         match addr {
             // RAM
             0x00..=0x07ff => {
@@ -237,13 +233,10 @@ impl Interconnect {
             }
             // PPU
             0x4014 => {
-                // NOTE dma_end probe is in the CPU
-                probe!(bobomb_memory, dma_start);
                 self.dma_high_byte = value;
             }
             // APU
             0x4015 => {
-                probe!(bobomb_memory, apu_status);
                 // println!("Write APU status not implemented. Skipping");
             }
             // Controllers

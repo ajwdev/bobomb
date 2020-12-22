@@ -249,10 +249,8 @@ impl Ppu {
         // if self.cycle == 1 {
         //     match self.scanline {
         //         VBLANK_SCANLINE => {
-        //             probe!(bobomb_ppu, vblank_begin);
 
         //             if self.control.nmi_during_vblank {
-        //                 probe!(bobomb_interrupt, nmi);
         //                 result.interrupt = Some(Interrupt::Nmi);
         //             }
 
@@ -261,7 +259,6 @@ impl Ppu {
         //             result.should_redraw = true;
         //         }
         //         PRERENDER_SCANLINE => {
-        //             probe!(bobomb_ppu, vblank_end);
         //             self.is_vblank.set(false);
 
         //             // TODO reset sprite overflow/zerohit
