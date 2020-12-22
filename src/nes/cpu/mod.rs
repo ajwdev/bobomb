@@ -705,7 +705,7 @@ impl Cpu {
                    instr,
                    self.read_at(self.PC),
                    self.read_at(self.PC + 1),
-                   self.PC
+                   self.last_pc
                 );
             }
             _ => {
@@ -714,7 +714,7 @@ impl Cpu {
                    instr,
                    self.read_at(self.PC),
                    self.read_at(self.PC + 1),
-                   self.PC
+                   self.last_pc
                 );
             }
         };
