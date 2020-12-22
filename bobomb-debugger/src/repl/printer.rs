@@ -45,7 +45,17 @@ impl<T: Num + fmt::Display + fmt::LowerHex> Printer<T> {
         pc: N,
         data: &[u8],
     ) -> Result<()> {
-        match self.last_examine.display.unwrap_or(Display::Decimal) {
+        self.examine_with_format(start, pc, data, self.last_examine)
+    }
+
+    pub fn examine_with_format<N: Unsigned + AsPrimitive<usize>>(
+        &mut self,
+        start: N,
+        pc: N,
+        data: &[u8],
+        fmt: Format,
+    ) -> Result<()> {
+        match fmt.display.unwrap_or(Display::Decimal) {
             Display::Decimal => self.print_decimal(start.as_(), data),
             Display::Hex => self.print_hex(start.as_(), data),
             Display::Instruction => self.print_disassembly(start.as_(), pc.as_(), data)?,
@@ -54,7 +64,11 @@ impl<T: Num + fmt::Display + fmt::LowerHex> Printer<T> {
     }
 
     pub fn print(&mut self, name: &str, num: T) -> Result<()> {
-        match self.last_print.display.unwrap_or(Display::Decimal) {
+        self.print_with_format(name, num, self.last_print)
+    }
+
+    pub fn print_with_format(&mut self, name: &str, num: T, fmt: Format) -> Result<()> {
+        match fmt.display.unwrap_or(Display::Decimal) {
             Display::Decimal => println!("{} = {}", name, num),
             Display::Hex => println!("{} = {:#06x}", name, num),
             Display::Instruction => {

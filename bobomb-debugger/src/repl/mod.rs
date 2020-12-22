@@ -11,6 +11,7 @@ use futures::select;
 use rustyline::error::ReadlineError;
 use rustyline;
 use rustyline::{CompletionType, EditMode, Editor};
+use ansi_term::Color::Green;
 
 use bobomb_grpc::api::*;
 
@@ -276,7 +277,7 @@ impl Repl {
                 .collect::<Vec<(Cmd, String)>>();
 
             for (cmd, cstr) in cmds {
-                println!("{}", cstr);
+                println!("{} {}", Green.paint("="), cstr);
                 self.process(cmd.clone(), None).await?;
             }
 
