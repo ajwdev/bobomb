@@ -29,7 +29,7 @@ pub struct Nes {
 }
 
 impl Nes {
-    pub fn new(rom_buffer: Vec<u8>) -> Nes {
+    pub fn new(rom_buffer: Vec<u8>, opts: &crate::Opts) -> Nes {
         let mut header = [0u8; 16];
         header.copy_from_slice(&rom_buffer[0..16]);
 
@@ -57,7 +57,10 @@ impl Nes {
         let interconnect = Arc::new(Mutex::new(
                 interconnect::Interconnect::new(ppu::Ppu::new(), rom)
         ));
-        let cpu = cpu::Cpu::new(interconnect.clone());
+        let cpu = match opts.program_counter {
+            None => cpu::Cpu::new(interconnect.clone()),
+            Some(pc) => cpu::Cpu::new_with_pc(interconnect.clone(), pc.into()),
+        };
 
         Nes {
             cpu,

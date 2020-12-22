@@ -14,7 +14,7 @@ mod address_modes;
 
 pub use crate::nes::cpu::address_modes::*;
 
-use crate::nes::address::{Address,Addressable};
+pub use crate::nes::address::{Address,Addressable};
 use crate::nes::interconnect::Interconnect;
 use crate::nes::cpu::status::{Flags,StatusRegister};
 use crate::nes::cpu::opcodes::*;
@@ -64,7 +64,11 @@ impl Cpu {
     pub fn new(interconnect: Arc<Mutex<Interconnect>>) -> Self {
         // See comment at top of file for power on state
         let pc = interconnect.lock().find_reset_vector_address();
-        Cpu {
+        Self::new_with_pc(interconnect, pc)
+    }
+
+    pub fn new_with_pc(interconnect: Arc<Mutex<Interconnect>>, pc: Address) -> Self {
+        Self {
             X: 0,
             Y: 0,
             AC: 0,
@@ -72,7 +76,7 @@ impl Cpu {
             SP: 0xfd,
             SR: StatusRegister::new(),
 
-            interconnect: interconnect,
+            interconnect,
             cycles: 0,
 
             stack_depth: 0,

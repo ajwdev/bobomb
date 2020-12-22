@@ -112,14 +112,19 @@ pub struct Executor {
 }
 
 impl Executor {
-    pub fn new(nes: Nes) -> Result<Self> {
+    pub fn new(nes: Nes, opts: &crate::Opts) -> Result<Self> {
         let execution_gate = Arc::new(ExecutionGate::new());
         let ctx_gate = execution_gate.clone();
+        let ctx = Arc::new(ExecutorContext::new(ctx_gate));
+
+        if opts.wait_for_attach {
+            ctx.breakpoints.lock().enable_step();
+        }
 
         Ok(Self {
             nes: Arc::new(Mutex::new(nes)),
             execution_gate,
-            ctx: Arc::new(ExecutorContext::new(ctx_gate)),
+            ctx,
             server_address: String::from("127.0.0.1:6502"),
             window: Window::new("Bobomb", WIDTH, HEIGHT, WindowOptions{
                 title: true,
@@ -162,7 +167,11 @@ impl Executor {
         // Limit to max ~60 fps update rate
         // self.window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
 
-        let mut last_pc: u16 = 0;
+        let mut last_pc: u16 = self.nes.lock().cpu.PC;
+
+        // TODO The UI blocks whenever we're stopped by the debugger. Can we start
+        // the actual emulation on another thread?
+
         while self.window.is_open() && !self.window.is_key_down(Key::Escape) {
             // Has the debugger stoped us?
             if self.block_execution(last_pc) {
