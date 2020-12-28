@@ -10,13 +10,13 @@ use crate::disassemble::Disassembly;
 
 const CHUNK_SIZE: usize = 8;
 
-pub struct Printer<T: Num + fmt::Display + fmt::LowerHex> {
+pub struct Printer<T: Num + fmt::Display + fmt::LowerHex + fmt::Binary> {
     last_print: Format,
     last_examine: Format,
     _expression_num_type: PhantomData<T>,
 }
 
-impl<T: Num + fmt::Display + fmt::LowerHex> Printer<T> {
+impl<T: Num + fmt::Display + fmt::LowerHex + fmt::Binary> Printer<T> {
     pub fn new() -> Self {
         Self {
             last_print: Format {
@@ -58,6 +58,7 @@ impl<T: Num + fmt::Display + fmt::LowerHex> Printer<T> {
         match fmt.display.unwrap_or(Display::Decimal) {
             Display::Decimal => self.print_decimal(start.as_(), data),
             Display::Hex => self.print_hex(start.as_(), data),
+            Display::Binary => self.print_binary(start.as_(), data),
             Display::Instruction => self.print_disassembly(start.as_(), pc.as_(), data)?,
         }
         Ok(())
@@ -71,6 +72,7 @@ impl<T: Num + fmt::Display + fmt::LowerHex> Printer<T> {
         match fmt.display.unwrap_or(Display::Decimal) {
             Display::Decimal => println!("{} = {}", name, num),
             Display::Hex => println!("{} = {:#06x}", name, num),
+            Display::Binary => println!("{} = {:#010b}", name, num),
             Display::Instruction => {
                 bail!("Format instruction unsupported in print command. Use Examine instead.")
             }
@@ -89,6 +91,23 @@ impl<T: Num + fmt::Display + fmt::LowerHex> Printer<T> {
                 chunk
                     .iter()
                     .map(|x| format!("{:#04x}", x))
+                    .collect::<Vec<String>>()
+                    .join("  "),
+            );
+            addr += CHUNK_SIZE;
+        }
+    }
+
+    fn print_binary(&self, start: usize, data: &[u8]) {
+        let mut addr = start;
+
+        for chunk in data.chunks(CHUNK_SIZE) {
+            println!(
+                "{:#06x}:  {}",
+                addr,
+                chunk
+                    .iter()
+                    .map(|x| format!("{:#010b}", x))
                     .collect::<Vec<String>>()
                     .join("  "),
             );

@@ -604,6 +604,309 @@ impl ::protobuf::reflect::ProtobufValue for ResumeReply {
 }
 
 #[derive(PartialEq,Clone,Default)]
+pub struct RestartRequest {
+    // message fields
+    pub set_program_counter: bool,
+    pub program_counter: u32,
+    // special fields
+    pub unknown_fields: ::protobuf::UnknownFields,
+    pub cached_size: ::protobuf::CachedSize,
+}
+
+impl<'a> ::std::default::Default for &'a RestartRequest {
+    fn default() -> &'a RestartRequest {
+        <RestartRequest as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl RestartRequest {
+    pub fn new() -> RestartRequest {
+        ::std::default::Default::default()
+    }
+
+    // bool set_program_counter = 1;
+
+
+    pub fn get_set_program_counter(&self) -> bool {
+        self.set_program_counter
+    }
+    pub fn clear_set_program_counter(&mut self) {
+        self.set_program_counter = false;
+    }
+
+    // Param is passed by value, moved
+    pub fn set_set_program_counter(&mut self, v: bool) {
+        self.set_program_counter = v;
+    }
+
+    // uint32 program_counter = 2;
+
+
+    pub fn get_program_counter(&self) -> u32 {
+        self.program_counter
+    }
+    pub fn clear_program_counter(&mut self) {
+        self.program_counter = 0;
+    }
+
+    // Param is passed by value, moved
+    pub fn set_program_counter(&mut self, v: u32) {
+        self.program_counter = v;
+    }
+}
+
+impl ::protobuf::Message for RestartRequest {
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::ProtobufResult<()> {
+        while !is.eof()? {
+            let (field_number, wire_type) = is.read_tag_unpack()?;
+            match field_number {
+                1 => {
+                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
+                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                    }
+                    let tmp = is.read_bool()?;
+                    self.set_program_counter = tmp;
+                },
+                2 => {
+                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
+                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                    }
+                    let tmp = is.read_uint32()?;
+                    self.program_counter = tmp;
+                },
+                _ => {
+                    ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u32 {
+        let mut my_size = 0;
+        if self.set_program_counter != false {
+            my_size += 2;
+        }
+        if self.program_counter != 0 {
+            my_size += ::protobuf::rt::value_size(2, self.program_counter, ::protobuf::wire_format::WireTypeVarint);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
+        self.cached_size.set(my_size);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::ProtobufResult<()> {
+        if self.set_program_counter != false {
+            os.write_bool(1, self.set_program_counter)?;
+        }
+        if self.program_counter != 0 {
+            os.write_uint32(2, self.program_counter)?;
+        }
+        os.write_unknown_fields(self.get_unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn get_cached_size(&self) -> u32 {
+        self.cached_size.get()
+    }
+
+    fn get_unknown_fields(&self) -> &::protobuf::UnknownFields {
+        &self.unknown_fields
+    }
+
+    fn mut_unknown_fields(&mut self) -> &mut ::protobuf::UnknownFields {
+        &mut self.unknown_fields
+    }
+
+    fn as_any(&self) -> &dyn (::std::any::Any) {
+        self as &dyn (::std::any::Any)
+    }
+    fn as_any_mut(&mut self) -> &mut dyn (::std::any::Any) {
+        self as &mut dyn (::std::any::Any)
+    }
+    fn into_any(self: ::std::boxed::Box<Self>) -> ::std::boxed::Box<dyn (::std::any::Any)> {
+        self
+    }
+
+    fn descriptor(&self) -> &'static ::protobuf::reflect::MessageDescriptor {
+        Self::descriptor_static()
+    }
+
+    fn new() -> RestartRequest {
+        RestartRequest::new()
+    }
+
+    fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::LazyV2<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::LazyV2::INIT;
+        descriptor.get(|| {
+            let mut fields = ::std::vec::Vec::new();
+            fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeBool>(
+                "set_program_counter",
+                |m: &RestartRequest| { &m.set_program_counter },
+                |m: &mut RestartRequest| { &mut m.set_program_counter },
+            ));
+            fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeUint32>(
+                "program_counter",
+                |m: &RestartRequest| { &m.program_counter },
+                |m: &mut RestartRequest| { &mut m.program_counter },
+            ));
+            ::protobuf::reflect::MessageDescriptor::new_pb_name::<RestartRequest>(
+                "RestartRequest",
+                fields,
+                file_descriptor_proto()
+            )
+        })
+    }
+
+    fn default_instance() -> &'static RestartRequest {
+        static instance: ::protobuf::rt::LazyV2<RestartRequest> = ::protobuf::rt::LazyV2::INIT;
+        instance.get(RestartRequest::new)
+    }
+}
+
+impl ::protobuf::Clear for RestartRequest {
+    fn clear(&mut self) {
+        self.set_program_counter = false;
+        self.program_counter = 0;
+        self.unknown_fields.clear();
+    }
+}
+
+impl ::std::fmt::Debug for RestartRequest {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for RestartRequest {
+    fn as_ref(&self) -> ::protobuf::reflect::ReflectValueRef {
+        ::protobuf::reflect::ReflectValueRef::Message(self)
+    }
+}
+
+#[derive(PartialEq,Clone,Default)]
+pub struct RestartReply {
+    // special fields
+    pub unknown_fields: ::protobuf::UnknownFields,
+    pub cached_size: ::protobuf::CachedSize,
+}
+
+impl<'a> ::std::default::Default for &'a RestartReply {
+    fn default() -> &'a RestartReply {
+        <RestartReply as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl RestartReply {
+    pub fn new() -> RestartReply {
+        ::std::default::Default::default()
+    }
+}
+
+impl ::protobuf::Message for RestartReply {
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::ProtobufResult<()> {
+        while !is.eof()? {
+            let (field_number, wire_type) = is.read_tag_unpack()?;
+            match field_number {
+                _ => {
+                    ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u32 {
+        let mut my_size = 0;
+        my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
+        self.cached_size.set(my_size);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::ProtobufResult<()> {
+        os.write_unknown_fields(self.get_unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn get_cached_size(&self) -> u32 {
+        self.cached_size.get()
+    }
+
+    fn get_unknown_fields(&self) -> &::protobuf::UnknownFields {
+        &self.unknown_fields
+    }
+
+    fn mut_unknown_fields(&mut self) -> &mut ::protobuf::UnknownFields {
+        &mut self.unknown_fields
+    }
+
+    fn as_any(&self) -> &dyn (::std::any::Any) {
+        self as &dyn (::std::any::Any)
+    }
+    fn as_any_mut(&mut self) -> &mut dyn (::std::any::Any) {
+        self as &mut dyn (::std::any::Any)
+    }
+    fn into_any(self: ::std::boxed::Box<Self>) -> ::std::boxed::Box<dyn (::std::any::Any)> {
+        self
+    }
+
+    fn descriptor(&self) -> &'static ::protobuf::reflect::MessageDescriptor {
+        Self::descriptor_static()
+    }
+
+    fn new() -> RestartReply {
+        RestartReply::new()
+    }
+
+    fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::LazyV2<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::LazyV2::INIT;
+        descriptor.get(|| {
+            let fields = ::std::vec::Vec::new();
+            ::protobuf::reflect::MessageDescriptor::new_pb_name::<RestartReply>(
+                "RestartReply",
+                fields,
+                file_descriptor_proto()
+            )
+        })
+    }
+
+    fn default_instance() -> &'static RestartReply {
+        static instance: ::protobuf::rt::LazyV2<RestartReply> = ::protobuf::rt::LazyV2::INIT;
+        instance.get(RestartReply::new)
+    }
+}
+
+impl ::protobuf::Clear for RestartReply {
+    fn clear(&mut self) {
+        self.unknown_fields.clear();
+    }
+}
+
+impl ::std::fmt::Debug for RestartReply {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for RestartReply {
+    fn as_ref(&self) -> ::protobuf::reflect::ReflectValueRef {
+        ::protobuf::reflect::ReflectValueRef::Message(self)
+    }
+}
+
+#[derive(PartialEq,Clone,Default)]
 pub struct StepRequest {
     // special fields
     pub unknown_fields: ::protobuf::UnknownFields,
@@ -3199,42 +3502,46 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x0fproto/api.proto\"\x0f\n\rAttachRequest\"*\n\x0bAttachReply\x12\x1b\
     \n\x03cpu\x18\x01\x20\x01(\x0b2\t.CPUStateR\x03cpu\"\x0f\n\rResumeReques\
     t\"*\n\x0bResumeReply\x12\x1b\n\x03cpu\x18\x01\x20\x01(\x0b2\t.CPUStateR\
-    \x03cpu\"\r\n\x0bStepRequest\"(\n\tStepReply\x12\x1b\n\x03cpu\x18\x01\
-    \x20\x01(\x0b2\t.CPUStateR\x03cpu\"N\n\x14PutBreakpointRequest\x12\x18\n\
-    \x07address\x18\x01\x20\x01(\rR\x07address\x12\x1c\n\ttemporary\x18\x02\
-    \x20\x01(\x08R\ttemporary\"3\n\x17DeleteBreakpointRequest\x12\x18\n\x07a\
-    ddress\x18\x01\x20\x01(\rR\x07address\"I\n\x0fBreakpointReply\x12\x18\n\
-    \x07address\x18\x01\x20\x01(\rR\x07address\x12\x1c\n\ttemporary\x18\x02\
-    \x20\x01(\x08R\ttemporary\"q\n\x11ReadMemoryRequest\x12\x14\n\x05start\
-    \x18\x01\x20\x01(\rR\x05start\x12\x14\n\x05count\x18\x02\x20\x01(\x05R\
-    \x05count\x120\n\x14count_by_instruction\x18\x03\x20\x01(\x08R\x12countB\
-    yInstruction\"z\n\x0fReadMemoryReply\x12\x14\n\x05start\x18\x01\x20\x01(\
-    \rR\x05start\x12\x12\n\x04data\x18\x02\x20\x01(\x0cR\x04data\x12\x14\n\
-    \x05count\x18\x03\x20\x01(\rR\x05count\x12'\n\x0fprogram_counter\x18\x04\
-    \x20\x01(\rR\x0eprogramCounter\"\x0f\n\rStatusRequest\"\xa7\x01\n\x0bSta\
-    tusReply\x12\x19\n\x08rom_name\x18\x01\x20\x01(\tR\x07romName\x12D\n\x0f\
-    emulation_state\x18\x02\x20\x01(\x0e2\x1b.StatusReply.EmulationStateR\
-    \x0eemulationState\"7\n\x0eEmulationState\x12\x0b\n\x07UNKNOWN\x10\0\x12\
-    \x0b\n\x07RUNNING\x10\x01\x12\x0b\n\x07STOPPED\x10\x02\"\x10\n\x0eReadCP\
-    URequest\"+\n\x0cReadCPUReply\x12\x1b\n\x03cpu\x18\x01\x20\x01(\x0b2\t.C\
-    PUStateR\x03cpu\"\xcf\x02\n\x08CPUState\x12\x0c\n\x01x\x18\x01\x20\x01(\
-    \rR\x01x\x12\x0c\n\x01y\x18\x02\x20\x01(\rR\x01y\x12\x0e\n\x02ac\x18\x03\
-    \x20\x01(\rR\x02ac\x123\n\x06status\x18\x04\x20\x01(\x0b2\x1b.CPUState.C\
-    puStatusRegisterR\x06status\x12'\n\x0fprogram_counter\x18\x05\x20\x01(\r\
-    R\x0eprogramCounter\x12#\n\rstack_pointer\x18\x06\x20\x01(\rR\x0cstackPo\
-    inter\x1a\x93\x01\n\x11CpuStatusRegister\x12\x1a\n\x08negative\x18\x01\
-    \x20\x01(\x08R\x08negative\x12\x1a\n\x08overflow\x18\x02\x20\x01(\x08R\
-    \x08overflow\x12\x1c\n\tinterrupt\x18\x03\x20\x01(\x08R\tinterrupt\x12\
-    \x12\n\x04zero\x18\x04\x20\x01(\x08R\x04zero\x12\x14\n\x05carry\x18\x05\
-    \x20\x01(\x08R\x05carry2\x97\x03\n\x0eBobombDebugger\x12(\n\x06Attach\
-    \x12\x0e.AttachRequest\x1a\x0c.AttachReply\"\0\x12*\n\x06Resume\x12\x0e.\
-    ResumeRequest\x1a\x0c.ResumeReply\"\00\x01\x12$\n\x04Step\x12\x0c.StepRe\
-    quest\x1a\n.StepReply\"\00\x01\x12:\n\rPutBreakpoint\x12\x15.PutBreakpoi\
-    ntRequest\x1a\x10.BreakpointReply\"\0\x12@\n\x10DeleteBreakpoint\x12\x18\
-    .DeleteBreakpointRequest\x1a\x10.BreakpointReply\"\0\x124\n\nReadMemory\
-    \x12\x12.ReadMemoryRequest\x1a\x10.ReadMemoryReply\"\0\x12+\n\x07ReadCPU\
-    \x12\x0f.ReadCPURequest\x1a\r.ReadCPUReply\"\0\x12(\n\x06Status\x12\x0e.\
-    StatusRequest\x1a\x0c.StatusReply\"\0b\x06proto3\
+    \x03cpu\"i\n\x0eRestartRequest\x12.\n\x13set_program_counter\x18\x01\x20\
+    \x01(\x08R\x11setProgramCounter\x12'\n\x0fprogram_counter\x18\x02\x20\
+    \x01(\rR\x0eprogramCounter\"\x0e\n\x0cRestartReply\"\r\n\x0bStepRequest\
+    \"(\n\tStepReply\x12\x1b\n\x03cpu\x18\x01\x20\x01(\x0b2\t.CPUStateR\x03c\
+    pu\"N\n\x14PutBreakpointRequest\x12\x18\n\x07address\x18\x01\x20\x01(\rR\
+    \x07address\x12\x1c\n\ttemporary\x18\x02\x20\x01(\x08R\ttemporary\"3\n\
+    \x17DeleteBreakpointRequest\x12\x18\n\x07address\x18\x01\x20\x01(\rR\x07\
+    address\"I\n\x0fBreakpointReply\x12\x18\n\x07address\x18\x01\x20\x01(\rR\
+    \x07address\x12\x1c\n\ttemporary\x18\x02\x20\x01(\x08R\ttemporary\"q\n\
+    \x11ReadMemoryRequest\x12\x14\n\x05start\x18\x01\x20\x01(\rR\x05start\
+    \x12\x14\n\x05count\x18\x02\x20\x01(\x05R\x05count\x120\n\x14count_by_in\
+    struction\x18\x03\x20\x01(\x08R\x12countByInstruction\"z\n\x0fReadMemory\
+    Reply\x12\x14\n\x05start\x18\x01\x20\x01(\rR\x05start\x12\x12\n\x04data\
+    \x18\x02\x20\x01(\x0cR\x04data\x12\x14\n\x05count\x18\x03\x20\x01(\rR\
+    \x05count\x12'\n\x0fprogram_counter\x18\x04\x20\x01(\rR\x0eprogramCounte\
+    r\"\x0f\n\rStatusRequest\"\xa7\x01\n\x0bStatusReply\x12\x19\n\x08rom_nam\
+    e\x18\x01\x20\x01(\tR\x07romName\x12D\n\x0femulation_state\x18\x02\x20\
+    \x01(\x0e2\x1b.StatusReply.EmulationStateR\x0eemulationState\"7\n\x0eEmu\
+    lationState\x12\x0b\n\x07UNKNOWN\x10\0\x12\x0b\n\x07RUNNING\x10\x01\x12\
+    \x0b\n\x07STOPPED\x10\x02\"\x10\n\x0eReadCPURequest\"+\n\x0cReadCPUReply\
+    \x12\x1b\n\x03cpu\x18\x01\x20\x01(\x0b2\t.CPUStateR\x03cpu\"\xcf\x02\n\
+    \x08CPUState\x12\x0c\n\x01x\x18\x01\x20\x01(\rR\x01x\x12\x0c\n\x01y\x18\
+    \x02\x20\x01(\rR\x01y\x12\x0e\n\x02ac\x18\x03\x20\x01(\rR\x02ac\x123\n\
+    \x06status\x18\x04\x20\x01(\x0b2\x1b.CPUState.CpuStatusRegisterR\x06stat\
+    us\x12'\n\x0fprogram_counter\x18\x05\x20\x01(\rR\x0eprogramCounter\x12#\
+    \n\rstack_pointer\x18\x06\x20\x01(\rR\x0cstackPointer\x1a\x93\x01\n\x11C\
+    puStatusRegister\x12\x1a\n\x08negative\x18\x01\x20\x01(\x08R\x08negative\
+    \x12\x1a\n\x08overflow\x18\x02\x20\x01(\x08R\x08overflow\x12\x1c\n\tinte\
+    rrupt\x18\x03\x20\x01(\x08R\tinterrupt\x12\x12\n\x04zero\x18\x04\x20\x01\
+    (\x08R\x04zero\x12\x14\n\x05carry\x18\x05\x20\x01(\x08R\x05carry2\xc4\
+    \x03\n\x0eBobombDebugger\x12(\n\x06Attach\x12\x0e.AttachRequest\x1a\x0c.\
+    AttachReply\"\0\x12*\n\x06Resume\x12\x0e.ResumeRequest\x1a\x0c.ResumeRep\
+    ly\"\00\x01\x12+\n\x07Restart\x12\x0f.RestartRequest\x1a\r.RestartReply\
+    \"\0\x12$\n\x04Step\x12\x0c.StepRequest\x1a\n.StepReply\"\00\x01\x12:\n\
+    \rPutBreakpoint\x12\x15.PutBreakpointRequest\x1a\x10.BreakpointReply\"\0\
+    \x12@\n\x10DeleteBreakpoint\x12\x18.DeleteBreakpointRequest\x1a\x10.Brea\
+    kpointReply\"\0\x124\n\nReadMemory\x12\x12.ReadMemoryRequest\x1a\x10.Rea\
+    dMemoryReply\"\0\x12+\n\x07ReadCPU\x12\x0f.ReadCPURequest\x1a\r.ReadCPUR\
+    eply\"\0\x12(\n\x06Status\x12\x0e.StatusRequest\x1a\x0c.StatusReply\"\0b\
+    \x06proto3\
 ";
 
 static file_descriptor_proto_lazy: ::protobuf::rt::LazyV2<::protobuf::descriptor::FileDescriptorProto> = ::protobuf::rt::LazyV2::INIT;

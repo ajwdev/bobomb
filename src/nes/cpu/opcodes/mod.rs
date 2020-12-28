@@ -98,12 +98,16 @@ pub use self::txs::Txs;
 
 mod sei;
 mod sec;
+mod sed;
 mod cld;
 mod clc;
+mod clv;
 pub use self::sei::Sei;
 pub use self::sec::Sec;
+pub use self::sed::Sed;
 pub use self::cld::Cld;
 pub use self::clc::Clc;
+pub use self::clv::Clv;
 
 mod lsr;
 pub use self::lsr::Lsr;

@@ -1,6 +1,7 @@
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool,Ordering};
 
-use anyhow::Result;
+use anyhow::*;
 use minifb::{Key, Window, WindowOptions};
 use parking_lot::{Condvar, Mutex};
 use futures::channel::oneshot;
@@ -10,6 +11,27 @@ use crate::nes::debugger::Breakpoints;
 use bobomb_grpc::grpc;
 use bobomb_grpc::api_grpc;
 use bobomb_grpc::grpc::ServerBuilder;
+
+#[derive(Debug)]
+pub enum ExitStatus {
+    Restart(Option<u16>),
+    Success,
+}
+
+impl std::fmt::Display for ExitStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "ExitState ( {:?} )", self)
+    }
+}
+
+pub enum State {
+}
+
+pub enum EmulationStatus {
+    Running,
+    Stopped(State),
+    Crashed(State, String),
+}
 
 pub type ExecutorLock = (Mutex<bool>, Condvar);
 
@@ -65,6 +87,9 @@ pub struct ExecutorContext {
     execution_gate: Arc<ExecutionGate>,
     events: Mutex<Vec<oneshot::Sender<u16>>>,
     pub breakpoints: Mutex<Breakpoints>,
+    // Restart fields
+    pub restart: AtomicBool,
+    pub restart_pc: Mutex<Option<u16>>,
 }
 
 impl ExecutorContext {
@@ -73,6 +98,8 @@ impl ExecutorContext {
             execution_gate,
             breakpoints: Mutex::new(Breakpoints::new()),
             events: Mutex::new(Vec::new()),
+            restart: AtomicBool::new(false),
+            restart_pc: Mutex::new(None),
         }
     }
 
@@ -84,6 +111,7 @@ impl ExecutorContext {
 
     pub fn publish_stop(&self, pc: u16) {
         for s in self.events.lock().drain(0..) {
+            println!("channel drain");
             if let Err(why) = s.send(pc) {
                 eprintln!("subscription error: {:?}", why);
             }
@@ -101,6 +129,15 @@ impl ExecutorContext {
     pub fn start_execution(&self) {
         self.execution_gate.start_execution()
     }
+
+    pub fn trigger_restart(&self, pc: Option<u16>) {
+        self.restart.store(true, Ordering::Relaxed);
+        *self.restart_pc.lock() = pc;
+    }
+
+    pub fn should_restart(&self) -> bool {
+        self.restart.load(Ordering::Relaxed)
+    }
 }
 
 pub struct Executor {
@@ -108,6 +145,7 @@ pub struct Executor {
     execution_gate: Arc<ExecutionGate>,
     ctx: Arc<ExecutorContext>,
     server_address: String,
+    wait_on_error: bool,
     window: Window,
 }
 
@@ -126,6 +164,7 @@ impl Executor {
             execution_gate,
             ctx,
             server_address: String::from("127.0.0.1:6502"),
+            wait_on_error: true,
             window: Window::new("Bobomb", WIDTH, HEIGHT, WindowOptions{
                 title: true,
                 resize: false,
@@ -160,7 +199,9 @@ impl Executor {
         }
     }
 
-    pub fn run(mut self) -> Result<()> {
+    // TODO Keep an eye on the Try trait in nightly. Then we
+    // could easily turn the ? operators into an ExitStatus
+    pub fn run(mut self) -> Result<ExitStatus> {
         let bldr = self.build_debugger_server()?;
         let _server = bldr.build()?;
 
@@ -178,20 +219,41 @@ impl Executor {
                 println!("Waking up from stop");
             }
 
-            // Step the nes
-            let mut nes = self.nes.lock();
-            let step_info = nes.step();
-            if step_info.should_paint {
-                self.window.update_with_buffer(
-                    &nes.interconnect.lock().ppu.front,
-                    WIDTH,
-                    HEIGHT,
-                )?;
+            // Check for restart. We do this after our potential blocking call
+            if self.ctx.should_restart() {
+                // Check for PC
+                let pc = self.ctx.restart_pc.lock().take();
+                return Ok(ExitStatus::Restart(pc))
             }
 
-            last_pc = step_info.program_counter;
+            // Step the nes
+            let mut nes = self.nes.lock();
+            match nes.step() {
+                Ok(step_info) => {
+                    if step_info.should_paint {
+                        self.window.update_with_buffer(
+                            &nes.interconnect.lock().ppu.front,
+                            WIDTH,
+                            HEIGHT,
+                        )?;
+                    }
+
+                    last_pc = step_info.program_counter;
+                }
+                Err(why) => {
+                    if self.wait_on_error {
+                        // Stop so that the debugger can do some post mortem
+                        drop(nes); // Drop to release the lock for the debugger
+                        self.ctx.stop_execution();
+                        self.ctx.publish_stop(last_pc);
+                        eprintln!("error encountered {:#06x}. Waiting for debugger...", last_pc);
+                        self.execution_gate.wait();
+                    }
+                    return Err(why);
+                }
+            }
         }
 
-        Ok(())
+        Ok(ExitStatus::Success)
     }
 }

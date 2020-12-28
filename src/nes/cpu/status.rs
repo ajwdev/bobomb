@@ -40,11 +40,9 @@ pub struct StatusRegister {
 
 impl StatusRegister {
     pub fn new() -> Self {
-        // Power on state == 00110100 (0x34). See comment at top of file
-        StatusRegister {
+        Self {
             negative: false,
             overflow: false,
-            // break: true,
             decimal: false,
             interrupt: true,
             zero: false,
@@ -88,13 +86,13 @@ impl StatusRegister {
 
     #[inline]
     pub fn set(&mut self, flag: Flags) {
-        let mut reg = self.find_flag_mut(flag);
+        let reg = self.find_flag_mut(flag);
         *reg = true;
     }
 
     #[inline]
     pub fn reset(&mut self, flag: Flags) {
-        let mut reg = self.find_flag_mut(flag);
+        let reg = self.find_flag_mut(flag);
         *reg = false;
     }
 
@@ -111,7 +109,8 @@ impl StatusRegister {
     #[inline]
     pub fn to_u8(&self) -> u8 {
         let result
-            = (self.carry as u8)
+            = 1 << 5  // Unsused/Reserved bit but seems to be set
+            | (self.carry as u8)
             | (self.zero as u8) << 1
             | (self.interrupt as u8) << 2
             | (self.decimal as u8) << 3

@@ -26,6 +26,8 @@ pub trait BobombDebugger {
 
     fn resume(&self, o: ::grpc::ServerHandlerContext, req: ::grpc::ServerRequestSingle<super::api::ResumeRequest>, resp: ::grpc::ServerResponseSink<super::api::ResumeReply>) -> ::grpc::Result<()>;
 
+    fn restart(&self, o: ::grpc::ServerHandlerContext, req: ::grpc::ServerRequestSingle<super::api::RestartRequest>, resp: ::grpc::ServerResponseUnarySink<super::api::RestartReply>) -> ::grpc::Result<()>;
+
     fn step(&self, o: ::grpc::ServerHandlerContext, req: ::grpc::ServerRequestSingle<super::api::StepRequest>, resp: ::grpc::ServerResponseSink<super::api::StepReply>) -> ::grpc::Result<()>;
 
     fn put_breakpoint(&self, o: ::grpc::ServerHandlerContext, req: ::grpc::ServerRequestSingle<super::api::PutBreakpointRequest>, resp: ::grpc::ServerResponseUnarySink<super::api::BreakpointReply>) -> ::grpc::Result<()>;
@@ -72,6 +74,16 @@ impl BobombDebuggerClient {
             resp_marshaller: ::grpc::rt::ArcOrStatic::Static(&::grpc_protobuf::MarshallerProtobuf),
         });
         self.grpc_client.call_server_streaming(o, req, descriptor)
+    }
+
+    pub fn restart(&self, o: ::grpc::RequestOptions, req: super::api::RestartRequest) -> ::grpc::SingleResponse<super::api::RestartReply> {
+        let descriptor = ::grpc::rt::ArcOrStatic::Static(&::grpc::rt::MethodDescriptor {
+            name: ::grpc::rt::StringOrStatic::Static("/BobombDebugger/Restart"),
+            streaming: ::grpc::rt::GrpcStreaming::Unary,
+            req_marshaller: ::grpc::rt::ArcOrStatic::Static(&::grpc_protobuf::MarshallerProtobuf),
+            resp_marshaller: ::grpc::rt::ArcOrStatic::Static(&::grpc_protobuf::MarshallerProtobuf),
+        });
+        self.grpc_client.call_unary(o, req, descriptor)
     }
 
     pub fn step(&self, o: ::grpc::RequestOptions, req: super::api::StepRequest) -> ::grpc::StreamingResponse<super::api::StepReply> {
@@ -167,6 +179,18 @@ impl BobombDebuggerServer {
                     {
                         let handler_copy = handler_arc.clone();
                         ::grpc::rt::MethodHandlerServerStreaming::new(move |ctx, req, resp| (*handler_copy).resume(ctx, req, resp))
+                    },
+                ),
+                ::grpc::rt::ServerMethod::new(
+                    ::grpc::rt::ArcOrStatic::Static(&::grpc::rt::MethodDescriptor {
+                        name: ::grpc::rt::StringOrStatic::Static("/BobombDebugger/Restart"),
+                        streaming: ::grpc::rt::GrpcStreaming::Unary,
+                        req_marshaller: ::grpc::rt::ArcOrStatic::Static(&::grpc_protobuf::MarshallerProtobuf),
+                        resp_marshaller: ::grpc::rt::ArcOrStatic::Static(&::grpc_protobuf::MarshallerProtobuf),
+                    }),
+                    {
+                        let handler_copy = handler_arc.clone();
+                        ::grpc::rt::MethodHandlerUnary::new(move |ctx, req, resp| (*handler_copy).restart(ctx, req, resp))
                     },
                 ),
                 ::grpc::rt::ServerMethod::new(

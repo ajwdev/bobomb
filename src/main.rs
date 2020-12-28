@@ -7,7 +7,7 @@ use std::io::Read;
 use std::u16;
 
 mod nes;
-use crate::nes::executor::Executor;
+use crate::nes::executor::{Executor, ExitStatus};
 
 #[derive(Default, Clone, Debug, PartialEq)]
 pub struct Opts {
@@ -16,11 +16,6 @@ pub struct Opts {
 }
 
 fn main() -> Result<()> {
-    // let filename = env::args().nth(1).unwrap();
-
-    // let mut file = fs::File::open(&filename).unwrap();
-    // let mut file_buf = Vec::new();
-    // file.read_to_end(&mut file_buf).unwrap();
     let args = App::new("bobomb")
         .arg(
             Arg::with_name("program-counter")
@@ -45,7 +40,7 @@ fn main() -> Result<()> {
         )
         .get_matches();
 
-    let opts = Opts {
+    let mut opts = Opts {
         wait_for_attach: args.is_present("wait"),
         program_counter: args.value_of("program-counter").map(|s| {
             let n = s.strip_prefix("0x").unwrap_or(s);
@@ -59,7 +54,19 @@ fn main() -> Result<()> {
         file.read_to_end(&mut buf).unwrap();
     }
 
-    let nes = nes::Nes::new(buf, &opts);
-    let executor = Executor::new(nes, &opts)?;
-    executor.run()
+    loop {
+        let nes = nes::Nes::new(&buf, &opts);
+        let executor = Executor::new(nes, &opts)?;
+
+        match executor.run() {
+            Ok(exitstatus) => match exitstatus {
+                ExitStatus::Restart(n) => {
+                    println!("Restart reqested");
+                    opts.program_counter =  n
+                }
+                ExitStatus::Success => return Ok(()),
+            }
+            Err(why) => return Err(why),
+        }
+    }
 }

@@ -3,6 +3,7 @@ syntax = "proto3";
 service BobombDebugger {
     rpc Attach (AttachRequest) returns (AttachReply) {}
     rpc Resume (ResumeRequest) returns (stream ResumeReply) {}
+    rpc Restart (RestartRequest) returns (RestartReply) {}
 
     rpc Step (StepRequest) returns (stream StepReply) {}
 
@@ -28,6 +29,12 @@ message ResumeRequest { }
 message ResumeReply {
     CPUState cpu = 1;
 }
+
+message RestartRequest {
+    bool set_program_counter = 1;
+    uint32 program_counter = 2;
+}
+message RestartReply { }
 
 message StepRequest { }
 message StepReply {
