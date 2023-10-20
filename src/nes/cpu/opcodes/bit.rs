@@ -14,13 +14,13 @@ impl FromAddress for Bit {
             cpu.SR.reset(Flags::Zero);
         }
 
-        if (word & (1 << 7)) == 1 {
+        if ((word >> 7) & 1) == 1 {
             cpu.SR.set(Flags::Negative);
         } else {
             cpu.SR.reset(Flags::Negative);
         }
 
-        if (word & (1 << 6)) == 1 {
+        if ((word >> 6) & 1) == 1 {
             cpu.SR.set(Flags::Overflow);
         } else {
             cpu.SR.reset(Flags::Overflow);

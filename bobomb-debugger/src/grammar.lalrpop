@@ -92,21 +92,23 @@ Int32: i32 = {
 // https://sourceware.org/gdb/current/onlinedocs/gdb/Expressions.html#Expressions
 
 FmtExpr: Format = {
-    <s:r"/-?[0-9]+[xdi]"> => {
+    <s:r"/-?[0-9]+[xdib]"> => {
         let n = i32::from_str(&s[1..s.len()-1]).unwrap();
         let d = &s[s.len()-1..];
         match d {
             "d" => Format{display: Some(Display::Decimal), count: Some(n)},
             "x" => Format{display: Some(Display::Hex), count: Some(n)},
+            "b" => Format{display: Some(Display::Binary), count: Some(n)},
             "i" => Format{display: Some(Display::Instruction), count: Some(n)},
             _ => panic!("unknown display character {}", d),
         }
     },
-    <s:r"/[xdi]"> => {
+    <s:r"/[xdib]"> => {
         let d = &s[s.len()-1..];
         match d {
             "d" => Format{display: Some(Display::Decimal), count: None},
             "x" => Format{display: Some(Display::Hex), count: None},
+            "b" => Format{display: Some(Display::Binary), count: None},
             "i" => Format{display: Some(Display::Instruction), count: None},
             _ => panic!("unknown display character {}", d),
         }
@@ -134,6 +136,8 @@ pub Command: Cmd = {
     StackCmd,
     DisplayCmd,
     UndisplayCmd,
+    ManCmd,
+    RestartCmd,
 }
 
 DisplayCmd: Cmd = {
@@ -171,6 +175,11 @@ BreakCmd: Cmd = {
     "b" => Cmd::Break(None),
 }
 
+RestartCmd: Cmd = {
+    "restart" <e:Expr> => Cmd::Restart(Some(e)),
+    "restart" => Cmd::Restart(None),
+}
+
 ClearCmd: Cmd = {
     "clear" <n:Num> => Cmd::Clear(n),
 }
@@ -205,4 +214,8 @@ SetCmd: Cmd = {
 
 StackCmd: Cmd = {
     "stack" => Cmd::PrintStack,
+}
+
+ManCmd: Cmd = {
+    "man" <s:r"[a-zA-Z]+"> => Cmd::Manual(String::from(s)),
 }
