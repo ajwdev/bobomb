@@ -90,20 +90,26 @@ mod tax;
 mod tya;
 mod tay;
 mod txs;
+mod tsx;
 pub use self::txa::Txa;
 pub use self::tax::Tax;
 pub use self::tya::Tya;
 pub use self::tay::Tay;
 pub use self::txs::Txs;
+pub use self::tsx::Tsx;
 
 mod sei;
 mod sec;
+mod sed;
 mod cld;
 mod clc;
+mod clv;
 pub use self::sei::Sei;
 pub use self::sec::Sec;
+pub use self::sed::Sed;
 pub use self::cld::Cld;
 pub use self::clc::Clc;
+pub use self::clv::Clv;
 
 mod lsr;
 pub use self::lsr::Lsr;

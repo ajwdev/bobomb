@@ -204,4 +204,24 @@ impl ApiClient {
         self.print_debug_response(&resp);
         self.map_viewstamp(resp)
     }
+
+    pub async fn do_restart(
+        &mut self,
+        pc: Option<u32>,
+    ) -> Result<RestartReply, grpc::Error> {
+        let mut req = RestartRequest::new();
+        if let Some(n) = pc {
+            req.set_program_counter = true;
+            req.program_counter = n;
+        }
+
+        let resp = self
+            .client
+            .restart(self.req_options(), req)
+            .join_metadata_result()
+            .await;
+
+        self.print_debug_response(&resp);
+        self.map_viewstamp(resp)
+    }
 }

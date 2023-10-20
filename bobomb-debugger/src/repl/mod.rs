@@ -36,6 +36,7 @@ const CTRLC: &'static str = "^C";
 pub struct Repl {
     client: client::ApiClient,
     ctrlc_handler: CtrlCHandler,
+    should_attach: bool,
     env: HashMap<String, i32>,
     variable_counter: usize,
     display_commands: Vec<Option<(Cmd, String)>>,
@@ -56,6 +57,7 @@ impl Repl {
         Ok(Self {
             client,
             ctrlc_handler,
+            should_attach: true,
             variable_counter: 1,
             env: HashMap::new(),
             display_commands: Vec::new(),
@@ -77,11 +79,15 @@ impl Repl {
             eprintln!("Unable to load history: {}", why);
         }
 
-        if let Err(why) = block_on(self.attach()) {
-            printer::error(anyhow!("unable to attach debugger: {}", why));
-        }
 
         loop {
+            if self.should_attach {
+                if let Err(why) = block_on(self.attach()) {
+                    printer::error(anyhow!("unable to attach debugger: {}", why));
+                }
+                self.should_attach = false;
+            }
+
             match rl.readline(PROMPT) {
                 Ok(line) => {
                     if !line.trim_end().is_empty() {
@@ -114,6 +120,12 @@ impl Repl {
 
     pub async fn process(&mut self, ast: Cmd, line: Option<&str>) -> Result<()> {
         match ast {
+            Cmd::Manual(opc) => {
+                std::process::Command::new("xdg-open")
+                    .args(&[format!("http://www.obelisk.me.uk/6502/reference.html#{}", opc)])
+                    .output()?;
+            }
+
             Cmd::Status => {
                 let status = self.client.do_status().await?;
                 println!("Status {:#?}", status);
@@ -246,6 +258,17 @@ impl Repl {
                 println!("Breakpoint {:#06x} deleted", resp.address);
             }
 
+            Cmd::Restart(expr) => {
+                let pc = match expr {
+                    Some(e) => Some(e.reduce(&self.env)? as u32),
+                    None => None,
+                };
+                self.client.do_restart(pc).await?;
+                // Right now the debugger is tied to the lifetime of the
+                // executor. Thus we need to re-attach
+                self.should_attach = false;
+            }
+
             _ => panic!("unknown command"),
         }
 
@@ -298,5 +321,14 @@ impl Repl {
         self.env.set("$I", st.interrupt as i32);
         self.env.set("$V", st.overflow as i32);
         self.env.set("$N", st.negative as i32);
+        // TODO Consider putting this in the proto
+        let sr
+            = 1 << 5  // Unsused/Reserved bit but seems to be set
+            | (st.carry as i32)
+            | (st.zero as i32) << 1
+            | (st.interrupt as i32) << 2
+            | (st.overflow as i32) << 6
+            | (st.negative as i32) << 7;
+        self.env.set("$SR", sr);
     }
 }

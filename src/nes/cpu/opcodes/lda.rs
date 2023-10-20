@@ -33,6 +33,7 @@ impl FromAddress for Lda {
             AddressMode::AbsoluteX => { 4 + (extra_cycles as u32) },
             AddressMode::AbsoluteY => { 4 + (extra_cycles as u32) },
             AddressMode::IndirectY => { 5 + (extra_cycles as u32) },
+            AddressMode::IndirectX => 6,
             _ => { panic!("unimplemented address mode {:?} for LDX", mode); }
         }
     }

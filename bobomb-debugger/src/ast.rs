@@ -19,37 +19,41 @@ impl Environment for HashMap<String,i32> {
 
 #[derive(Clone, Debug)]
 pub enum Cmd {
-    Examine(Option<Box<Expression>>, Option<Format>),
-    Print(Option<Box<Expression>>, Option<Format>),
+    Attach,
     Break(Option<Box<Expression>>),
     Clear(i32),
-    SetVar(String, Box<Expression>),
-    PrintVar(Option<String>),
-    Display(Option<Box<Cmd>>),
-    Undisplay(i32),
-    PrintStack,
-    Status,
-    Attach,
     Continue,
+    Display(Option<Box<Cmd>>),
+    Examine(Option<Box<Expression>>, Option<Format>),
+    Manual(String),
+    Print(Option<Box<Expression>>, Option<Format>),
+    PrintStack,
+    PrintVar(Option<String>),
+    Restart(Option<Box<Expression>>),
+    SetVar(String, Box<Expression>),
+    Status,
     Step,
+    Undisplay(i32),
 }
 
 impl Cmd {
     pub fn name(&self) -> &'static str {
         match *self {
-            Cmd::Examine(_,_) => "examine",
-            Cmd::Print(_,_) => "print",
+            Cmd::Attach => "attach",
             Cmd::Break(_) => "break",
             Cmd::Clear(_) => "clear",
-            Cmd::SetVar(_,_) => "set",
-            Cmd::PrintVar(_) => "print",
-            Cmd::Display(_) => "display",
-            Cmd::Undisplay(_) => "undisplay",
-            Cmd::PrintStack => "stack",
-            Cmd::Status => "status",
-            Cmd::Attach => "attach",
             Cmd::Continue => "continue",
+            Cmd::Display(_) => "display",
+            Cmd::Examine(_,_) => "examine",
+            Cmd::Manual(_) => "man",
+            Cmd::Print(_,_) => "print",
+            Cmd::PrintStack => "stack",
+            Cmd::PrintVar(_) => "print",
+            Cmd::Restart(_) => "restart",
+            Cmd::SetVar(_,_) => "set",
+            Cmd::Status => "status",
             Cmd::Step => "step",
+            Cmd::Undisplay(_) => "undisplay",
         }
     }
 }
@@ -58,6 +62,7 @@ impl Cmd {
 pub enum Display {
     Hex,
     Decimal,
+    Binary,
     Instruction,
 }
 

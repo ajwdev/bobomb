@@ -241,6 +241,35 @@ impl BobombDebugger for Server {
         }
     }
 
+    fn restart(
+        &self,
+        ctx: grpc::ServerHandlerContext,
+        req: grpc::ServerRequestSingle<RestartRequest>,
+        mut resp: grpc::ServerResponseUnarySink<RestartReply>,
+    ) -> grpc::Result<()> {
+        match self.viewstamp.try_lock_for(LOCK_TIMEOUT) {
+            Some(mut viewstamp) => {
+                viewstamp_bail!(ctx, &*viewstamp.as_bytes(), resp);
+
+                let pc = if req.message.set_program_counter {
+                    Some(req.message.program_counter as u16)
+                } else {
+                    None
+                };
+
+                self.ctx.trigger_restart(pc);
+                self.ctx.start_execution();
+                *viewstamp = new_viewstamp();
+
+                // For now this doesn't matter since the debugger is
+                // is currently tied to the executor lifetime.
+                resp.send_metadata(dbg_metadata(&*viewstamp))?;
+                resp.finish(RestartReply::new())
+            }
+            None => lock_error!(resp),
+        }
+    }
+
     fn resume(
         &self,
         ctx: grpc::ServerHandlerContext,
@@ -270,11 +299,11 @@ impl BobombDebugger for Server {
                     .fuse()
                     .into_stream();
 
-                self.ctx.start_execution();
                 *viewstamp = new_viewstamp();
                 resp.send_metadata(dbg_metadata(&*viewstamp))?;
-
                 ctx.pump(stream, resp);
+
+                self.ctx.start_execution();
                 Ok(())
             }
             None => lock_error!(resp),
@@ -291,6 +320,8 @@ impl BobombDebugger for Server {
 
         match self.viewstamp.try_lock_for(LOCK_TIMEOUT) {
             Some(mut viewstamp) => {
+                viewstamp_bail!(ctx, &*viewstamp.as_bytes(), resp);
+
                 let fut = self.ctx.subscribe_to_stop();
                 let fut_nes = self.nes.clone();
 

@@ -1,5 +1,6 @@
 use parking_lot::Mutex;
 use std::sync::Arc;
+use anyhow::*;
 
 #[macro_use]
 mod macros;
@@ -25,6 +26,25 @@ use crate::nes::cpu::opcodes::*;
 // Power on state is defined here: https://wiki.nesdev.com/w/index.php/CPU_power_up_state
 
 pub const STACK_START: u16 = 0x100;
+
+#[derive(Debug)]
+pub enum CpuError {
+    UnknownInstruction(u8, u16),
+    BRKInstruction(u16),
+}
+
+impl std::error::Error for CpuError {}
+
+impl std::fmt::Display for CpuError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match *self {
+            CpuError::UnknownInstruction(opc, pc) =>
+                write!(f, "unknown instruction: pc: {:#06X} opcode: {:02X}", pc, opc),
+            CpuError::BRKInstruction(pc) =>
+                write!(f, "BRK instruction reached: pc: {:#06X}", pc),
+        }
+    }
+}
 
 #[derive(Debug,Clone,Copy)]
 pub enum Interrupt {
@@ -309,9 +329,18 @@ impl Cpu {
         previous
     }
 
-    pub fn step(&mut self, pending_interrupt: Option<Interrupt>) -> u32 {
+    pub fn step(&mut self, pending_interrupt: Option<Interrupt>) -> Result<u32, CpuError> {
         let mut burned_cycles = 0;
         self.last_pc = self.PC;
+
+        // println!("trace: {:#>04X} A:{:#>02X} X:{:#>02X} Y:{:#>02X} P:{:#>02X} SP:{:#>02X}",
+        //     self.PC,
+        //     self.AC,
+        //     self.X,
+        //     self.Y,
+        //     self.SR.to_u8(),
+        //     self.SP,
+        // );
 
         // On a real NES, what happens if an interrupt fires during DMA?
         {
@@ -331,9 +360,9 @@ impl Cpu {
                 if interconnect.dma_write_iteration == 255 {
                     interconnect.dma_in_progress = false;
                     interconnect.dma_write_iteration = 0;
-                    return 3;   // This equal a total of 513 cycles per DMA
+                    return Ok(3);   // This equal a total of 513 cycles per DMA
                 } else {
-                    return 2;
+                    return Ok(2);
                 }
             }
         }
@@ -503,6 +532,9 @@ impl Cpu {
             0x7d => {
                 Adc::from_address(self, AddressMode::AbsoluteX)
             }
+            0xba => {
+                Tsx::from_address(self, AddressMode::Implied)
+            }
             0xe0 => {
                 Cpx::from_immediate(self)
             }
@@ -546,11 +578,17 @@ impl Cpu {
             0x38 => {
                 Sec::from_implied(self)
             }
+            0xf8 => {
+                Sed::implied(self) as u32
+            }
             0x78 => {
                 Sei::implied(self) as u32
             }
             0x18 => {
                 Clc::implied(self) as u32
+            }
+            0xb8 => {
+                Clv::implied(self) as u32
             }
             0xd8 => {
                 Cld::implied(self) as u32
@@ -617,6 +655,9 @@ impl Cpu {
             }
             0xbd => {
                 Lda::from_address(self, AddressMode::AbsoluteX)
+            }
+            0xa1 => {
+                Lda::from_address(self, AddressMode::IndirectX)
             }
             0x84 => {
                 Sty::from_address(self, AddressMode::ZeroPage)
@@ -697,29 +738,30 @@ impl Cpu {
                 Inx::from_implied(self)
             }
             0x00 => {
-                self.debug_stack();
-                panic!("Hit a BRK instruction which is probably wrong: {:#x}, {:#x} {:#x}, PC: {:#x}",
-                   instr,
-                   self.read_at(self.PC),
-                   self.read_at(self.PC + 1),
-                   self.last_pc
-                );
+                // self.debug_stack();
+                // panic!("Hit a BRK instruction which is probably wrong: {:#x}, {:#x} {:#x}, PC: {:#x}",
+                //    instr,
+                //    self.read_at(self.PC),
+                //    self.read_at(self.PC + 1),
+                //    self.last_pc
+                // );
+                return Err(CpuError::BRKInstruction(self.last_pc));
             }
             _ => {
-                self.debug_stack();
-                panic!("unrecognized opcode {:#04x}, {:#04x} {:#04x}, PC: {:#06x}",
-                   instr,
-                   self.read_at(self.PC),
-                   self.read_at(self.PC + 1),
-                   self.last_pc
-                );
+                // self.debug_stack();
+                // panic!("unrecognized opcode {:#04x}, {:#04x} {:#04x}, PC: {:#06x}",
+                //    instr,
+                //    self.read_at(self.PC),
+                //    self.read_at(self.PC + 1),
+                //    self.last_pc
+                // );
+                return Err(CpuError::UnknownInstruction(instr, self.last_pc));
             }
         };
 
-        // dbg_hex!(self.PC);
 
         self.cycles += burned_cycles;
-        burned_cycles
+        Ok(burned_cycles)
     }
 }
 

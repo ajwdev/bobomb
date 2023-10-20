@@ -1,3 +1,4 @@
+use anyhow::*;
 use parking_lot::{Mutex,Condvar};
 use std::sync::Arc;
 use std::thread;
@@ -29,7 +30,7 @@ pub struct Nes {
 }
 
 impl Nes {
-    pub fn new(rom_buffer: Vec<u8>, opts: &crate::Opts) -> Nes {
+    pub fn new(rom_buffer: &[u8], opts: &crate::Opts) -> Nes {
         let mut header = [0u8; 16];
         header.copy_from_slice(&rom_buffer[0..16]);
 
@@ -117,9 +118,9 @@ impl Nes {
         }
     }
 
-    pub fn step(&mut self) -> StepInfo {
+    pub fn step(&mut self) -> Result<StepInfo> {
         let intr = self.interconnect.lock().fetch_interrupt();
-        let cycles = self.cpu.step(intr);
+        let cycles = self.cpu.step(intr)?;
 
         let mut should_paint = false;
         {
@@ -134,9 +135,9 @@ impl Nes {
             }
         }
 
-        StepInfo{
+        Ok( StepInfo{
             should_paint,
             program_counter: self.cpu.PC,
-        }
+        })
     }
 }
