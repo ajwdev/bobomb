@@ -52,7 +52,7 @@ impl Controller {
     }
 
     #[inline]
-    fn set_button_state(&mut self, button: ControllerButton, state: bool) {
+    fn set_button_state(&mut self, _button: ControllerButton, state: bool) {
         match self.next_button {
             ControllerButton::ButtonA => { self.button_a = state; }
             ControllerButton::ButtonB => { self.button_b = state; }

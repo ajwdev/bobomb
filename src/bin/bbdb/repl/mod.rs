@@ -12,7 +12,8 @@ use futures::select;
 use ansi_term::Color::Green;
 use rustyline;
 use rustyline::error::ReadlineError;
-use rustyline::{CompletionType, EditMode, Editor};
+use rustyline::{CompletionType, EditMode, DefaultEditor};
+use tracing::{info, error};
 
 use bobomb::grpc;
 use bobomb::debugger::{ast::*, parser::PARSER};
@@ -31,6 +32,7 @@ lazy_static! {
 
 const PROMPT: &'static str = "(bobomb) ";
 const CTRLC: &'static str = "^C";
+const HISTORY_FILE: &'static str = ".bobomb_history";
 
 pub struct Repl {
     client: client::ApiClient,
@@ -46,12 +48,12 @@ pub struct Repl {
 }
 
 impl Repl {
-    pub fn new(cfg: crate::Opts) -> Result<Self> {
+    pub fn new(url: &str, debug: bool) -> Result<Self> {
         let ctrlc_handler = CtrlCHandler::new();
         CtrlCHandler::register(&ctrlc_handler)?;
 
-        let mut client = block_on(client::ApiClient::new(&cfg.host, cfg.port))?;
-        client.debug_responses(cfg.debug_requests);
+        let mut client = block_on(client::ApiClient::new(url))?;
+        client.debug_responses(debug);
 
         Ok(Self {
             client,
@@ -73,9 +75,9 @@ impl Repl {
             .completion_type(CompletionType::List)
             .build();
 
-        let mut rl = Editor::<()>::with_config(config);
-        if let Err(why) = rl.load_history(".bobomb_history") {
-            eprintln!("Unable to load history: {}", why);
+        let mut rl = DefaultEditor::with_config(config).expect("unable to create line editor");
+        if let Err(why) = rl.load_history(HISTORY_FILE) {
+            error!("Unable to load history: {}", why);
         }
 
         loop {
@@ -89,7 +91,9 @@ impl Repl {
             match rl.readline(PROMPT) {
                 Ok(line) => {
                     if !line.trim_end().is_empty() {
-                        rl.add_history_entry(line.as_str());
+                        if let Err(why) = rl.add_history_entry(line.as_str()) {
+                            error!("Unable to load history: {}", why);
+                        }
 
                         match PARSER.parse(&line) {
                             Ok(ast) => {
@@ -113,7 +117,7 @@ impl Repl {
             }
         }
 
-        rl.save_history(".bobomb_history").unwrap();
+        rl.save_history(HISTORY_FILE).unwrap();
     }
 
     pub async fn process(&mut self, ast: Cmd, line: Option<&str>) -> Result<()> {

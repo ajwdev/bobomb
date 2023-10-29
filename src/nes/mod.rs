@@ -1,8 +1,8 @@
 use anyhow::*;
-use parking_lot::{Mutex,Condvar};
+use parking_lot::{Mutex};
 use std::sync::Arc;
-use std::thread;
-use std::time::{Duration,Instant};
+
+
 
 pub mod macros;
 pub mod cpu;
@@ -15,12 +15,6 @@ pub mod debugger;
 
 pub mod executor;
 pub use crate::nes::executor::ExecutorLock;
-
-#[derive(Default, Clone, Debug, PartialEq)]
-pub struct Opts {
-    pub program_counter: Option<u16>,
-    pub wait_for_attach: bool,
-}
 
 #[derive(Default)]
 pub struct StepInfo {
@@ -36,7 +30,7 @@ pub struct Nes {
 }
 
 impl Nes {
-    pub fn new(rom_buffer: &[u8], opts: &Opts) -> Nes {
+    pub fn new(rom_buffer: &[u8], program_counter: Option<u16>) -> Nes {
         let mut header = [0u8; 16];
         header.copy_from_slice(&rom_buffer[0..16]);
 
@@ -64,7 +58,7 @@ impl Nes {
         let interconnect = Arc::new(Mutex::new(
                 interconnect::Interconnect::new(ppu::Ppu::new(), rom)
         ));
-        let cpu = match opts.program_counter {
+        let cpu = match program_counter {
             None => cpu::Cpu::new(interconnect.clone()),
             Some(pc) => cpu::Cpu::new_with_pc(interconnect.clone(), pc.into()),
         };

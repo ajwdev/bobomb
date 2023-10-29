@@ -1,4 +1,4 @@
-use crate::nes::cpu::{Cpu,FromImplied,AddressMode};
+use crate::nes::cpu::{Cpu,FromImplied};
 
 pub struct Iny { }
 

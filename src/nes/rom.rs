@@ -1,4 +1,4 @@
-use std::ops::{Index,IndexMut};
+use std::ops::{Index};
 
 const ROM_BANK_SIZE: u16 = 16 * 1024;
 

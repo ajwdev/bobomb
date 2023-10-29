@@ -7,27 +7,27 @@ build = "build.rs"
 
 [dependencies]
 ansi_term = "0.12"
-anyhow = "1.0.34"
-bytes = "0.5.6"
-clap = "2.33.3"
-ctrlc = "3.1.7"
-futures = "0.3.8"
+anyhow = "1.0.75"
+bytes = "1.5.0"
+clap = { version = "4.4.7", features = ["derive"] }
+ctrlc = "3.4.1"
+futures = "0.3.29"
 futures-cpupool = "0.1.8"
 lalrpop = { version = "0.20", features = ["lexer"] }
 lalrpop-util = "0.20"
 lazy_static = "1.4.0"
-minifb = "0.19.1"
-num-traits = "0.2.14"
-parking_lot = "0.11.1"
+minifb = "0.25.0"
+num-traits = "0.2.17"
+parking_lot = "0.12.1"
 prost = "0.12"
 regex = "1"
-rustyline = "7.0.0"
-tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
+rustyline = "12.0.0"
+tokio = { version = "1.33", features = ["macros", "rt-multi-thread"] }
 tonic = "0.10"
-tower = "0.4.4"
+tower = "0.4.13"
 tower-http = { version = "0.4.4", features = ["trace"] }
 tracing = { version = "0.1", features = ["log"] }
-tracing-subscriber = "0.3.0"
+tracing-subscriber = "0.3.17"
 
 [build-dependencies]
 lalrpop = { version = "0.20", features = ["lexer"] }

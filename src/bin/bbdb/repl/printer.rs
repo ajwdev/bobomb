@@ -143,6 +143,7 @@ impl<T: Num + fmt::Display + fmt::LowerHex + fmt::Binary> Printer<T> {
 // Util
 //
 
+// TODO(ajw) Convert to tracing error! macro
 fn error_display<T: std::fmt::Display>(msg: T) {
     eprintln!("{}: {}", Red.bold().paint("Error"), msg)
 }

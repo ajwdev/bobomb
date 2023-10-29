@@ -4,3 +4,8 @@ target
 6502.txt
 *.ko
 .direnv
+.bobomb_history
+
+# Testing ROM we dont want to check in
+# See https://www.nesdev.org/wiki/Emulator_tests
+nestest
