@@ -3,22 +3,21 @@ pub mod printer;
 use std::collections::{HashMap, HashSet};
 use std::u32;
 
-use anyhow::*;
+use anyhow::{anyhow, bail, Error, Result};
+// TODO(ajw) - Replace with tokio so we're not using multiple future executors
 use futures::executor::block_on;
 use futures::future::{BoxFuture, FutureExt};
 use futures::select;
 
-use rustyline::error::ReadlineError;
-use rustyline;
-use rustyline::{CompletionType, EditMode, Editor};
 use ansi_term::Color::Green;
+use rustyline;
+use rustyline::error::ReadlineError;
+use rustyline::{CompletionType, EditMode, Editor};
 
-use bobomb_grpc::api::*;
+use bobomb::grpc;
+use bobomb::debugger::{ast::*, parser::PARSER};
 
-use crate::ast::*;
 use crate::client;
-use crate::parser::PARSER;
-
 use crate::ctrl_c::CtrlCHandler;
 
 use lazy_static::lazy_static;
@@ -51,7 +50,7 @@ impl Repl {
         let ctrlc_handler = CtrlCHandler::new();
         CtrlCHandler::register(&ctrlc_handler)?;
 
-        let mut client = client::ApiClient::new(&cfg.host, cfg.port)?;
+        let mut client = block_on(client::ApiClient::new(&cfg.host, cfg.port))?;
         client.debug_responses(cfg.debug_requests);
 
         Ok(Self {
@@ -78,7 +77,6 @@ impl Repl {
         if let Err(why) = rl.load_history(".bobomb_history") {
             eprintln!("Unable to load history: {}", why);
         }
-
 
         loop {
             if self.should_attach {
@@ -122,7 +120,10 @@ impl Repl {
         match ast {
             Cmd::Manual(opc) => {
                 std::process::Command::new("xdg-open")
-                    .args(&[format!("http://www.obelisk.me.uk/6502/reference.html#{}", opc)])
+                    .args(&[format!(
+                        "http://www.obelisk.me.uk/6502/reference.html#{}",
+                        opc
+                    )])
                     .output()?;
             }
 
@@ -207,14 +208,23 @@ impl Repl {
                     resp = self.client.do_continue().fuse() => resp?,
                     _ = sigch.fuse() => bail!("Cancelled. Must re-attach debugger"),
                 };
-                self.update_env_with_cpu(&resp.cpu.unwrap());
-                self.display_on_stop().await?;
+                match resp {
+                    Some(resp) => {
+                        self.update_env_with_cpu(&resp.cpu.unwrap());
+                        self.display_on_stop().await?;
+                    },
+                    None => bail!("server closed connection"),
+                }
             }
 
             Cmd::Step => {
-                let resp = self.client.do_step().await?;
-                self.update_env_with_cpu(&resp.cpu.unwrap());
-                self.display_on_stop().await?;
+                match self.client.do_step().await? {
+                    Some(resp) => {
+                        self.update_env_with_cpu(&resp.cpu.unwrap());
+                        self.display_on_stop().await?;
+                    },
+                    None => bail!("server closed connection"),
+                }
             }
 
             Cmd::SetVar(v, e) => {
@@ -278,7 +288,7 @@ impl Repl {
     async fn attach(&mut self) -> Result<()> {
         let status = self.client.do_status().await?;
 
-        if status.emulation_state == StatusReply_EmulationState::RUNNING {
+        if status.emulation_state == grpc::status_reply::EmulationState::Running.into() {
             self.client.do_attach().await?;
         }
 
@@ -309,7 +319,7 @@ impl Repl {
         .boxed()
     }
 
-    fn update_env_with_cpu(&mut self, msg: &CPUState) {
+    fn update_env_with_cpu(&mut self, msg: &grpc::CpuState) {
         self.env.set("$PC", msg.program_counter as i32);
         self.env.set("$SP", msg.stack_pointer as i32);
         self.env.set("$X", msg.x as i32);
@@ -322,8 +332,7 @@ impl Repl {
         self.env.set("$V", st.overflow as i32);
         self.env.set("$N", st.negative as i32);
         // TODO Consider putting this in the proto
-        let sr
-            = 1 << 5  // Unsused/Reserved bit but seems to be set
+        let sr = 1 << 5  // Unsused/Reserved bit but seems to be set
             | (st.carry as i32)
             | (st.zero as i32) << 1
             | (st.interrupt as i32) << 2

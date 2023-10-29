@@ -1,21 +1,23 @@
 use anyhow::Result;
-use clap::{value_t, App, Arg};
+use clap::{App, Arg};
+use tracing::{info, Level};
+use tracing_subscriber::FmtSubscriber;
 
-use std::env;
 use std::fs;
 use std::io::Read;
 use std::u16;
 
-mod nes;
-use crate::nes::executor::{Executor, ExitStatus};
-
-#[derive(Default, Clone, Debug, PartialEq)]
-pub struct Opts {
-    pub program_counter: Option<u16>,
-    pub wait_for_attach: bool,
-}
+use bobomb::nes::{Nes, Opts};
+use bobomb::nes::executor::{Executor, ExitStatus};
 
 fn main() -> Result<()> {
+    let subscriber = FmtSubscriber::builder()
+        .with_max_level(Level::INFO)
+        .finish();
+
+    tracing::subscriber::set_global_default(subscriber)
+        .expect("setting default subscriber failed");
+
     let args = App::new("bobomb")
         .arg(
             Arg::with_name("program-counter")
@@ -54,8 +56,10 @@ fn main() -> Result<()> {
         file.read_to_end(&mut buf).unwrap();
     }
 
+    info!("Starting nes emulation");
+
     loop {
-        let nes = nes::Nes::new(&buf, &opts);
+        let nes = Nes::new(&buf, &opts);
         let executor = Executor::new(nes, &opts)?;
 
         match executor.run() {

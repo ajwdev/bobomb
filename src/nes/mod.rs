@@ -16,6 +16,12 @@ pub mod debugger;
 pub mod executor;
 pub use crate::nes::executor::ExecutorLock;
 
+#[derive(Default, Clone, Debug, PartialEq)]
+pub struct Opts {
+    pub program_counter: Option<u16>,
+    pub wait_for_attach: bool,
+}
+
 #[derive(Default)]
 pub struct StepInfo {
     program_counter: u16,
@@ -30,7 +36,7 @@ pub struct Nes {
 }
 
 impl Nes {
-    pub fn new(rom_buffer: &[u8], opts: &crate::Opts) -> Nes {
+    pub fn new(rom_buffer: &[u8], opts: &Opts) -> Nes {
         let mut header = [0u8; 16];
         header.copy_from_slice(&rom_buffer[0..16]);
 

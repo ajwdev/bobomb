@@ -1,6 +1,6 @@
 use std::fmt;
 use std::collections::HashMap;
-use anyhow::*;
+use anyhow::{Result, bail};
 
 pub trait Environment {
     fn get(&self, name: &str) -> Option<i32>;
@@ -70,6 +70,31 @@ pub enum Display {
 pub struct Format {
     pub display: Option<Display>,
     pub count: Option<i32>,
+}
+
+impl Format {
+    pub fn merge(&mut self, next: Option<Format>) -> Format {
+        *self = self.clone().combine(next);
+        *self
+    }
+
+    pub fn combine(mut self, next: Option<Format>) -> Format {
+        match next {
+            None => self,
+            Some(unwrapped) => {
+                if unwrapped.display.is_some() {
+                    self.display = unwrapped.display;
+                    // We specified a display format so we must reset the count as well
+                    self.count = unwrapped.count.or(Some(1));
+                } else {
+                    // We're not setting the format but might be displaying more items
+                    self.count = unwrapped.count.or(self.count);
+                }
+
+                self
+            }
+        }
+    }
 }
 
 #[derive(Clone, Debug)]

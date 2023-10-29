@@ -1,5 +1,5 @@
-use anyhow::*;
-use ansi_term::Color::{Blue,Yellow};
+use ansi_term::Color::{Blue, Yellow};
+use anyhow::{anyhow, bail, Result};
 
 // TODO Consider moving this into a common package to avoid pulling in all of core
 #[derive(Debug, Copy, Clone)]
@@ -38,7 +38,7 @@ impl AddressMode {
     }
 }
 
-#[derive(Debug,Copy,Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct Instruction {
     pub name: &'static str,
     pub mode: AddressMode,
@@ -78,12 +78,8 @@ impl Instruction {
 
     fn format_address_mode(&self) -> String {
         match self.mode {
-            AddressMode::Implied => {
-                String::new()
-            }
-            AddressMode::Accumulator => {
-                "A".to_string()
-            }
+            AddressMode::Implied => String::new(),
+            AddressMode::Accumulator => "A".to_string(),
             AddressMode::Immediate => {
                 format!("#{}", self.format_addr())
             }
@@ -91,35 +87,31 @@ impl Instruction {
                 format!("{}", self.format_addr())
             }
             AddressMode::AbsoluteY | AddressMode::ZeroPageY => {
-                format!("{},Y",  self.format_addr())
+                format!("{},Y", self.format_addr())
             }
             AddressMode::AbsoluteX | AddressMode::ZeroPageX => {
-                format!("{},X",  self.format_addr())
+                format!("{},X", self.format_addr())
             }
             AddressMode::Indirect => {
-                format!("({})",  self.format_addr())
+                format!("({})", self.format_addr())
             }
             AddressMode::IndirectX => {
-                format!("({},X)",  self.format_addr())
+                format!("({},X)", self.format_addr())
             }
             AddressMode::IndirectY => {
-                format!("({}),Y",  self.format_addr())
+                format!("({}),Y", self.format_addr())
             }
         }
     }
 
     fn format_bytes(&self) -> String {
         match (self.byte1, self.byte2) {
-            (None, None) =>
-                format!("{:#>02x}", self.byte0),
-            (Some(a), None) =>
-                format!("{:#>02x} {:#>02x}", self.byte0, a),
-            (Some(a), Some(b)) =>
-                format!("{:#>02x} {:#>02x} {:#>02x}", self.byte0, a, b),
+            (None, None) => format!("{:#>02x}", self.byte0),
+            (Some(a), None) => format!("{:#>02x} {:#>02x}", self.byte0, a),
+            (Some(a), Some(b)) => format!("{:#>02x} {:#>02x} {:#>02x}", self.byte0, a, b),
 
-            _ => panic!("first byte None but second byte Some")
+            _ => panic!("first byte None but second byte Some"),
         }
-
     }
 
     fn format_addr(&self) -> String {
@@ -133,7 +125,7 @@ impl Instruction {
                 format!("${:#>04x}", addr)
             }
 
-            _ => panic!("first byte None but second byte Some")
+            _ => panic!("first byte None but second byte Some"),
         }
     }
 }
@@ -143,7 +135,7 @@ pub struct Disassembly {
     instructions: Vec<Instruction>,
 }
 
-pub fn disassemble_instruction<'a,I: Iterator<Item = &'a u8>>(
+pub fn disassemble_instruction<'a, I: Iterator<Item = &'a u8>>(
     address: usize,
     offset: usize,
     iter: &mut I,
@@ -153,13 +145,13 @@ pub fn disassemble_instruction<'a,I: Iterator<Item = &'a u8>>(
         return Ok(None);
     }
 
-    let opc = OPCODES[*b.unwrap() as usize]
-        .ok_or_else(|| anyhow!("opcode {:?} unrecognized", b))?;
+    let opc =
+        OPCODES[*b.unwrap() as usize].ok_or_else(|| anyhow!("opcode {:?} unrecognized", b))?;
 
     let mut buf: [Option<u8>; 2] = [None, None];
     let mut i = 0;
 
-    while i < opc.1.len()-1 {
+    while i < opc.1.len() - 1 {
         buf[i] = iter.next().map(|x| *x);
         if buf[i].is_none() {
             bail!("this shouldnt be none");
@@ -179,8 +171,8 @@ pub fn disassemble_instruction<'a,I: Iterator<Item = &'a u8>>(
     }))
 }
 
-impl Disassembly{
-    pub fn disassemble<'a,I: Iterator<Item = &'a u8>>(
+impl Disassembly {
+    pub fn disassemble<'a, I: Iterator<Item = &'a u8>>(
         start_address: usize,
         iter: &mut I,
     ) -> Result<Self> {
@@ -194,7 +186,9 @@ impl Disassembly{
             offset += instr.len();
         }
 
-        Ok(Self{instructions: output})
+        Ok(Self {
+            instructions: output,
+        })
     }
 
     pub fn print(&self, program_counter: usize) {
