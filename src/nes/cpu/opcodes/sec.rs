@@ -1,6 +1,6 @@
 use crate::nes::cpu::{Cpu,FromImplied};
 use crate::nes::cpu::status::Flags;
-use super::store::Store;
+
 
 pub struct Sec { }
 

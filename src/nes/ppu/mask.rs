@@ -1,4 +1,4 @@
-use std::fmt;
+
 use std::cmp::PartialEq;
 use std::ops::BitAnd;
 

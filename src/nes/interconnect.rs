@@ -1,11 +1,11 @@
-use std::ops::{Index,IndexMut};
-use std::cell::{RefCell,RefMut};
+
+use std::cell::{RefCell};
 
 use crate::nes::cpu;
 use crate::nes::ppu;
 use crate::nes::controller;
-use crate::nes::address::{Address,Addressable};
-use crate::nes::rom::{Rom,Bank};
+use crate::nes::address::{Address};
+use crate::nes::rom::{Rom};
 use crate::nes::cpu::disassemble::OPCODES;
 
 const SYSTEM_RAM: usize = 2 * 1024;

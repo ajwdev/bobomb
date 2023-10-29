@@ -46,7 +46,7 @@ impl FromAddress for Rol {
 impl FromAccumulator for Rol {
     fn from_accumulator(cpu: &mut Cpu) -> u32 {
         let word = cpu.AC;
-        let result = Self::rotate_one_bit_left(cpu, word);
+        let _result = Self::rotate_one_bit_left(cpu, word);
 
         cpu.AC = word;
 

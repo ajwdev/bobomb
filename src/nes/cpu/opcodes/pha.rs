@@ -1,4 +1,4 @@
-use crate::nes::cpu::{Cpu,Registers,Implied};
+use crate::nes::cpu::{Cpu,Implied};
 
 pub struct Pha { }
 

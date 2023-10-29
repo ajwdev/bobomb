@@ -1,5 +1,5 @@
-use crate::nes::cpu::{Cpu,Registers,FromAddress,AddressMode};
-use super::store::Store;
+use crate::nes::cpu::{Cpu,FromAddress,AddressMode};
+
 
 pub struct Tsx { }
 

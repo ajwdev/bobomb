@@ -5,7 +5,7 @@ use anyhow::Result;
 #[macro_use]
 mod macros;
 
-use crate::dbg_hex;
+
 
 pub mod disassemble;
 
@@ -114,7 +114,7 @@ impl Cpu {
     }
 
     pub fn read_at<T: Addressable>(&self, addr: T) -> u8 {
-        let mut mem = self.interconnect.lock();
+        let mem = self.interconnect.lock();
         mem.read_word(addr.nes_address())
     }
 
@@ -306,7 +306,7 @@ impl Cpu {
         self.push_address(pc);
         self.push_word(sr);
 
-        let mut interconnect = self.interconnect.lock();
+        let interconnect = self.interconnect.lock();
 
         match intr {
             Interrupt::Nmi => {

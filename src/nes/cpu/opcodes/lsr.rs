@@ -1,4 +1,4 @@
-use crate::nes::cpu::{Cpu,Registers,AddressMode,Accumulator,FromAddress};
+use crate::nes::cpu::{Cpu,AddressMode,Accumulator,FromAddress};
 use crate::nes::cpu::status::Flags;
 
 pub struct Lsr { }

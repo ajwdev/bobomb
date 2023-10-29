@@ -1,4 +1,4 @@
-use crate::nes::cpu::{Cpu,Registers,AddressMode,FromImmediate,FromAddress};
+use crate::nes::cpu::{Cpu,AddressMode,FromImmediate,FromAddress};
 
 pub struct Lda { }
 
