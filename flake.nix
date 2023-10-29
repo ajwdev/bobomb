@@ -11,13 +11,21 @@
   outputs = { self, utils, nixpkgs, fenix, }: utils.lib.eachDefaultSystem (system: let 
     pkgs = nixpkgs.legacyPackages.${system};
     rust = fenix.packages.${system};
-    lib = pkgs.lib;
   in {
     devShell = pkgs.mkShell {
       buildInputs = with pkgs; [
+        (rust.complete.withComponents [
+          "cargo"
+          "clippy"
+          "rust-src"
+          "rustc"
+          "rustfmt"
+        ])
         protobuf
         llvmPackages_16.bintools clang 
-        rust.stable.rust rust-analyzer clippy rustfmt
+        rust.stable.rust
+        rust-analyzer
+        # rust-analyzer-nightly
         pkg-config libxkbcommon
       ];
 
