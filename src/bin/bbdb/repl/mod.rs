@@ -13,7 +13,7 @@ use ansi_term::Color::Green;
 use rustyline;
 use rustyline::error::ReadlineError;
 use rustyline::{CompletionType, EditMode, DefaultEditor};
-use tracing::{info, error};
+use tracing::error;
 
 use bobomb::grpc;
 use bobomb::debugger::{ast::*, parser::PARSER};

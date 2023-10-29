@@ -2,7 +2,7 @@ use std::fmt;
 use std::marker::PhantomData;
 
 use ansi_term::Color::{Blue, Red};
-use anyhow::*;
+use anyhow::{bail, Result};
 use num_traits::{AsPrimitive, Num, Unsigned};
 
 use bobomb::debugger::ast::{Display, Format};
