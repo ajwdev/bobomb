@@ -1,6 +1,6 @@
 use parking_lot::Mutex;
 use std::sync::Arc;
-use anyhow::*;
+use anyhow::Result;
 
 #[macro_use]
 mod macros;

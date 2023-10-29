@@ -1,4 +1,4 @@
-use crate::grammar::CommandParser;
+use super::grammar::CommandParser;
 
 use lazy_static::lazy_static;
 lazy_static! {

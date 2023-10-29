@@ -1,7 +1,7 @@
 use std::str::FromStr;
 use std::i32;
 
-use crate::ast::*;
+use super::ast::*;
 
 grammar;
 

@@ -2,15 +2,33 @@
 name = "bobomb"
 version = "0.2.0"
 authors = ["Andrew Williams <williams.andrew@gmail.com>"]
-edition = "2018"
+edition = "2021"
+build = "build.rs"
 
 [dependencies]
+ansi_term = "0.12"
 anyhow = "1.0.34"
 bytes = "0.5.6"
 clap = "2.33.3"
+ctrlc = "3.1.7"
 futures = "0.3.8"
 futures-cpupool = "0.1.8"
+lalrpop = { version = "0.20", features = ["lexer"] }
+lalrpop-util = "0.20"
+lazy_static = "1.4.0"
 minifb = "0.19.1"
+num-traits = "0.2.14"
 parking_lot = "0.11.1"
+prost = "0.12"
+regex = "1"
+rustyline = "7.0.0"
+tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
+tonic = "0.10"
+tower = "0.4.4"
+tower-http = { version = "0.4.4", features = ["trace"] }
+tracing = { version = "0.1", features = ["log"] }
+tracing-subscriber = "0.3.0"
 
-bobomb-grpc = { path = "./bobomb-grpc" }
+[build-dependencies]
+lalrpop = { version = "0.20", features = ["lexer"] }
+tonic-build = "0.10"

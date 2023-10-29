@@ -1,14 +1,7 @@
-#[macro_use]
-extern crate lalrpop_util;
-lalrpop_mod!(grammar);
-
 use clap::{App, Arg, value_t};
 
-mod ast;
 mod client;
 mod ctrl_c;
-mod disassemble;
-mod parser;
 mod repl;
 
 pub use repl::Repl;
@@ -20,8 +13,9 @@ pub struct Opts<'a> {
     pub debug_requests: bool,
 }
 
-fn main() {
-    let args = App::new("bobomb-debugger")
+#[tokio::main]
+async fn main() {
+    let args = App::new("bbdb")
         .arg(
             Arg::with_name("host")
                 .short("h")

@@ -5,8 +5,8 @@ use ansi_term::Color::{Blue, Red};
 use anyhow::*;
 use num_traits::{AsPrimitive, Num, Unsigned};
 
-use crate::ast::{Display, Format};
-use crate::disassemble::Disassembly;
+use bobomb::debugger::ast::{Display, Format};
+use bobomb::debugger::disassemble::Disassembly;
 
 const CHUNK_SIZE: usize = 8;
 
@@ -139,31 +139,6 @@ impl<T: Num + fmt::Display + fmt::LowerHex + fmt::Binary> Printer<T> {
     }
 }
 
-impl crate::ast::Format {
-    pub fn merge(&mut self, next: Option<Format>) -> Format {
-        *self = self.clone().combine(next);
-        *self
-    }
-
-    pub fn combine(mut self, next: Option<Format>) -> Format {
-        match next {
-            None => self,
-            Some(unwrapped) => {
-                if unwrapped.display.is_some() {
-                    self.display = unwrapped.display;
-                    // We specified a display format so we must reset the count as well
-                    self.count = unwrapped.count.or(Some(1));
-                } else {
-                    // We're not setting the format but might be displaying more items
-                    self.count = unwrapped.count.or(self.count);
-                }
-
-                self
-            }
-        }
-    }
-}
-
 //
 // Util
 //
@@ -203,7 +178,7 @@ where
     match err {
         ParseError::InvalidToken { location } => highlight(location, location + 1),
 
-        ParseError::UnrecognizedEOF { location, .. } => highlight(location, location + 1),
+        ParseError::UnrecognizedEof { location, .. } => highlight(location, location + 1),
 
         ParseError::UnrecognizedToken {
             token: (start, _, end),

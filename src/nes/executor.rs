@@ -1,16 +1,21 @@
+use std::net::ToSocketAddrs;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use std::sync::atomic::{AtomicBool,Ordering};
 
-use anyhow::*;
+use std::thread;
+
+use anyhow::Result;
+use futures::channel::oneshot;
 use minifb::{Key, Window, WindowOptions};
 use parking_lot::{Condvar, Mutex};
-use futures::channel::oneshot;
 
-use crate::nes::Nes;
+// grpc related things
+use tonic;
+// use tower::{ServiceBuilder, ServiceExt, Service};
+use tower_http::trace::TraceLayer;
+
 use crate::nes::debugger::Breakpoints;
-use bobomb_grpc::grpc;
-use bobomb_grpc::api_grpc;
-use bobomb_grpc::grpc::ServerBuilder;
+use crate::nes::{Nes, Opts};
 
 #[derive(Debug)]
 pub enum ExitStatus {
@@ -80,7 +85,6 @@ impl ExecutionGate {
 const WIDTH: usize = 256;
 const HEIGHT: usize = 240;
 
-
 pub struct ExecutorContext {
     execution_gate: Arc<ExecutionGate>,
     events: Mutex<Vec<oneshot::Sender<u16>>>,
@@ -141,13 +145,13 @@ pub struct Executor {
     nes: Arc<Mutex<Nes>>,
     execution_gate: Arc<ExecutionGate>,
     ctx: Arc<ExecutorContext>,
-    server_address: String,
+    // server_address: String,
     wait_on_error: bool,
     window: Window,
 }
 
 impl Executor {
-    pub fn new(nes: Nes, opts: &crate::Opts) -> Result<Self> {
+    pub fn new(nes: Nes, opts: &Opts) -> Result<Self> {
         let execution_gate = Arc::new(ExecutionGate::new());
         let ctx_gate = execution_gate.clone();
         let ctx = Arc::new(ExecutorContext::new(ctx_gate));
@@ -160,27 +164,20 @@ impl Executor {
             nes: Arc::new(Mutex::new(nes)),
             execution_gate,
             ctx,
-            server_address: String::from("127.0.0.1:6502"),
+            // server_address: String::from("127.0.0.1:6502"),
             wait_on_error: true,
-            window: Window::new("Bobomb", WIDTH, HEIGHT, WindowOptions{
-                title: true,
-                resize: false,
-                scale: minifb::Scale::X2,
-               ..WindowOptions::default()
-            })?,
+            window: Window::new(
+                "Bobomb",
+                WIDTH,
+                HEIGHT,
+                WindowOptions {
+                    title: true,
+                    resize: false,
+                    scale: minifb::Scale::X2,
+                    ..WindowOptions::default()
+                },
+            )?,
         })
-    }
-
-    fn build_debugger_server(&self) -> Result<grpc::ServerBuilder> {
-        let mut bldr = ServerBuilder::new_plain();
-        bldr.http.set_addr(&self.server_address)?;
-
-        let service_def = api_grpc::BobombDebuggerServer::new_service_def(
-            crate::nes::debugger::Server::new(self.nes.clone(), self.ctx.clone()),
-        );
-        bldr.add_service(service_def);
-
-        Ok(bldr)
     }
 
     fn block_execution(&mut self, pc: u16) -> bool {
@@ -199,8 +196,26 @@ impl Executor {
     // TODO Keep an eye on the Try trait in nightly. Then we
     // could easily turn the ? operators into an ExitStatus
     pub fn run(mut self) -> Result<ExitStatus> {
-        let bldr = self.build_debugger_server()?;
-        let _server = bldr.build()?;
+        // Set up the debugger
+        let dbg_nes = self.nes.clone();
+        let dbg_ctx = self.ctx.clone();
+        thread::spawn(move || {
+            let listen_addr = "127.0.0.1:6502".to_socket_addrs().unwrap().next().unwrap();
+            let server = crate::nes::debugger::Server::new(dbg_nes, dbg_ctx);
+
+            tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .expect("unable to build tokio runtime")
+                .block_on(
+                    tonic::transport::Server::builder()
+                        .layer(TraceLayer::new_for_grpc())
+                        .add_service(
+                            crate::grpc::bobomb_debugger_server::BobombDebuggerServer::new(server),
+                        )
+                        .serve(listen_addr),
+                )
+        });
 
         // Limit to max ~60 fps update rate
         // self.window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
@@ -220,7 +235,7 @@ impl Executor {
             if self.ctx.should_restart() {
                 // Check for PC
                 let pc = self.ctx.restart_pc.lock().take();
-                return Ok(ExitStatus::Restart(pc))
+                return Ok(ExitStatus::Restart(pc));
             }
 
             // Step the nes
@@ -250,7 +265,7 @@ impl Executor {
                     if self.ctx.should_restart() {
                         // Check for PC
                         let pc = self.ctx.restart_pc.lock().take();
-                        return Ok(ExitStatus::Restart(pc))
+                        return Ok(ExitStatus::Restart(pc));
                     }
 
                     return Err(why);
