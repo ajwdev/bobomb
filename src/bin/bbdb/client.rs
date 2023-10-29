@@ -16,8 +16,8 @@ pub(crate) struct ApiClient {
 }
 
 impl ApiClient {
-    pub async fn new(host: &str, port: u16) -> Result<Self> {
-        let client = BobombDebuggerClient::connect(format!("https://{}:{}", host, port)).await?;
+    pub async fn new(url: &str) -> Result<Self> {
+        let client = BobombDebuggerClient::connect(url.to_string()).await?;
 
         Ok(Self {
             client,

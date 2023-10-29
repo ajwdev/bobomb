@@ -15,7 +15,7 @@ use tonic;
 use tower_http::trace::TraceLayer;
 
 use crate::nes::debugger::Breakpoints;
-use crate::nes::{Nes, Opts};
+use crate::nes::Nes;
 
 #[derive(Debug)]
 pub enum ExitStatus {
@@ -151,12 +151,12 @@ pub struct Executor {
 }
 
 impl Executor {
-    pub fn new(nes: Nes, opts: &Opts) -> Result<Self> {
+    pub fn new(nes: Nes, wait_for_attach: bool) -> Result<Self> {
         let execution_gate = Arc::new(ExecutionGate::new());
         let ctx_gate = execution_gate.clone();
         let ctx = Arc::new(ExecutorContext::new(ctx_gate));
 
-        if opts.wait_for_attach {
+        if wait_for_attach {
             ctx.breakpoints.lock().enable_step();
         }
 
