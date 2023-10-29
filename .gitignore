@@ -3,3 +3,4 @@ target
 *.nes
 6502.txt
 *.ko
+.direnv

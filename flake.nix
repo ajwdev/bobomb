@@ -24,6 +24,8 @@
       LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
       RUST_BACKTRACE = 1;
       # RUSTFLAGS = "-C target-cpu=native";
+      PROTOC = "${pkgs.protobuf}/bin/protoc";
+      PROTOC_INCLUDE = "${pkgs.protobuf}/include";
     };
   });
 }
