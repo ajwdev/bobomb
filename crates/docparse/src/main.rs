@@ -44,7 +44,11 @@ fn main() -> Result<()> {
         .finish();
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 
-    let body = reqwest::blocking::get(args.url.clone())?.text()?;
+    let client = reqwest::blocking::Client::builder()
+        .user_agent("6502-docparse-bot/0.1.0 (+https://github.com/ajwdev/bobomb)")
+        .build()?;
+
+    let body = client.get(args.url.clone()).send()?.text()?;
 
     let mut docs = Scraper::new(&body).scrap()?;
     docs.generated_at = Some(chrono::Utc::now().to_rfc2822());
