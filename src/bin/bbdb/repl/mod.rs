@@ -125,7 +125,7 @@ impl Repl {
             Cmd::Manual(opc) => {
                 std::process::Command::new("xdg-open")
                     .args(&[format!(
-                        "http://www.obelisk.me.uk/6502/reference.html#{}",
+                        "https://www.nesdev.org/obelisk-6502-guide/reference.html#{}",
                         opc
                     )])
                     .output()?;
