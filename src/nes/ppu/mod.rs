@@ -63,6 +63,7 @@ pub struct Ppu {
     // vram: Vec<u8>,
     vram: Box<[u8]>,
     oam: Box<[u8]>,
+    chr_rom: Option<Vec<u8>>,
 
     // Frame buffers
     pub front: Box<[u32]>,
@@ -121,6 +122,7 @@ impl Ppu {
 
             front: Box::new([0; 256 * 240]),
             back: Box::new([0; 256 * 240]),
+            chr_rom: None,
 
             // https://wiki.nesdev.com/w/index.php/PPU_power_up_state
             control: ControlRegister::new(),
@@ -161,6 +163,10 @@ impl Ppu {
         }
     }
 
+    pub fn load_chr_rom(&mut self, chr_data: Vec<u8>) {
+        self.chr_rom = Some(chr_data);
+    }
+
     pub fn step(&mut self) -> PpuStepResult {
         let mut result = PpuStepResult {
             should_redraw: false,
@@ -177,26 +183,26 @@ impl Ppu {
                 self.is_vblank.set(false);
             }
 
-            if (self.cycle >= 2 && self.cycle < 258) || (self.cycle >= 321 && self.cycle < 338) {
+            if self.rendering_enabled() && ((self.cycle >= 2 && self.cycle < 258) || (self.cycle >= 321 && self.cycle < 338)) {
                 self.fetch()
             }
 
-            if self.cycle == 256 {
+            if self.rendering_enabled() && self.cycle == 256 {
                 self.increment_scroll_y();
             }
 
-            if self.cycle == 257 {
+            if self.rendering_enabled() && self.cycle == 257 {
                 // copy X
                 // https://wiki.nesdev.com/w/index.php/PPU_scrolling#At_dot_257_of_each_scanline
                 self.load_background_shifters();
                 self.copy_scroll_x();
             }
 
-            if self.cycle == 338 || self.cycle == 340 {
+            if self.rendering_enabled() && (self.cycle == 338 || self.cycle == 340) {
                 self.next_tile_id = self.ppu_read_at(0x2000 | self.addr_v & 0x0fff);
             }
 
-            if self.scanline == -1 && self.cycle >= 280 && self.cycle < 305 {
+            if self.rendering_enabled() && self.scanline == -1 && self.cycle >= 280 && self.cycle < 305 {
                 self.copy_scroll_y();
             }
         }
@@ -233,32 +239,6 @@ impl Ppu {
         }
 
         result
-
-        // Draw some pixels
-        // if self.rendering_enabled() {
-        //     self.render();
-        // }
-
-        // if self.cycle == 1 {
-        //     match self.scanline {
-        //         VBLANK_SCANLINE => {
-
-        //             if self.control.nmi_during_vblank {
-        //                 result.interrupt = Some(Interrupt::Nmi);
-        //             }
-
-        //             self.is_vblank.set(true);
-        //             std::mem::swap(&mut self.front, &mut self.back);
-        //             result.should_redraw = true;
-        //         }
-        //         PRERENDER_SCANLINE => {
-        //             self.is_vblank.set(false);
-
-        //             // TODO reset sprite overflow/zerohit
-        //         }
-        //         _ => {} // Nothing to do
-        //     }
-        // }
     }
 
     fn copy_scroll_x(&mut self) {
@@ -308,6 +288,15 @@ impl Ppu {
     fn draw(&mut self) {
         let mut pixel: u8 = 0;
         let mut palette: u8 = 0;
+
+        // Only render if rendering is enabled
+        if !self.rendering_enabled() {
+            let i = (256 * self.scanline) + self.cycle - 1;
+            if i >= 0 && (i as usize) < self.back.len() {
+                self.back[i as usize] = COLORS[0]; // Use background color
+            }
+            return;
+        }
 
         // Backgrounds first
         if self.mask.show_background {
@@ -398,22 +387,34 @@ impl Ppu {
     }
 
     fn ppu_read_at(&self, address: u16) -> u8 {
-        let idx = (address % 0x4000) as usize;
+        let addr = address % 0x4000;
 
-        match idx {
-            // Pattern tables
-            0x0..=0x1fff => self.vram[idx],
-            // name tables
+        match addr {
+            // Pattern tables (CHR-ROM)
+            0x0000..=0x1fff => {
+                if let Some(ref chr_rom) = self.chr_rom {
+                    chr_rom[addr as usize]
+                } else {
+                    0 // Return 0 if no CHR-ROM loaded
+                }
+            }
+            // Name tables
             0x2000..=0x3eff => {
-                // TODO Does mirroring matter for us?
-                self.vram[idx]
+                let mirrored_addr = 0x2000 + ((addr - 0x2000) % 0x1000);
+                self.vram[mirrored_addr as usize]
             }
-            // palettes
+            // Palettes
             0x3f00..=0x3fff => {
-                let i = 0x3f00 + (idx % 8);
-                self.vram[i]
+                let palette_addr = 0x3f00 + ((addr - 0x3f00) % 0x20);
+                // Handle palette mirroring: $3F10/$3F14/$3F18/$3F1C mirror $3F00/$3F04/$3F08/$3F0C
+                let final_addr = if palette_addr >= 0x3f10 && (palette_addr % 4) == 0 {
+                    palette_addr - 0x10
+                } else {
+                    palette_addr
+                };
+                self.vram[final_addr as usize]
             }
-            _ => panic!("ppu read not implemented yet. access at {:#x}", idx),
+            _ => 0,
         }
     }
 

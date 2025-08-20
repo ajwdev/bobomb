@@ -39,10 +39,21 @@ impl Nes {
         }
 
         // TODO const these
+        let prg_bank_count = header[4] as usize;
+        let chr_bank_count = header[5] as usize;
+        
         let bank0_start = 16;
         let bank0_end = 16 * 1024 + bank0_start;
         let bank1_start = bank0_end;
         let bank1_end = 16 * 1024 + bank1_start;
+        
+        // CHR-ROM starts after PRG-ROM
+        let chr_start = if prg_bank_count == 1 { 
+            bank0_end 
+        } else { 
+            bank1_end 
+        };
+        let chr_end = chr_start + (chr_bank_count * 8 * 1024);
 
         let rom = if Self::rom_is_double_banked(&header) {
             debug!("ROM is double banked");
@@ -55,8 +66,16 @@ impl Nes {
             rom::Rom::new_single_bank(bank)
         };
 
+        let mut ppu = ppu::Ppu::new();
+        
+        // Load CHR-ROM data if present
+        if chr_bank_count > 0 && chr_end <= rom_buffer.len() {
+            let chr_data = rom_buffer[chr_start..chr_end].to_vec();
+            ppu.load_chr_rom(chr_data);
+        }
+        
         let interconnect = Arc::new(Mutex::new(interconnect::Interconnect::new(
-            ppu::Ppu::new(),
+            ppu,
             rom,
         )));
         let cpu = match program_counter {
