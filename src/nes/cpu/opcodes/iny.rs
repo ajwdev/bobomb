@@ -1,6 +1,6 @@
-use crate::nes::cpu::{Cpu,FromImplied};
+use crate::nes::cpu::{Cpu, FromImplied};
 
-pub struct Iny { }
+pub struct Iny {}
 
 impl FromImplied for Iny {
     fn from_implied(cpu: &mut Cpu) -> u32 {
@@ -16,9 +16,9 @@ impl FromImplied for Iny {
 
 #[cfg(test)]
 mod test {
+    use crate::nes::cpu::status::Flags;
     use crate::nes::cpu::test::*;
     use crate::nes::cpu::Registers;
-    use crate::nes::cpu::status::Flags;
 
     #[test]
     fn test_iny() {

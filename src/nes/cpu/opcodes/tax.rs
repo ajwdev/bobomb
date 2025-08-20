@@ -1,6 +1,6 @@
-use crate::nes::cpu::{Cpu,FromImplied};
+use crate::nes::cpu::{Cpu, FromImplied};
 
-pub struct Tax { }
+pub struct Tax {}
 
 impl FromImplied for Tax {
     fn from_implied(cpu: &mut Cpu) -> u32 {
@@ -17,13 +17,13 @@ impl FromImplied for Tax {
 
 #[cfg(test)]
 mod test {
+    use crate::nes::cpu::status::Flags;
     use crate::nes::cpu::test::*;
     use crate::nes::cpu::Registers;
-    use crate::nes::cpu::status::Flags;
 
     #[test]
     fn test_tax() {
-        let mut cpu = mock_cpu(&[0xaa,0xaa]);
+        let mut cpu = mock_cpu(&[0xaa, 0xaa]);
         cpu.X = 0xf0;
         cpu.AC = 0x00;
         cpu.SR.reset(Flags::Zero);
@@ -44,4 +44,3 @@ mod test {
         assert_status_set!(cpu, Flags::Negative);
     }
 }
-

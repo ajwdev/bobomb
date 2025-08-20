@@ -1,10 +1,14 @@
+use crate::nes::address::{Address, Addressable};
 use crate::nes::cpu::AddressMode;
-use crate::nes::address::{Address,Addressable};
 
-pub struct Disassembler { }
+pub struct Disassembler {}
 
 impl Disassembler {
-    pub fn disassemble<T: Addressable>(opc: u8, pipeline: &[u8], address: T) -> Result<(String,u32), String> {
+    pub fn disassemble<T: Addressable>(
+        opc: u8,
+        pipeline: &[u8],
+        address: T,
+    ) -> Result<(String, u32), String> {
         match OPCODES[opc as usize] {
             Some((label, mode)) => {
                 let byte_str = Self::decode_bytes(mode, opc, pipeline);
@@ -15,14 +19,17 @@ impl Disassembler {
                     Self::instruction_length(mode),
                 ))
             }
-            None => {
-                Err(format!("Unmatched opcode {:#x}", opc))
-            }
+            None => Err(format!("Unmatched opcode {:#x}", opc)),
         }
     }
 
     #[inline]
-    fn format_line(address: u16, label: String, byte_str: String, operands: Option<String>) -> String {
+    fn format_line(
+        address: u16,
+        label: String,
+        byte_str: String,
+        operands: Option<String>,
+    ) -> String {
         let mut result = String::new();
 
         result.push_str(format!("0x{:04X} | ", address).as_str());
@@ -37,17 +44,16 @@ impl Disassembler {
     #[inline]
     fn instruction_length(mode: AddressMode) -> u32 {
         match mode {
-            AddressMode::Implied | AddressMode::Accumulator => {
-                1
-            }
-            AddressMode::Relative | AddressMode::Immediate
-            | AddressMode::Indirect | AddressMode::IndirectY | AddressMode::IndirectX
-            | AddressMode::ZeroPage | AddressMode::ZeroPageX | AddressMode::ZeroPageY => {
-                2
-            }
-            AddressMode::Absolute | AddressMode::AbsoluteX | AddressMode::AbsoluteY => {
-                3
-            }
+            AddressMode::Implied | AddressMode::Accumulator => 1,
+            AddressMode::Relative
+            | AddressMode::Immediate
+            | AddressMode::Indirect
+            | AddressMode::IndirectY
+            | AddressMode::IndirectX
+            | AddressMode::ZeroPage
+            | AddressMode::ZeroPageX
+            | AddressMode::ZeroPageY => 2,
+            AddressMode::Absolute | AddressMode::AbsoluteX | AddressMode::AbsoluteY => 3,
         }
     }
 
@@ -56,15 +62,14 @@ impl Disassembler {
             AddressMode::Implied | AddressMode::Accumulator => {
                 format!("{:02X}      ", opc)
             }
-            AddressMode::Relative |
-                    AddressMode::Indirect |
-                    AddressMode::ZeroPage |
-                    AddressMode::Immediate |
-                    AddressMode::ZeroPageX |
-                    AddressMode::ZeroPageY |
-                    AddressMode::IndirectX |
-                    AddressMode::IndirectY
-            => {
+            AddressMode::Relative
+            | AddressMode::Indirect
+            | AddressMode::ZeroPage
+            | AddressMode::Immediate
+            | AddressMode::ZeroPageX
+            | AddressMode::ZeroPageY
+            | AddressMode::IndirectX
+            | AddressMode::IndirectY => {
                 format!("{:02X} {:02X}   ", opc, buf[0])
             }
             AddressMode::Absolute | AddressMode::AbsoluteX | AddressMode::AbsoluteY => {
@@ -78,31 +83,15 @@ impl Disassembler {
             AddressMode::Relative | AddressMode::Indirect | AddressMode::ZeroPage => {
                 Some(format!("${:02X}", buf[0]))
             }
-            AddressMode::Immediate => {
-                Some(format!("#${:02X}", buf[0]))
-            }
-            AddressMode::Absolute => {
-                Some(format!("${:04X}", Address::from_bytes(buf).to_u16()))
-            }
-            AddressMode::AbsoluteX => {
-                Some(format!("${:04X},X", Address::from_bytes(buf).to_u16()))
-            }
-            AddressMode::AbsoluteY => {
-                Some(format!("${:04X},Y", Address::from_bytes(buf).to_u16()))
-            }
-            AddressMode::ZeroPageX => {
-                Some(format!("${:02X},X", buf[0]))
-            }
-            AddressMode::ZeroPageY => {
-                Some(format!("${:02X},Y", buf[0]))
-            }
-            AddressMode::IndirectX => {
-                Some(format!("(${:02X},X)", buf[0]))
-            }
-            AddressMode::IndirectY => {
-                Some(format!("(${:02X}),Y", buf[0]))
-            }
-            _ => None
+            AddressMode::Immediate => Some(format!("#${:02X}", buf[0])),
+            AddressMode::Absolute => Some(format!("${:04X}", Address::from_bytes(buf).to_u16())),
+            AddressMode::AbsoluteX => Some(format!("${:04X},X", Address::from_bytes(buf).to_u16())),
+            AddressMode::AbsoluteY => Some(format!("${:04X},Y", Address::from_bytes(buf).to_u16())),
+            AddressMode::ZeroPageX => Some(format!("${:02X},X", buf[0])),
+            AddressMode::ZeroPageY => Some(format!("${:02X},Y", buf[0])),
+            AddressMode::IndirectX => Some(format!("(${:02X},X)", buf[0])),
+            AddressMode::IndirectY => Some(format!("(${:02X}),Y", buf[0])),
+            _ => None,
         }
     }
 }

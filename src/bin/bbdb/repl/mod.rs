@@ -12,11 +12,11 @@ use futures::select;
 use ansi_term::Color::Green;
 use rustyline;
 use rustyline::error::ReadlineError;
-use rustyline::{CompletionType, EditMode, DefaultEditor};
+use rustyline::{CompletionType, DefaultEditor, EditMode};
 use tracing::error;
 
-use bobomb::grpc;
 use bobomb::debugger::{ast::*, parser::PARSER};
+use bobomb::grpc;
 
 use crate::client;
 use crate::ctrl_c::CtrlCHandler;
@@ -216,20 +216,18 @@ impl Repl {
                     Some(resp) => {
                         self.update_env_with_cpu(&resp.cpu.unwrap());
                         self.display_on_stop().await?;
-                    },
+                    }
                     None => bail!("server closed connection"),
                 }
             }
 
-            Cmd::Step => {
-                match self.client.do_step().await? {
-                    Some(resp) => {
-                        self.update_env_with_cpu(&resp.cpu.unwrap());
-                        self.display_on_stop().await?;
-                    },
-                    None => bail!("server closed connection"),
+            Cmd::Step => match self.client.do_step().await? {
+                Some(resp) => {
+                    self.update_env_with_cpu(&resp.cpu.unwrap());
+                    self.display_on_stop().await?;
                 }
-            }
+                None => bail!("server closed connection"),
+            },
 
             Cmd::SetVar(v, e) => {
                 if RESERVED_VARIABLES.contains(v.as_str()) {

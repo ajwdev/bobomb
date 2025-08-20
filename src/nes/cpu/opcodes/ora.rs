@@ -1,6 +1,6 @@
-use crate::nes::cpu::{Cpu,FromImmediate,FromAddress,AddressMode};
+use crate::nes::cpu::{AddressMode, Cpu, FromAddress, FromImmediate};
 
-pub struct Ora { }
+pub struct Ora {}
 
 impl Ora {
     #[inline]
@@ -30,11 +30,15 @@ impl FromAddress for Ora {
 
         match mode {
             AddressMode::ZeroPage => 3,
+            AddressMode::ZeroPageX => 4,
             AddressMode::Absolute => 4,
-            AddressMode::AbsoluteX => { 4 + (extra_cycles as u32) },
-            AddressMode::AbsoluteY => { 4 + (extra_cycles as u32) },
-            AddressMode::IndirectY => { 5 + (extra_cycles as u32) },
-            _ => { panic!("unimplemented address mode {:?} for AND", mode); }
+            AddressMode::AbsoluteX => 4 + (extra_cycles as u32),
+            AddressMode::AbsoluteY => 4 + (extra_cycles as u32),
+            AddressMode::IndirectX => 6,
+            AddressMode::IndirectY => 5 + (extra_cycles as u32),
+            _ => {
+                panic!("unimplemented address mode {:?} for ORA", mode);
+            }
         }
     }
 }
@@ -67,4 +71,3 @@ impl FromAddress for Ora {
 //         //TODO Make assertions on status registers
 //     }
 // }
-

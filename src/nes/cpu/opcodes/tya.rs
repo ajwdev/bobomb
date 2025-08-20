@@ -1,9 +1,9 @@
-use crate::nes::cpu::{Cpu,Implied};
+use crate::nes::cpu::{Cpu, FromImplied};
 
-pub struct Tya { }
+pub struct Tya {}
 
-impl Implied for Tya {
-    fn implied(cpu: &mut Cpu) -> usize {
+impl FromImplied for Tya {
+    fn from_implied(cpu: &mut Cpu) -> u32 {
         let result = cpu.Y;
         cpu.AC = result;
 

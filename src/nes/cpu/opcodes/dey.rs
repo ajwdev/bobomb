@@ -1,9 +1,9 @@
-use crate::nes::cpu::{Cpu,Implied};
+use crate::nes::cpu::{Cpu, FromImplied};
 
-pub struct Dey { }
+pub struct Dey {}
 
-impl Implied for Dey {
-    fn implied(cpu: &mut Cpu) -> usize {
+impl FromImplied for Dey {
+    fn from_implied(cpu: &mut Cpu) -> u32 {
         cpu.Y = cpu.Y.wrapping_sub(1);
         // TODO The reason we create `word` here is because we can't pass cpu.Y to
         // `zero_and_negative_status` as it's already mutably borrowed by the function
@@ -12,7 +12,7 @@ impl Implied for Dey {
         cpu.zero_and_negative_status(word);
 
         2
-   }
+    }
 }
 
 #[cfg(test)]

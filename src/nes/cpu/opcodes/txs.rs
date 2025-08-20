@@ -1,11 +1,15 @@
-use crate::nes::cpu::{Cpu,Implied,STACK_START};
+use crate::nes::cpu::{Cpu, FromImplied, STACK_START};
+use tracing::debug;
 
-pub struct Txs { }
+pub struct Txs {}
 
-impl Implied for Txs {
-    fn implied(cpu: &mut Cpu) -> usize {
+impl FromImplied for Txs {
+    fn from_implied(cpu: &mut Cpu) -> u32 {
         cpu.SP = cpu.X;
-        println!("Stack pointer changed: {:#06x}", cpu.SP as u16 + STACK_START);
+        debug!(
+            "Stack pointer changed: {:#06x}",
+            cpu.SP as u16 + STACK_START
+        );
         cpu.stack_depth = 0;
 
         2

@@ -1,4 +1,4 @@
-use std::ops::{Index};
+use std::ops::Index;
 
 const ROM_BANK_SIZE: u16 = 16 * 1024;
 
@@ -8,12 +8,12 @@ const ROM_UPPER_START: u16 = ROM_LOWER_START + ROM_BANK_SIZE; // 0xc000
 const ROM_UPPER_END: u16 = ROM_UPPER_START + 0x3FFF;
 
 pub struct Bank {
-    pub data: [u8; ROM_BANK_SIZE as usize]
+    pub data: [u8; ROM_BANK_SIZE as usize],
 }
 
 impl Bank {
     pub fn new(src: &[u8]) -> Self {
-        let mut b = Bank{
+        let mut b = Bank {
             data: [0; ROM_BANK_SIZE as usize],
         };
         b.data.clone_from_slice(src);
@@ -28,7 +28,6 @@ impl Index<usize> for Bank {
         &self.data[idx]
     }
 }
-
 
 pub struct Rom {
     lower_bank: Option<Bank>,
@@ -56,11 +55,13 @@ impl Index<u16> for Rom {
 
     fn index(&self, addr: u16) -> &u8 {
         match addr {
-            ROM_LOWER_START..=ROM_LOWER_END => {    // Lower Bank
+            ROM_LOWER_START..=ROM_LOWER_END => {
+                // Lower Bank
                 let reladdr: u16 = addr - ROM_LOWER_START;
                 &self.lower_bank.as_ref().unwrap()[reladdr as usize]
             }
-            ROM_UPPER_START..=ROM_UPPER_END => {    // Upper Bank
+            ROM_UPPER_START..=ROM_UPPER_END => {
+                // Upper Bank
                 let reladdr: u16 = addr - (ROM_LOWER_START + ROM_BANK_SIZE);
                 if self.upper_bank.is_some() {
                     &self.upper_bank.as_ref().unwrap()[reladdr as usize]
@@ -68,7 +69,9 @@ impl Index<u16> for Rom {
                     &self.lower_bank.as_ref().unwrap()[reladdr as usize]
                 }
             }
-            _ => { panic!("outside ROM address range: {:#X}", addr); }
+            _ => {
+                panic!("outside ROM address range: {:#X}", addr);
+            }
         }
     }
 }

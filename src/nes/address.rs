@@ -1,11 +1,8 @@
 use std::fmt;
-use std::ops::{Sub,Add};
+use std::ops::{Add, Sub};
 
 pub trait Addressable:
-        Sized +
-        Sub<Self, Output = Self> +
-        Add<Self, Output = Self> +
-        fmt::LowerHex + fmt::UpperHex
+    Sized + Sub<Self, Output = Self> + Add<Self, Output = Self> + fmt::LowerHex + fmt::UpperHex
 {
     fn nes_address(&self) -> u16;
 
@@ -18,7 +15,7 @@ pub trait Addressable:
     }
 }
 
-#[derive(Debug,Copy,Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct Address(pub u16);
 
 impl Address {
@@ -58,7 +55,6 @@ impl Addressable for Address {
     }
 }
 
-
 impl From<u16> for Address {
     fn from(t: u16) -> Address {
         Address(t)
@@ -87,7 +83,6 @@ impl From<Address> for u16 {
         t.0
     }
 }
-
 
 impl Sub for Address {
     type Output = Address;

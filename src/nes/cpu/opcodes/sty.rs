@@ -1,7 +1,7 @@
-use crate::nes::cpu::{Cpu,Registers,FromAddress,AddressMode};
 use super::store::Store;
+use crate::nes::cpu::{AddressMode, Cpu, FromAddress, Registers};
 
-pub struct Sty { }
+pub struct Sty {}
 
 impl FromAddress for Sty {
     fn from_address(cpu: &mut Cpu, mode: AddressMode) -> u32 {
@@ -13,7 +13,9 @@ impl FromAddress for Sty {
             AddressMode::ZeroPageX => 4,
             AddressMode::Absolute => 4,
             // TODO Make a macro for this
-            _ => { panic!("unimplemented address mode {:?} for STY", mode); }
+            _ => {
+                panic!("unimplemented address mode {:?} for STY", mode);
+            }
         }
     }
 }

@@ -18,9 +18,13 @@ mod test {
             "x $PC",
             "x/10i $PC",
             "x/10i $PC+10-1",
-        ].iter().for_each(|s| {
-            assert!(PARSER.parse(s).is_ok(),
-                "could not parse command: \"{}\"", s
+        ]
+        .iter()
+        .for_each(|s| {
+            assert!(
+                PARSER.parse(s).is_ok(),
+                "could not parse command: \"{}\"",
+                s
             );
         })
     }

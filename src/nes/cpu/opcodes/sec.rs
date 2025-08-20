@@ -1,8 +1,7 @@
-use crate::nes::cpu::{Cpu,FromImplied};
 use crate::nes::cpu::status::Flags;
+use crate::nes::cpu::{Cpu, FromImplied};
 
-
-pub struct Sec { }
+pub struct Sec {}
 
 impl FromImplied for Sec {
     fn from_implied(cpu: &mut Cpu) -> u32 {
@@ -13,8 +12,8 @@ impl FromImplied for Sec {
 
 #[cfg(test)]
 mod test {
-    use crate::nes::cpu::test::*;
     use crate::nes::cpu::status::Flags;
+    use crate::nes::cpu::test::*;
 
     #[test]
     fn test_sec() {
@@ -25,4 +24,3 @@ mod test {
         assert_status_set!(cpu, Flags::Carry);
     }
 }
-

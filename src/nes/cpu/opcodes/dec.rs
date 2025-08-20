@@ -1,6 +1,6 @@
-use crate::nes::cpu::{Cpu,FromAddress,AddressMode};
+use crate::nes::cpu::{AddressMode, Cpu, FromAddress};
 
-pub struct Dec { }
+pub struct Dec {}
 
 impl Dec {
     #[inline]
@@ -25,7 +25,9 @@ impl FromAddress for Dec {
             AddressMode::ZeroPageX => 6,
             AddressMode::Absolute => 6,
             AddressMode::AbsoluteX => 7,
-            _ => { panic!("unimplemented address mode {:?} for DEC", mode); }
+            _ => {
+                panic!("unimplemented address mode {:?} for DEC", mode);
+            }
         }
     }
 }

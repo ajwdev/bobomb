@@ -94,17 +94,7 @@ pub struct StatusReply {
 }
 /// Nested message and enum types in `StatusReply`.
 pub mod status_reply {
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum EmulationState {
         Unknown = 0,
@@ -182,8 +172,8 @@ pub mod cpu_state {
 /// Generated client implementations.
 pub mod bobomb_debugger_client {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
-    use tonic::codegen::*;
     use tonic::codegen::http::Uri;
+    use tonic::codegen::*;
     #[derive(Debug, Clone)]
     pub struct BobombDebuggerClient<T> {
         inner: tonic::client::Grpc<T>,
@@ -227,9 +217,8 @@ pub mod bobomb_debugger_client {
                     <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
                 >,
             >,
-            <T as tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
-            >>::Error: Into<StdError> + Send + Sync,
+            <T as tonic::codegen::Service<http::Request<tonic::body::BoxBody>>>::Error:
+                Into<StdError> + Send + Sync,
         {
             BobombDebuggerClient::new(InterceptedService::new(inner, interceptor))
         }
@@ -268,19 +257,14 @@ pub mod bobomb_debugger_client {
             &mut self,
             request: impl tonic::IntoRequest<super::AttachRequest>,
         ) -> std::result::Result<tonic::Response<super::AttachReply>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/debugger.BobombDebugger/Attach",
-            );
+            let path = http::uri::PathAndQuery::from_static("/debugger.BobombDebugger/Attach");
             let mut req = request.into_request();
             req.extensions_mut()
                 .insert(GrpcMethod::new("debugger.BobombDebugger", "Attach"));
@@ -293,19 +277,14 @@ pub mod bobomb_debugger_client {
             tonic::Response<tonic::codec::Streaming<super::ResumeReply>>,
             tonic::Status,
         > {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/debugger.BobombDebugger/Resume",
-            );
+            let path = http::uri::PathAndQuery::from_static("/debugger.BobombDebugger/Resume");
             let mut req = request.into_request();
             req.extensions_mut()
                 .insert(GrpcMethod::new("debugger.BobombDebugger", "Resume"));
@@ -315,19 +294,14 @@ pub mod bobomb_debugger_client {
             &mut self,
             request: impl tonic::IntoRequest<super::RestartRequest>,
         ) -> std::result::Result<tonic::Response<super::RestartReply>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/debugger.BobombDebugger/Restart",
-            );
+            let path = http::uri::PathAndQuery::from_static("/debugger.BobombDebugger/Restart");
             let mut req = request.into_request();
             req.extensions_mut()
                 .insert(GrpcMethod::new("debugger.BobombDebugger", "Restart"));
@@ -340,19 +314,14 @@ pub mod bobomb_debugger_client {
             tonic::Response<tonic::codec::Streaming<super::StepReply>>,
             tonic::Status,
         > {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/debugger.BobombDebugger/Step",
-            );
+            let path = http::uri::PathAndQuery::from_static("/debugger.BobombDebugger/Step");
             let mut req = request.into_request();
             req.extensions_mut()
                 .insert(GrpcMethod::new("debugger.BobombDebugger", "Step"));
@@ -361,23 +330,16 @@ pub mod bobomb_debugger_client {
         pub async fn put_breakpoint(
             &mut self,
             request: impl tonic::IntoRequest<super::PutBreakpointRequest>,
-        ) -> std::result::Result<
-            tonic::Response<super::BreakpointReply>,
-            tonic::Status,
-        > {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+        ) -> std::result::Result<tonic::Response<super::BreakpointReply>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/debugger.BobombDebugger/PutBreakpoint",
-            );
+            let path =
+                http::uri::PathAndQuery::from_static("/debugger.BobombDebugger/PutBreakpoint");
             let mut req = request.into_request();
             req.extensions_mut()
                 .insert(GrpcMethod::new("debugger.BobombDebugger", "PutBreakpoint"));
@@ -386,48 +348,35 @@ pub mod bobomb_debugger_client {
         pub async fn delete_breakpoint(
             &mut self,
             request: impl tonic::IntoRequest<super::DeleteBreakpointRequest>,
-        ) -> std::result::Result<
-            tonic::Response<super::BreakpointReply>,
-            tonic::Status,
-        > {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+        ) -> std::result::Result<tonic::Response<super::BreakpointReply>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/debugger.BobombDebugger/DeleteBreakpoint",
-            );
+            let path =
+                http::uri::PathAndQuery::from_static("/debugger.BobombDebugger/DeleteBreakpoint");
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(GrpcMethod::new("debugger.BobombDebugger", "DeleteBreakpoint"));
+            req.extensions_mut().insert(GrpcMethod::new(
+                "debugger.BobombDebugger",
+                "DeleteBreakpoint",
+            ));
             self.inner.unary(req, path, codec).await
         }
         pub async fn read_memory(
             &mut self,
             request: impl tonic::IntoRequest<super::ReadMemoryRequest>,
-        ) -> std::result::Result<
-            tonic::Response<super::ReadMemoryReply>,
-            tonic::Status,
-        > {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+        ) -> std::result::Result<tonic::Response<super::ReadMemoryReply>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/debugger.BobombDebugger/ReadMemory",
-            );
+            let path = http::uri::PathAndQuery::from_static("/debugger.BobombDebugger/ReadMemory");
             let mut req = request.into_request();
             req.extensions_mut()
                 .insert(GrpcMethod::new("debugger.BobombDebugger", "ReadMemory"));
@@ -438,19 +387,14 @@ pub mod bobomb_debugger_client {
             &mut self,
             request: impl tonic::IntoRequest<super::ReadCpuRequest>,
         ) -> std::result::Result<tonic::Response<super::ReadCpuReply>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/debugger.BobombDebugger/ReadCPU",
-            );
+            let path = http::uri::PathAndQuery::from_static("/debugger.BobombDebugger/ReadCPU");
             let mut req = request.into_request();
             req.extensions_mut()
                 .insert(GrpcMethod::new("debugger.BobombDebugger", "ReadCPU"));
@@ -460,19 +404,14 @@ pub mod bobomb_debugger_client {
             &mut self,
             request: impl tonic::IntoRequest<super::StatusRequest>,
         ) -> std::result::Result<tonic::Response<super::StatusReply>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/debugger.BobombDebugger/Status",
-            );
+            let path = http::uri::PathAndQuery::from_static("/debugger.BobombDebugger/Status");
             let mut req = request.into_request();
             req.extensions_mut()
                 .insert(GrpcMethod::new("debugger.BobombDebugger", "Status"));
@@ -494,8 +433,7 @@ pub mod bobomb_debugger_server {
         /// Server streaming response type for the Resume method.
         type ResumeStream: tonic::codegen::tokio_stream::Stream<
                 Item = std::result::Result<super::ResumeReply, tonic::Status>,
-            >
-            + Send
+            > + Send
             + 'static;
         async fn resume(
             &self,
@@ -508,8 +446,7 @@ pub mod bobomb_debugger_server {
         /// Server streaming response type for the Step method.
         type StepStream: tonic::codegen::tokio_stream::Stream<
                 Item = std::result::Result<super::StepReply, tonic::Status>,
-            >
-            + Send
+            > + Send
             + 'static;
         async fn step(
             &self,
@@ -560,10 +497,7 @@ pub mod bobomb_debugger_server {
                 max_encoding_message_size: None,
             }
         }
-        pub fn with_interceptor<F>(
-            inner: T,
-            interceptor: F,
-        ) -> InterceptedService<Self, F>
+        pub fn with_interceptor<F>(inner: T, interceptor: F) -> InterceptedService<Self, F>
         where
             F: tonic::service::Interceptor,
         {
@@ -619,23 +553,16 @@ pub mod bobomb_debugger_server {
                 "/debugger.BobombDebugger/Attach" => {
                     #[allow(non_camel_case_types)]
                     struct AttachSvc<T: BobombDebugger>(pub Arc<T>);
-                    impl<
-                        T: BobombDebugger,
-                    > tonic::server::UnaryService<super::AttachRequest>
-                    for AttachSvc<T> {
+                    impl<T: BobombDebugger> tonic::server::UnaryService<super::AttachRequest> for AttachSvc<T> {
                         type Response = super::AttachReply;
-                        type Future = BoxFuture<
-                            tonic::Response<Self::Response>,
-                            tonic::Status,
-                        >;
+                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
                         fn call(
                             &mut self,
                             request: tonic::Request<super::AttachRequest>,
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
-                            let fut = async move {
-                                <T as BobombDebugger>::attach(&inner, request).await
-                            };
+                            let fut =
+                                async move { <T as BobombDebugger>::attach(&inner, request).await };
                             Box::pin(fut)
                         }
                     }
@@ -665,24 +592,21 @@ pub mod bobomb_debugger_server {
                 "/debugger.BobombDebugger/Resume" => {
                     #[allow(non_camel_case_types)]
                     struct ResumeSvc<T: BobombDebugger>(pub Arc<T>);
-                    impl<
-                        T: BobombDebugger,
-                    > tonic::server::ServerStreamingService<super::ResumeRequest>
-                    for ResumeSvc<T> {
+                    impl<T: BobombDebugger>
+                        tonic::server::ServerStreamingService<super::ResumeRequest>
+                        for ResumeSvc<T>
+                    {
                         type Response = super::ResumeReply;
                         type ResponseStream = T::ResumeStream;
-                        type Future = BoxFuture<
-                            tonic::Response<Self::ResponseStream>,
-                            tonic::Status,
-                        >;
+                        type Future =
+                            BoxFuture<tonic::Response<Self::ResponseStream>, tonic::Status>;
                         fn call(
                             &mut self,
                             request: tonic::Request<super::ResumeRequest>,
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
-                            let fut = async move {
-                                <T as BobombDebugger>::resume(&inner, request).await
-                            };
+                            let fut =
+                                async move { <T as BobombDebugger>::resume(&inner, request).await };
                             Box::pin(fut)
                         }
                     }
@@ -712,15 +636,9 @@ pub mod bobomb_debugger_server {
                 "/debugger.BobombDebugger/Restart" => {
                     #[allow(non_camel_case_types)]
                     struct RestartSvc<T: BobombDebugger>(pub Arc<T>);
-                    impl<
-                        T: BobombDebugger,
-                    > tonic::server::UnaryService<super::RestartRequest>
-                    for RestartSvc<T> {
+                    impl<T: BobombDebugger> tonic::server::UnaryService<super::RestartRequest> for RestartSvc<T> {
                         type Response = super::RestartReply;
-                        type Future = BoxFuture<
-                            tonic::Response<Self::Response>,
-                            tonic::Status,
-                        >;
+                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
                         fn call(
                             &mut self,
                             request: tonic::Request<super::RestartRequest>,
@@ -758,24 +676,20 @@ pub mod bobomb_debugger_server {
                 "/debugger.BobombDebugger/Step" => {
                     #[allow(non_camel_case_types)]
                     struct StepSvc<T: BobombDebugger>(pub Arc<T>);
-                    impl<
-                        T: BobombDebugger,
-                    > tonic::server::ServerStreamingService<super::StepRequest>
-                    for StepSvc<T> {
+                    impl<T: BobombDebugger>
+                        tonic::server::ServerStreamingService<super::StepRequest> for StepSvc<T>
+                    {
                         type Response = super::StepReply;
                         type ResponseStream = T::StepStream;
-                        type Future = BoxFuture<
-                            tonic::Response<Self::ResponseStream>,
-                            tonic::Status,
-                        >;
+                        type Future =
+                            BoxFuture<tonic::Response<Self::ResponseStream>, tonic::Status>;
                         fn call(
                             &mut self,
                             request: tonic::Request<super::StepRequest>,
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
-                            let fut = async move {
-                                <T as BobombDebugger>::step(&inner, request).await
-                            };
+                            let fut =
+                                async move { <T as BobombDebugger>::step(&inner, request).await };
                             Box::pin(fut)
                         }
                     }
@@ -805,15 +719,11 @@ pub mod bobomb_debugger_server {
                 "/debugger.BobombDebugger/PutBreakpoint" => {
                     #[allow(non_camel_case_types)]
                     struct PutBreakpointSvc<T: BobombDebugger>(pub Arc<T>);
-                    impl<
-                        T: BobombDebugger,
-                    > tonic::server::UnaryService<super::PutBreakpointRequest>
-                    for PutBreakpointSvc<T> {
+                    impl<T: BobombDebugger> tonic::server::UnaryService<super::PutBreakpointRequest>
+                        for PutBreakpointSvc<T>
+                    {
                         type Response = super::BreakpointReply;
-                        type Future = BoxFuture<
-                            tonic::Response<Self::Response>,
-                            tonic::Status,
-                        >;
+                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
                         fn call(
                             &mut self,
                             request: tonic::Request<super::PutBreakpointRequest>,
@@ -851,23 +761,19 @@ pub mod bobomb_debugger_server {
                 "/debugger.BobombDebugger/DeleteBreakpoint" => {
                     #[allow(non_camel_case_types)]
                     struct DeleteBreakpointSvc<T: BobombDebugger>(pub Arc<T>);
-                    impl<
-                        T: BobombDebugger,
-                    > tonic::server::UnaryService<super::DeleteBreakpointRequest>
-                    for DeleteBreakpointSvc<T> {
+                    impl<T: BobombDebugger>
+                        tonic::server::UnaryService<super::DeleteBreakpointRequest>
+                        for DeleteBreakpointSvc<T>
+                    {
                         type Response = super::BreakpointReply;
-                        type Future = BoxFuture<
-                            tonic::Response<Self::Response>,
-                            tonic::Status,
-                        >;
+                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
                         fn call(
                             &mut self,
                             request: tonic::Request<super::DeleteBreakpointRequest>,
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move {
-                                <T as BobombDebugger>::delete_breakpoint(&inner, request)
-                                    .await
+                                <T as BobombDebugger>::delete_breakpoint(&inner, request).await
                             };
                             Box::pin(fut)
                         }
@@ -898,15 +804,9 @@ pub mod bobomb_debugger_server {
                 "/debugger.BobombDebugger/ReadMemory" => {
                     #[allow(non_camel_case_types)]
                     struct ReadMemorySvc<T: BobombDebugger>(pub Arc<T>);
-                    impl<
-                        T: BobombDebugger,
-                    > tonic::server::UnaryService<super::ReadMemoryRequest>
-                    for ReadMemorySvc<T> {
+                    impl<T: BobombDebugger> tonic::server::UnaryService<super::ReadMemoryRequest> for ReadMemorySvc<T> {
                         type Response = super::ReadMemoryReply;
-                        type Future = BoxFuture<
-                            tonic::Response<Self::Response>,
-                            tonic::Status,
-                        >;
+                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
                         fn call(
                             &mut self,
                             request: tonic::Request<super::ReadMemoryRequest>,
@@ -944,15 +844,9 @@ pub mod bobomb_debugger_server {
                 "/debugger.BobombDebugger/ReadCPU" => {
                     #[allow(non_camel_case_types)]
                     struct ReadCPUSvc<T: BobombDebugger>(pub Arc<T>);
-                    impl<
-                        T: BobombDebugger,
-                    > tonic::server::UnaryService<super::ReadCpuRequest>
-                    for ReadCPUSvc<T> {
+                    impl<T: BobombDebugger> tonic::server::UnaryService<super::ReadCpuRequest> for ReadCPUSvc<T> {
                         type Response = super::ReadCpuReply;
-                        type Future = BoxFuture<
-                            tonic::Response<Self::Response>,
-                            tonic::Status,
-                        >;
+                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
                         fn call(
                             &mut self,
                             request: tonic::Request<super::ReadCpuRequest>,
@@ -990,23 +884,16 @@ pub mod bobomb_debugger_server {
                 "/debugger.BobombDebugger/Status" => {
                     #[allow(non_camel_case_types)]
                     struct StatusSvc<T: BobombDebugger>(pub Arc<T>);
-                    impl<
-                        T: BobombDebugger,
-                    > tonic::server::UnaryService<super::StatusRequest>
-                    for StatusSvc<T> {
+                    impl<T: BobombDebugger> tonic::server::UnaryService<super::StatusRequest> for StatusSvc<T> {
                         type Response = super::StatusReply;
-                        type Future = BoxFuture<
-                            tonic::Response<Self::Response>,
-                            tonic::Status,
-                        >;
+                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
                         fn call(
                             &mut self,
                             request: tonic::Request<super::StatusRequest>,
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
-                            let fut = async move {
-                                <T as BobombDebugger>::status(&inner, request).await
-                            };
+                            let fut =
+                                async move { <T as BobombDebugger>::status(&inner, request).await };
                             Box::pin(fut)
                         }
                     }
@@ -1033,18 +920,14 @@ pub mod bobomb_debugger_server {
                     };
                     Box::pin(fut)
                 }
-                _ => {
-                    Box::pin(async move {
-                        Ok(
-                            http::Response::builder()
-                                .status(200)
-                                .header("grpc-status", "12")
-                                .header("content-type", "application/grpc")
-                                .body(empty_body())
-                                .unwrap(),
-                        )
-                    })
-                }
+                _ => Box::pin(async move {
+                    Ok(http::Response::builder()
+                        .status(200)
+                        .header("grpc-status", "12")
+                        .header("content-type", "application/grpc")
+                        .body(empty_body())
+                        .unwrap())
+                }),
             }
         }
     }

@@ -1,7 +1,7 @@
-use crate::nes::cpu::{Cpu,AddressMode,FromAddress};
 use crate::nes::cpu::status::Flags;
+use crate::nes::cpu::{AddressMode, Cpu, FromAddress};
 
-pub struct Bit { }
+pub struct Bit {}
 
 impl FromAddress for Bit {
     fn from_address(cpu: &mut Cpu, mode: AddressMode) -> u32 {
@@ -26,11 +26,12 @@ impl FromAddress for Bit {
             cpu.SR.reset(Flags::Overflow);
         }
 
-
         match mode {
             AddressMode::ZeroPage => 3,
             AddressMode::Absolute => 4,
-            _ => { panic!("unimplemented address mode {:?} for BIT", mode); }
+            _ => {
+                panic!("unimplemented address mode {:?} for BIT", mode);
+            }
         }
     }
 }

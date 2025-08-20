@@ -1,8 +1,7 @@
-
 use std::cmp::PartialEq;
 use std::ops::BitAnd;
 
-#[derive(Default,Debug)]
+#[derive(Default, Debug)]
 pub struct MaskRegister {
     pub grayscale: bool,
     pub show_left_background: bool,

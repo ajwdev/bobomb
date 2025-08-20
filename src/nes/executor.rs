@@ -8,10 +8,10 @@ use anyhow::Result;
 use futures::channel::oneshot;
 use minifb::{Key, Window, WindowOptions};
 use parking_lot::{Condvar, Mutex};
+use tracing::error;
 
 // grpc related things
 use tonic;
-// use tower::{ServiceBuilder, ServiceExt, Service};
 use tower_http::trace::TraceLayer;
 
 use crate::nes::debugger::Breakpoints;
@@ -114,7 +114,7 @@ impl ExecutorContext {
     pub fn publish_stop(&self, pc: u16) {
         for s in self.events.lock().drain(0..) {
             if let Err(why) = s.send(pc) {
-                eprintln!("subscription error: {:?}", why);
+                error!("subscription error: {:?}", why);
             }
         }
     }
@@ -218,7 +218,8 @@ impl Executor {
         });
 
         // Limit to max ~60 fps update rate
-        // self.window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
+        self.window
+            .limit_update_rate(Some(std::time::Duration::from_micros(16600)));
 
         let mut last_pc: u16 = self.nes.lock().cpu.PC;
 

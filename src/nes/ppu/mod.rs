@@ -1,8 +1,5 @@
-
 use crate::nes::cpu::Interrupt;
 use std::cell::Cell;
-
-
 
 // TODO This file is a mess. We need to heavily refactor after we're
 // confident about the implementation
@@ -107,7 +104,6 @@ pub struct Ppu {
     sprite_overflow: bool,
 
     // frame_is_even: bool,
-
     pub cycle: i64,
     pub scanline: i64,
     pub frames: usize,
@@ -171,7 +167,7 @@ impl Ppu {
             interrupt: None,
         };
 
-        if self.scanline >= -1 && self.scanline < 240  {
+        if self.scanline >= -1 && self.scanline < 240 {
             if self.scanline == 0 && self.cycle == 0 {
                 // skip cycle
                 self.cycle = 1;
@@ -197,9 +193,7 @@ impl Ppu {
             }
 
             if self.cycle == 338 || self.cycle == 340 {
-                self.next_tile_id = self.ppu_read_at(
-                    0x2000 | self.addr_v & 0x0fff
-                );
+                self.next_tile_id = self.ppu_read_at(0x2000 | self.addr_v & 0x0fff);
             }
 
             if self.scanline == -1 && self.cycle >= 280 && self.cycle < 305 {
@@ -240,7 +234,6 @@ impl Ppu {
 
         result
 
-
         // Draw some pixels
         // if self.rendering_enabled() {
         //     self.render();
@@ -266,7 +259,6 @@ impl Ppu {
         //         _ => {} // Nothing to do
         //     }
         // }
-
     }
 
     fn copy_scroll_x(&mut self) {
@@ -331,24 +323,32 @@ impl Ppu {
         }
 
         let c = self.ppu_read_at(0x3f00 + ((palette as u16) << 2) + (pixel as u16)) & 0x3f;
-        let i = (256 * self.scanline) + self.cycle-1;
+        let i = (256 * self.scanline) + self.cycle - 1;
         // dbg!(self.scanline, self.cycle-1);
         self.back[i as usize] = COLORS[c as usize];
     }
 
-	#[inline]
+    #[inline]
     fn get_fine_y(&self) -> u16 {
-		(self.addr_v >> 12) & 0b111
-	}
+        (self.addr_v >> 12) & 0b111
+    }
 
     fn load_background_shifters(&mut self) {
         self.pattern_lo = (self.pattern_lo & 0xff00) | self.next_tile_lsb as u16;
         self.pattern_hi = (self.pattern_hi & 0xff00) | self.next_tile_msb as u16;
 
-        self.attrib_lo = (self.attrib_lo & 0xff00) |
-            if self.next_tile_attrib & 0b01 > 0 { 0xff } else { 0x00 };
-        self.attrib_hi = (self.attrib_hi & 0xff00) |
-            if self.next_tile_attrib & 0b10 > 0 { 0xff } else { 0x00 };
+        self.attrib_lo = (self.attrib_lo & 0xff00)
+            | if self.next_tile_attrib & 0b01 > 0 {
+                0xff
+            } else {
+                0x00
+            };
+        self.attrib_hi = (self.attrib_hi & 0xff00)
+            | if self.next_tile_attrib & 0b10 > 0 {
+                0xff
+            } else {
+                0x00
+            };
     }
 
     fn fetch(&mut self) {
@@ -363,35 +363,31 @@ impl Ppu {
                 // fetch name table
                 self.load_background_shifters();
 
-                self.next_tile_id = self.ppu_read_at(
-                     0x2000 | (self.addr_v & 0x0FFF)
-                );
+                self.next_tile_id = self.ppu_read_at(0x2000 | (self.addr_v & 0x0FFF));
             }
             2 => {
                 // fetch attribute table
-                let address = 0x23C0 |
-                    (self.addr_v & 0x0C00) |
-                    ((self.addr_v >> 4) & 0x38) |
-                    ((self.addr_v >> 2) & 0x07);
+                let address = 0x23C0
+                    | (self.addr_v & 0x0C00)
+                    | ((self.addr_v >> 4) & 0x38)
+                    | ((self.addr_v >> 2) & 0x07);
 
                 let shift = ((self.addr_v >> 4) & 4) | (self.addr_v & 2);
                 self.next_tile_attrib = ((self.ppu_read_at(address) >> shift) & 3) << 2;
             }
             4 => {
                 // fetch low tile
-				let address: u16 =
-                    self.control.background_address.to_u16() +
-                    (self.next_tile_id as u16 * 16) +
-                    self.get_fine_y();
-				self.next_tile_lsb = self.ppu_read_at(address);
+                let address: u16 = self.control.background_address.to_u16()
+                    + (self.next_tile_id as u16 * 16)
+                    + self.get_fine_y();
+                self.next_tile_lsb = self.ppu_read_at(address);
             }
             6 => {
                 // fetch high tile
-				let address: u16 =
-                    self.control.background_address.to_u16() +
-                    (self.next_tile_id as u16 * 16) +
-                    self.get_fine_y();
-				self.next_tile_msb = self.ppu_read_at(address + 8);
+                let address: u16 = self.control.background_address.to_u16()
+                    + (self.next_tile_id as u16 * 16)
+                    + self.get_fine_y();
+                self.next_tile_msb = self.ppu_read_at(address + 8);
             }
             7 => {
                 self.increment_scroll_x();
@@ -406,9 +402,7 @@ impl Ppu {
 
         match idx {
             // Pattern tables
-            0x0..=0x1fff => {
-                self.vram[idx]
-            }
+            0x0..=0x1fff => self.vram[idx],
             // name tables
             0x2000..=0x3eff => {
                 // TODO Does mirroring matter for us?
@@ -419,7 +413,7 @@ impl Ppu {
                 let i = 0x3f00 + (idx % 8);
                 self.vram[i]
             }
-            _ => panic!("ppu read not implemented yet. access at {:#x}", idx)
+            _ => panic!("ppu read not implemented yet. access at {:#x}", idx),
         }
     }
 

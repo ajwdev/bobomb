@@ -1,6 +1,6 @@
-use crate::nes::cpu::{Cpu,FromImplied};
+use crate::nes::cpu::{Cpu, FromImplied};
 
-pub struct Inx { }
+pub struct Inx {}
 
 impl FromImplied for Inx {
     fn from_implied(cpu: &mut Cpu) -> u32 {
@@ -16,9 +16,9 @@ impl FromImplied for Inx {
 
 #[cfg(test)]
 mod test {
+    use crate::nes::cpu::status::Flags;
     use crate::nes::cpu::test::*;
     use crate::nes::cpu::Registers;
-    use crate::nes::cpu::status::Flags;
 
     #[test]
     fn test_inx() {
@@ -45,5 +45,3 @@ mod test {
         assert_status_set!(cpu, Flags::Negative);
     }
 }
-
-
