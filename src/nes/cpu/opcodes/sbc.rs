@@ -1,31 +1,38 @@
-use crate::nes::cpu::{Cpu,AddressMode,FromAddress,FromImmediate};
 use crate::nes::cpu::status::Flags;
+use crate::nes::cpu::{AddressMode, Cpu, FromAddress, FromImmediate};
 
-
-pub struct Sbc { }
+pub struct Sbc {}
 
 impl Sbc {
     fn subtract_with_carry(cpu: &mut Cpu, word: u8) {
         // We ignore the Decimal status register because on the NES
         // it is unused. Consider adding support in the future.
-        let tmp = word.wrapping_sub(cpu.SR.is_set(Flags::Carry) as u8);
-        let (result, overflow) = cpu.AC.overflowing_add(tmp);
 
-        cpu.zero_and_negative_status(result);
+        // SBC formula: A = A - M - (1 - C)
+        // This is equivalent to: A = A + ~M + C
+        let complement = !word;
+        let carry = cpu.SR.is_set(Flags::Carry) as u16;
 
-        if overflow {
+        let result = (cpu.AC as u16) + (complement as u16) + carry;
+        let result_byte = result as u8;
+
+        cpu.zero_and_negative_status(result_byte);
+
+        // Carry is set if no borrow occurred (result >= 0x100)
+        if result > 0xFF {
             cpu.SR.set(Flags::Carry);
         } else {
             cpu.SR.reset(Flags::Carry);
         }
 
-        if (word >> 7) != (result >> 7) {
+        // Overflow occurs when operands have same sign but result has different sign
+        if (cpu.AC ^ result_byte) & (complement ^ result_byte) & 0x80 != 0 {
             cpu.SR.set(Flags::Overflow);
         } else {
             cpu.SR.reset(Flags::Overflow);
         }
 
-        cpu.AC = result;
+        cpu.AC = result_byte;
     }
 }
 
@@ -47,11 +54,15 @@ impl FromAddress for Sbc {
 
         match mode {
             AddressMode::ZeroPage => 3,
+            AddressMode::ZeroPageX => 4,
             AddressMode::Absolute => 4,
-            AddressMode::AbsoluteX => { 4 + (extra_cycles as u32) },
-            AddressMode::AbsoluteY => { 4 + (extra_cycles as u32) },
-            AddressMode::IndirectY => { 5 + (extra_cycles as u32) },
-            _ => { panic!("unimplemented address mode {:?} for SBC", mode); }
+            AddressMode::AbsoluteX => 4 + (extra_cycles as u32),
+            AddressMode::AbsoluteY => 4 + (extra_cycles as u32),
+            AddressMode::IndirectX => 6,
+            AddressMode::IndirectY => 5 + (extra_cycles as u32),
+            _ => {
+                panic!("unimplemented address mode {:?} for SBC", mode);
+            }
         }
     }
 }

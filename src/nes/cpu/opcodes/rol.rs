@@ -1,7 +1,7 @@
-use crate::nes::cpu::{Cpu,FromAddress,FromAccumulator,AddressMode};
 use crate::nes::cpu::status::Flags;
+use crate::nes::cpu::{AddressMode, Cpu, FromAccumulator, FromAddress};
 
-pub struct Rol { }
+pub struct Rol {}
 
 impl Rol {
     #[inline]
@@ -38,7 +38,9 @@ impl FromAddress for Rol {
 
         match mode {
             AddressMode::ZeroPage => 5,
-            _ => { panic!("unimplemented address mode {:?} for ROL", mode); }
+            _ => {
+                panic!("unimplemented address mode {:?} for ROL", mode);
+            }
         }
     }
 }
@@ -46,9 +48,9 @@ impl FromAddress for Rol {
 impl FromAccumulator for Rol {
     fn from_accumulator(cpu: &mut Cpu) -> u32 {
         let word = cpu.AC;
-        let _result = Self::rotate_one_bit_left(cpu, word);
+        let result = Self::rotate_one_bit_left(cpu, word);
 
-        cpu.AC = word;
+        cpu.AC = result;
 
         2
     }
@@ -56,13 +58,13 @@ impl FromAccumulator for Rol {
 
 #[cfg(test)]
 mod test {
+    use crate::nes::cpu::status::Flags;
     use crate::nes::cpu::test::*;
     use crate::nes::cpu::Registers;
-    use crate::nes::cpu::status::Flags;
 
     #[test]
     fn test_eor() {
-        let mut cpu = mock_cpu(&[0x66,0xFF]);
+        let mut cpu = mock_cpu(&[0x66, 0xFF]);
 
         cpu.write_at(0x00FF, 0b10000000);
         cpu.SR.set(Flags::Carry);
@@ -76,7 +78,6 @@ mod test {
         assert_status_reset!(cpu, Flags::Zero);
         assert_status_set!(cpu, Flags::Negative);
 
-
         cpu.rewind();
         cpu.write_at(0x00FF, 0b10000001);
         cpu.SR.reset(Flags::Carry);
@@ -89,7 +90,6 @@ mod test {
         assert_status_set!(cpu, Flags::Carry);
         assert_status_reset!(cpu, Flags::Zero);
         assert_status_reset!(cpu, Flags::Negative);
-
 
         cpu.rewind();
         cpu.write_at(0x00FF, 0b00000001);

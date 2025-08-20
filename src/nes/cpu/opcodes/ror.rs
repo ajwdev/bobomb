@@ -1,7 +1,7 @@
-use crate::nes::cpu::{Cpu,FromAddress,FromAccumulator,AddressMode};
 use crate::nes::cpu::status::Flags;
+use crate::nes::cpu::{AddressMode, Cpu, FromAccumulator, FromAddress};
 
-pub struct Ror { }
+pub struct Ror {}
 
 impl Ror {
     #[inline]
@@ -39,9 +39,11 @@ impl FromAddress for Ror {
 
         match mode {
             AddressMode::ZeroPage => 5,
-            AddressMode::Absolute =>  6,
-            AddressMode::AbsoluteX => { 4 + (extra_cycles as u32) },
-            _ => { panic!("unimplemented address mode {:?} for ROR", mode); }
+            AddressMode::Absolute => 6,
+            AddressMode::AbsoluteX => 7,
+            _ => {
+                panic!("unimplemented address mode {:?} for ROR", mode);
+            }
         }
     }
 }
@@ -58,13 +60,13 @@ impl FromAccumulator for Ror {
 
 #[cfg(test)]
 mod test {
+    use crate::nes::cpu::status::Flags;
     use crate::nes::cpu::test::*;
     use crate::nes::cpu::Registers;
-    use crate::nes::cpu::status::Flags;
 
     #[test]
     fn test_eor() {
-        let mut cpu = mock_cpu(&[0x66,0xFF]);
+        let mut cpu = mock_cpu(&[0x66, 0xFF]);
 
         cpu.write_at(0x00FF, 0b10000000);
         cpu.SR.set(Flags::Carry);
@@ -78,7 +80,6 @@ mod test {
         assert_status_reset!(cpu, Flags::Zero);
         assert_status_set!(cpu, Flags::Negative);
 
-
         cpu.rewind();
         cpu.write_at(0x00FF, 0b10000001);
         cpu.SR.reset(Flags::Carry);
@@ -91,7 +92,6 @@ mod test {
         assert_status_set!(cpu, Flags::Carry);
         assert_status_reset!(cpu, Flags::Zero);
         assert_status_reset!(cpu, Flags::Negative);
-
 
         cpu.rewind();
         cpu.write_at(0x00FF, 0b00000001);
