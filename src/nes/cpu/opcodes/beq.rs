@@ -1,12 +1,12 @@
-use crate::nes::cpu::{Cpu,Relative};
-use crate::nes::cpu::status::Flags;
 use super::branch::Branch;
+use crate::nes::cpu::status::Flags;
+use crate::nes::cpu::{Cpu, FromRelative};
 
-pub struct Beq { }
+pub struct Beq {}
 
-impl Relative for Beq {
-    fn relative(cpu: &mut Cpu) -> usize {
-        Branch::branch_on_true(cpu, |c| c.SR.is_set(Flags::Zero)) as usize
+impl FromRelative for Beq {
+    fn from_relative(cpu: &mut Cpu) -> u32 {
+        Branch::branch_on_true(cpu, |c| c.SR.is_set(Flags::Zero))
     }
 }
 

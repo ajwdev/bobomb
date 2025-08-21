@@ -1,7 +1,6 @@
-use crate::nes::cpu::{Cpu,FromAddress,AddressMode};
+use crate::nes::cpu::{AddressMode, Cpu, FromAddress};
 
-
-pub struct Tsx { }
+pub struct Tsx {}
 
 impl FromAddress for Tsx {
     fn from_address(cpu: &mut Cpu, mode: AddressMode) -> u32 {
@@ -11,15 +10,17 @@ impl FromAddress for Tsx {
         match mode {
             AddressMode::Implied => 2,
             // TODO Make a macro for this
-            _ => { panic!("unimplemented address mode {:?} for TSX", mode); }
+            _ => {
+                panic!("unimplemented address mode {:?} for TSX", mode);
+            }
         }
     }
 }
 
 #[cfg(test)]
 mod test {
-    use crate::nes::cpu::test::*;
     use crate::nes::cpu::status::Flags;
+    use crate::nes::cpu::test::*;
 
     #[test]
     fn test_tsx() {
@@ -42,7 +43,10 @@ mod test {
 
         cpu.step(None).unwrap();
         assert!(cpu.X == cpu.SP, "expected {:#x}, got {:#x}", cpu.SP, cpu.X);
-        assert!(cpu.SR.is_set(Flags::Zero), "expected zero flag to be set but is clear")
+        assert!(
+            cpu.SR.is_set(Flags::Zero),
+            "expected zero flag to be set but is clear"
+        )
     }
 
     #[test]
@@ -56,6 +60,9 @@ mod test {
 
         cpu.step(None).unwrap();
         assert!(cpu.X == cpu.SP, "expected {:#x}, got {:#x}", cpu.SP, cpu.X);
-        assert!(cpu.SR.is_set(Flags::Negative), "expected negative flag to be set but is clear")
+        assert!(
+            cpu.SR.is_set(Flags::Negative),
+            "expected negative flag to be set but is clear"
+        )
     }
 }

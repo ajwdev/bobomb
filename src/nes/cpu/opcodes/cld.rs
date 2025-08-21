@@ -1,32 +1,35 @@
-use crate::nes::cpu::{Cpu,Implied};
+use crate::nes::cpu::status::Flags;
+use crate::nes::cpu::{Cpu, FromImplied};
 
+pub struct Cld {}
 
-
-pub struct Cld { }
-
-impl Implied for Cld {
-    fn implied(cpu: &mut Cpu) -> usize {
-        cpu.SR.reset_decimal();
+impl FromImplied for Cld {
+    fn from_implied(cpu: &mut Cpu) -> u32 {
+        cpu.SR.reset(Flags::Decimal);
         2
     }
 }
 
 #[cfg(test)]
 mod test {
-    use crate::nes::cpu::test::*;
     use crate::nes::cpu::status::Flags;
+    use crate::nes::cpu::test::*;
 
     #[test]
     fn test_cld() {
         let mut cpu = mock_cpu(&[0xd8]);
 
-        cpu.SR.set_decimal();
-        assert!(cpu.SR.is_set(Flags::Decimal),
-                "expected true, got {:#?}",
-                cpu.SR.is_set(Flags::Decimal));
+        cpu.SR.set(Flags::Decimal);
+        assert!(
+            cpu.SR.is_set(Flags::Decimal),
+            "expected true, got {:#?}",
+            cpu.SR.is_set(Flags::Decimal)
+        );
         cpu.step(None);
-        assert!(!cpu.SR.is_set(Flags::Decimal),
-                "expected false, got {:#?}",
-                cpu.SR.is_set(Flags::Decimal));
+        assert!(
+            !cpu.SR.is_set(Flags::Decimal),
+            "expected false, got {:#?}",
+            cpu.SR.is_set(Flags::Decimal)
+        );
     }
 }

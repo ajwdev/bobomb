@@ -1,7 +1,7 @@
-use crate::nes::cpu::{Cpu,FromAddress,FromAccumulator,AddressMode};
 use crate::nes::cpu::status::Flags;
+use crate::nes::cpu::{AddressMode, Cpu, FromAccumulator, FromAddress};
 
-pub struct Asl { }
+pub struct Asl {}
 
 impl Asl {
     #[inline]
@@ -33,7 +33,12 @@ impl FromAddress for Asl {
 
         match mode {
             AddressMode::ZeroPage => 5,
-            _ => { panic!("unimplemented address mode {:?} for ASL", mode); }
+            AddressMode::ZeroPageX => 6,
+            AddressMode::Absolute => 6,
+            AddressMode::AbsoluteX => 7,
+            _ => {
+                panic!("unimplemented address mode {:?} for ASL", mode);
+            }
         }
     }
 }
@@ -71,7 +76,6 @@ impl FromAccumulator for Asl {
 //         assert_status_reset!(cpu, Flags::Zero);
 //         assert_status_set!(cpu, Flags::Negative);
 
-
 //         cpu.rewind();
 //         cpu.write_at(0x00FF, 0b10000001);
 //         cpu.SR.reset(Flags::Carry);
@@ -84,7 +88,6 @@ impl FromAccumulator for Asl {
 //         assert_status_set!(cpu, Flags::Carry);
 //         assert_status_reset!(cpu, Flags::Zero);
 //         assert_status_reset!(cpu, Flags::Negative);
-
 
 //         cpu.rewind();
 //         cpu.write_at(0x00FF, 0b00000001);
@@ -100,4 +103,3 @@ impl FromAccumulator for Asl {
 //         assert_status_reset!(cpu, Flags::Negative);
 //     }
 // }
-
