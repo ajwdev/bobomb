@@ -1,7 +1,10 @@
 use std::sync::Arc;
-use parking_lot::Mutex;
-use futures::channel::oneshot;
+
 use ctrlc;
+use futures::channel::oneshot;
+use parking_lot::Mutex;
+
+// TODO Replace this with tokio signal
 
 pub struct CtrlCHandler {
     ch: Arc<Mutex<Option<oneshot::Sender<()>>>>,
@@ -14,7 +17,7 @@ impl CtrlCHandler {
         }
     }
 
-    pub fn register(&self) -> Result<(),ctrlc::Error> {
+    pub fn register(&self) -> Result<(), ctrlc::Error> {
         let ch_cloned = self.ch.clone();
 
         ctrlc::set_handler(move || {

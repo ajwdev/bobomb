@@ -11,14 +11,30 @@
   outputs = { self, utils, nixpkgs, fenix, }: utils.lib.eachDefaultSystem (system: let 
     pkgs = nixpkgs.legacyPackages.${system};
     rust = fenix.packages.${system};
-    lib = pkgs.lib;
   in {
     devShell = pkgs.mkShell {
       buildInputs = with pkgs; [
+        (rust.complete.withComponents [
+          "cargo"
+          "clippy"
+          "rust-src"
+          "rustc"
+          "rustfmt"
+        ])
         protobuf
         llvmPackages_16.bintools clang 
-        rust.stable.rust rust-analyzer clippy rustfmt
-        pkg-config libxkbcommon
+        rust.stable.rust
+        rust-analyzer
+        # rust-analyzer-nightly
+        pkg-config libxkbcommon openssl libiconv
+      ] ++ lib.optionals stdenv.isDarwin [
+        darwin.apple_sdk.frameworks.Foundation
+        darwin.apple_sdk.frameworks.Cocoa
+        darwin.apple_sdk.frameworks.Metal
+        darwin.apple_sdk.frameworks.MetalKit
+        darwin.apple_sdk.frameworks.QuartzCore
+        darwin.apple_sdk.frameworks.Security
+        darwin.apple_sdk.frameworks.AppKit
       ];
 
       LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
