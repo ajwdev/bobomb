@@ -1,9 +1,9 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/24.05";
     utils.url = "github:numtide/flake-utils";
     fenix = {
-      url = "github:nix-community/fenix";
+      url = "github:nix-community/fenix/monthly";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
@@ -14,7 +14,7 @@
   in {
     devShell = pkgs.mkShell {
       buildInputs = with pkgs; [
-        (rust.complete.withComponents [
+        (rust.latest.withComponents [
           "cargo"
           "clippy"
           "rust-src"
@@ -23,7 +23,6 @@
         ])
         protobuf
         llvmPackages_16.bintools clang 
-        rust.stable.rust
         rust-analyzer
         # rust-analyzer-nightly
         pkg-config libxkbcommon openssl libiconv
