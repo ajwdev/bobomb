@@ -2,7 +2,7 @@
 name = "bobomb"
 version = "0.2.0"
 authors = ["Andrew Williams <williams.andrew@gmail.com>"]
-edition = "2021"
+edition = "2024"
 build = "build.rs"
 
 [dependencies]
