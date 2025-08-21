@@ -26,7 +26,15 @@
         rust.stable.rust
         rust-analyzer
         # rust-analyzer-nightly
-        pkg-config libxkbcommon
+        pkg-config libxkbcommon openssl libiconv
+      ] ++ lib.optionals stdenv.isDarwin [
+        darwin.apple_sdk.frameworks.Foundation
+        darwin.apple_sdk.frameworks.Cocoa
+        darwin.apple_sdk.frameworks.Metal
+        darwin.apple_sdk.frameworks.MetalKit
+        darwin.apple_sdk.frameworks.QuartzCore
+        darwin.apple_sdk.frameworks.Security
+        darwin.apple_sdk.frameworks.AppKit
       ];
 
       LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
