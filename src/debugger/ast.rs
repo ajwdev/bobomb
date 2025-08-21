@@ -109,7 +109,7 @@ impl fmt::Display for Expression {
         match &*self {
             Expression::Variable(s) => write!(f, "{}", &s),
             Expression::Number(n) => write!(f, "{}", n),
-            Expression::Op(ref l, op, ref r) => write!(f, "{} {} {}", l, op, r),
+            Expression::Op(l, op, r) => write!(f, "{} {} {}", l, op, r),
         }
     }
 }
@@ -125,7 +125,7 @@ impl Expression {
                 }
             }
             Expression::Number(n) => Ok(*n),
-            Expression::Op(ref lhs, op, ref rhs) => {
+            Expression::Op(lhs, op, rhs) => {
                 let a = lhs.reduce(env)?;
                 let b = rhs.reduce(env)?;
 

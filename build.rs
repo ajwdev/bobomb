@@ -1,5 +1,7 @@
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    lalrpop::process_root().unwrap();
+    lalrpop::Configuration::new()
+        .set_in_dir("src")
+        .process_dir("src")?;
 
     tonic_build::configure()
         .out_dir("src/grpc")
