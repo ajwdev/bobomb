@@ -1,15 +1,14 @@
-
 pub enum ControllerButton {
     // Responses are returned from the controller in this order
     ButtonA,
-	ButtonB,
-	ButtonSelect,
-	ButtonStart,
-	ButtonUp,
-	ButtonDown,
-	ButtonLeft,
-	ButtonRight,
-    Undefined
+    ButtonB,
+    ButtonSelect,
+    ButtonStart,
+    ButtonUp,
+    ButtonDown,
+    ButtonLeft,
+    ButtonRight,
+    Undefined,
 }
 
 pub struct Controller {
@@ -54,15 +53,33 @@ impl Controller {
     #[inline]
     fn set_button_state(&mut self, _button: ControllerButton, state: bool) {
         match self.next_button {
-            ControllerButton::ButtonA => { self.button_a = state; }
-            ControllerButton::ButtonB => { self.button_b = state; }
-            ControllerButton::ButtonUp => { self.button_up = state; }
-            ControllerButton::ButtonDown => { self.button_down = state; }
-            ControllerButton::ButtonLeft => { self.button_left = state; }
-            ControllerButton::ButtonRight => { self.button_right = state; }
-            ControllerButton::ButtonStart => { self.button_start = state; }
-            ControllerButton::ButtonSelect => { self.button_select = state; }
-            ControllerButton::Undefined => { panic!("attempted to set button Undefined"); }
+            ControllerButton::ButtonA => {
+                self.button_a = state;
+            }
+            ControllerButton::ButtonB => {
+                self.button_b = state;
+            }
+            ControllerButton::ButtonUp => {
+                self.button_up = state;
+            }
+            ControllerButton::ButtonDown => {
+                self.button_down = state;
+            }
+            ControllerButton::ButtonLeft => {
+                self.button_left = state;
+            }
+            ControllerButton::ButtonRight => {
+                self.button_right = state;
+            }
+            ControllerButton::ButtonStart => {
+                self.button_start = state;
+            }
+            ControllerButton::ButtonSelect => {
+                self.button_select = state;
+            }
+            ControllerButton::Undefined => {
+                panic!("attempted to set button Undefined");
+            }
         }
     }
 

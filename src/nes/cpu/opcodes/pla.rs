@@ -1,6 +1,6 @@
-use crate::nes::cpu::{Cpu,FromImplied};
+use crate::nes::cpu::{Cpu, FromImplied};
 
-pub struct Pla { }
+pub struct Pla {}
 
 impl FromImplied for Pla {
     fn from_implied(cpu: &mut Cpu) -> u32 {
@@ -28,4 +28,3 @@ mod test {
         assert_cpu_register!(cpu, Registers::AC, 0xAA);
     }
 }
-

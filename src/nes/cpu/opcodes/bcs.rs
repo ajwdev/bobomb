@@ -1,8 +1,8 @@
-use crate::nes::cpu::{Cpu,FromRelative};
-use crate::nes::cpu::status::Flags;
 use super::branch::Branch;
+use crate::nes::cpu::status::Flags;
+use crate::nes::cpu::{Cpu, FromRelative};
 
-pub struct Bcs { }
+pub struct Bcs {}
 
 impl FromRelative for Bcs {
     fn from_relative(cpu: &mut Cpu) -> u32 {
@@ -14,8 +14,8 @@ impl FromRelative for Bcs {
 
 #[cfg(test)]
 mod test {
-    use crate::nes::cpu::test::*;
     use crate::nes::cpu::status::Flags;
+    use crate::nes::cpu::test::*;
 
     #[test]
     fn test_beq_skip() {
@@ -51,4 +51,3 @@ mod test {
         assert!(cpu.PC == 0x7f84, "expected 0x7f82, got {:#x}", cpu.PC);
     }
 }
-

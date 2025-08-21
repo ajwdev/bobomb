@@ -1,22 +1,29 @@
-use crate::nes::cpu::{Cpu,Absolute};
 use crate::nes::address::Address;
+use crate::nes::cpu::{AddressMode, Cpu, FromAddress};
 
-pub struct Jsr { }
+pub struct Jsr {}
 
-impl Absolute for Jsr {
-    fn absolute(cpu: &mut Cpu) -> usize {
-        // https://wiki.nesdev.com/w/index.php/RTS_Trick#About_JSR_and_RTS
-        let addr = cpu.read_dword_and_increment();
-        // PC is now at the next instruction. According to the doc above we are to
-        // take this value and subtract one from it, THEN push it on the stack. On pop
-        // we then add 1 to the address. I'm not sure why we just cant push the current PC
-        // but there is probably a reason.
-        let ret = Address(cpu.PC.wrapping_sub(1));
+impl FromAddress for Jsr {
+    fn from_address(cpu: &mut Cpu, mode: AddressMode) -> u32 {
+        match mode {
+            AddressMode::Absolute => {
+                // https://wiki.nesdev.com/w/index.php/RTS_Trick#About_JSR_and_RTS
+                let addr = cpu.read_dword_and_increment();
+                // PC is now at the next instruction. According to the doc above we are to
+                // take this value and subtract one from it, THEN push it on the stack. On pop
+                // we then add 1 to the address. I'm not sure why we just cant push the current PC
+                // but there is probably a reason.
+                let ret = Address(cpu.PC.wrapping_sub(1));
 
-        cpu.push_address(ret);
-        cpu.PC = addr;
+                cpu.push_address(ret);
+                cpu.PC = addr;
 
-        6
+                6
+            }
+            _ => {
+                panic!("unimplemented address mode {:?} for JSR", mode);
+            }
+        }
     }
 }
 

@@ -1,6 +1,6 @@
-use crate::nes::cpu::{Cpu,AddressMode,FromImmediate,FromAddress};
+use crate::nes::cpu::{AddressMode, Cpu, FromAddress, FromImmediate};
 
-pub struct Lda { }
+pub struct Lda {}
 
 impl Lda {
     #[inline]
@@ -30,11 +30,13 @@ impl FromAddress for Lda {
             AddressMode::ZeroPage => 3,
             AddressMode::ZeroPageX => 4,
             AddressMode::Absolute => 4,
-            AddressMode::AbsoluteX => { 4 + (extra_cycles as u32) },
-            AddressMode::AbsoluteY => { 4 + (extra_cycles as u32) },
-            AddressMode::IndirectY => { 5 + (extra_cycles as u32) },
+            AddressMode::AbsoluteX => 4 + (extra_cycles as u32),
+            AddressMode::AbsoluteY => 4 + (extra_cycles as u32),
+            AddressMode::IndirectY => 5 + (extra_cycles as u32),
             AddressMode::IndirectX => 6,
-            _ => { panic!("unimplemented address mode {:?} for LDX", mode); }
+            _ => {
+                panic!("unimplemented address mode {:?} for LDA", mode);
+            }
         }
     }
 }

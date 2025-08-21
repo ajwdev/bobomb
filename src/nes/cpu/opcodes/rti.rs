@@ -1,7 +1,6 @@
-use crate::nes::cpu::{Cpu,FromImplied};
+use crate::nes::cpu::{Cpu, FromImplied};
 
-
-pub struct Rti { }
+pub struct Rti {}
 
 impl FromImplied for Rti {
     fn from_implied(cpu: &mut Cpu) -> u32 {
@@ -31,4 +30,3 @@ mod test {
         // assert!(cpu.PC == 0xbeef, "expected 0xbeef, got {:#x}", cpu.PC);
     }
 }
-

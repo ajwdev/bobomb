@@ -1,24 +1,22 @@
+use anyhow::Result;
 use parking_lot::Mutex;
 use std::sync::Arc;
-use anyhow::Result;
 
 #[macro_use]
 mod macros;
 
-
-
 pub mod disassemble;
 
-pub(crate) mod status;
-mod opcodes;
 mod address_modes;
+mod opcodes;
+pub(crate) mod status;
 
 pub use crate::nes::cpu::address_modes::*;
 
-pub use crate::nes::address::{Address,Addressable};
-use crate::nes::interconnect::Interconnect;
-use crate::nes::cpu::status::{Flags,StatusRegister};
+pub use crate::nes::address::{Address, Addressable};
 use crate::nes::cpu::opcodes::*;
+use crate::nes::cpu::status::{Flags, StatusRegister};
+use crate::nes::interconnect::Interconnect;
 
 // TODO Consider breaking the CPU logic out into its own private module and re-exporting it. This
 // will require adjusting the visibility on a lot of methods.
@@ -38,15 +36,17 @@ impl std::error::Error for CpuError {}
 impl std::fmt::Display for CpuError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match *self {
-            CpuError::UnknownInstruction(opc, pc) =>
-                write!(f, "unknown instruction: pc: {:#06X} opcode: {:02X}", pc, opc),
-            CpuError::BRKInstruction(pc) =>
-                write!(f, "BRK instruction reached: pc: {:#06X}", pc),
+            CpuError::UnknownInstruction(opc, pc) => write!(
+                f,
+                "unknown instruction: pc: {:#06X} opcode: {:02X}",
+                pc, opc
+            ),
+            CpuError::BRKInstruction(pc) => write!(f, "BRK instruction reached: pc: {:#06X}", pc),
         }
     }
 }
 
-#[derive(Debug,Clone,Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum Interrupt {
     Nmi,
     Irq,
@@ -66,18 +66,17 @@ pub enum Registers {
 pub struct Cpu {
     pub interconnect: Arc<Mutex<Interconnect>>,
 
-    pub PC: u16, // Program counter
-    pub X: u8, // General purpose register
-    pub Y: u8, // General purpose register
-    pub AC: u8, // Accumlator register
-    pub SP: u8, // Stack pointer
+    pub PC: u16,            // Program counter
+    pub X: u8,              // General purpose register
+    pub Y: u8,              // General purpose register
+    pub AC: u8,             // Accumlator register
+    pub SP: u8,             // Stack pointer
     pub SR: StatusRegister, // Status register
 
     cycles: u32,
 
     stack_depth: i16,
     last_pc: u16,
-
 }
 
 impl Cpu {
@@ -120,11 +119,13 @@ impl Cpu {
 
     pub fn register_value(&self, reg: Registers) -> u8 {
         match reg {
-            Registers::X => { self.X },
-            Registers::Y => { self.Y },
-            Registers::AC => { self.AC },
-            Registers::SP => { self.SP },
-            Registers::PC => { panic!("Register PC is too wide. FIX") },
+            Registers::X => self.X,
+            Registers::Y => self.Y,
+            Registers::AC => self.AC,
+            Registers::SP => self.SP,
+            Registers::PC => {
+                panic!("Register PC is too wide. FIX")
+            }
         }
     }
 
@@ -156,17 +157,17 @@ impl Cpu {
         // Set the Zero bit in the status register if the word is zero.
         // Else, reset it back to its default.
         if word == 0 {
-            self.SR.set_zero();
+            self.SR.set(Flags::Zero);
         } else {
-            self.SR.reset_zero();
+            self.SR.reset(Flags::Zero);
         }
 
         // Set the Negative bit in the status register if the word is
         // negative. Else, reset it back to its default.
         if (word as i8) < 0 {
-            self.SR.set_negative();
+            self.SR.set(Flags::Negative);
         } else {
-            self.SR.reset_negative();
+            self.SR.reset(Flags::Negative);
         }
     }
 
@@ -255,35 +256,35 @@ impl Cpu {
             AddressMode::ZeroPage => {
                 let word = self.read_word_and_increment();
                 result = Cpu::zero_page_address(word);
-            },
+            }
             AddressMode::ZeroPageX => {
                 let word = self.read_word_and_increment();
                 result = Cpu::zero_page_address(word) + self.X as u16;
-            },
+            }
             AddressMode::ZeroPageY => {
                 let word = self.read_word_and_increment();
                 result = Cpu::zero_page_address(word) + self.Y as u16;
-            },
+            }
             AddressMode::Indirect => {
                 let indirect_addr = self.read_dword_and_increment();
                 result = self.buggy_read_dword(indirect_addr);
-            },
+            }
             AddressMode::IndirectY => {
                 let indirect_addr = Cpu::zero_page_address(self.read_word_and_increment());
                 result = self.buggy_read_dword(indirect_addr) + self.Y as u16;
                 pages_differ = Cpu::page_crossed(self.PC, result);
-            },
+            }
             AddressMode::IndirectX => {
                 let indirect_addr = Cpu::zero_page_address(self.read_word_and_increment());
                 result = self.buggy_read_dword(indirect_addr + (self.X as u16));
-            },
+            }
             AddressMode::Absolute => {
                 result = self.read_dword_and_increment();
-            },
+            }
             AddressMode::AbsoluteX => {
                 result = self.read_dword_and_increment() + self.X as u16;
                 pages_differ = Cpu::page_crossed(self.PC, result);
-            },
+            }
             AddressMode::AbsoluteY => {
                 // result = self.read_dword_and_increment() + self.Y as u16;
                 let x = self.read_dword_and_increment();
@@ -292,8 +293,10 @@ impl Cpu {
                 result = x.wrapping_add(self.Y as u16);
 
                 pages_differ = Cpu::page_crossed(self.PC, result);
-            },
-            _ => { panic!("unimplemented {:?} for translate_address", mode); }
+            }
+            _ => {
+                panic!("unimplemented {:?} for translate_address", mode);
+            }
         }
 
         (Address(result), pages_differ)
@@ -348,10 +351,8 @@ impl Cpu {
 
             if interconnect.dma_in_progress {
                 let next_byte = self.read_at(
-                    Address::new(
-                        interconnect.dma_high_byte,
-                        interconnect.dma_write_iteration
-                    ).to_u16()
+                    Address::new(interconnect.dma_high_byte, interconnect.dma_write_iteration)
+                        .to_u16(),
                 );
                 interconnect.ppu.write_dma(next_byte);
 
@@ -360,7 +361,7 @@ impl Cpu {
                 if interconnect.dma_write_iteration == 255 {
                     interconnect.dma_in_progress = false;
                     interconnect.dma_write_iteration = 0;
-                    return Ok(3);   // This equal a total of 513 cycles per DMA
+                    return Ok(3); // This equal a total of 513 cycles per DMA
                 } else {
                     return Ok(2);
                 }
@@ -391,362 +392,157 @@ impl Cpu {
         //     &[self.read_at(self.PC),self.read_at(self.PC+1)]
         // ));
 
-
         // TODO How does this perform? Look into an array of opcodes like in the disassembler
         burned_cycles += match instr {
-            0x06 => {
-                Asl::from_address(self, AddressMode::ZeroPage)
-            }
-            0x0a => {
-                Asl::from_accumulator(self)
-            }
-            0x08 => {
-                Php::from_address(self, AddressMode::Implied)
-            }
-            0x28 => {
-                Plp::from_address(self, AddressMode::Implied)
-            }
-            0x09 => {
-                Ora::from_immediate(self)
-            }
-            0x10 => {
-                Bpl::relative(self) as u32
-            }
-            0xf0 => {
-                Beq::relative(self) as u32
-            }
-            0xd0 => {
-                Bne::relative(self) as u32
-            }
-            0xb0 => {
-                Bcs::from_relative(self)
-            }
-            0x30 => {
-                Bmi::from_relative(self)
-            }
-            0x50 => {
-                Bvc::relative(self) as u32
-            }
-            0x70 => {
-                Bvs::relative(self) as u32
-            }
-            0x90 => {
-                Bcc::from_relative(self)
-            }
-            0xc5 => {
-                Cmp::from_address(self, AddressMode::ZeroPage)
-            }
-            0xc9 => {
-                Cmp::immediate(self) as u32
-            }
-            0xd9 => {
-                Cmp::from_address(self, AddressMode::AbsoluteY)
-            }
-            0xcd => {
-                Cmp::from_address(self, AddressMode::Absolute)
-            }
-            0xdd => {
-                Cmp::from_address(self, AddressMode::AbsoluteX)
-            }
-            0x20 => {
-                Jsr::absolute(self) as u32
-            }
-            0x24 => {
-                Bit::from_address(self, AddressMode::ZeroPage)
-            }
-            0x2c => {
-                Bit::from_address(self, AddressMode::Absolute)
-            }
-            0x40 => {
-                Rti::from_implied(self)
-            }
-            0x60 => {
-                Rts::from_implied(self)
-            }
-            0x4a => {
-                Lsr::accumulator(self) as u32
-            }
-            0x46 => {
-                Lsr::from_address(self, AddressMode::ZeroPage)
-            }
-            0x4c => {
-                Jmp::from_address(self, AddressMode::Absolute)
-            }
-            0x6c => {
-                Jmp::from_address(self, AddressMode::Indirect)
-            }
-            0x48 => {
-                Pha::implied(self) as u32
-            }
-            0x45 => {
-                Eor::from_address(self, AddressMode::ZeroPage)
-            }
-            0x49 => {
-                Eor::from_immediate(self)
-            }
-            0x4d => {
-                Eor::from_address(self, AddressMode::Absolute)
-            }
-            0x68 => {
-                Pla::from_implied(self)
-            }
-            0x25 => {
-                And::from_address(self, AddressMode::ZeroPage)
-            }
-            0x35 => {
-                And::from_address(self, AddressMode::ZeroPageX)
-            }
-            0x39 => {
-                And::from_address(self, AddressMode::AbsoluteY)
-            }
-            0x3d => {
-                And::from_address(self, AddressMode::AbsoluteX)
-            }
-            0x05 => {
-                Ora::from_address(self, AddressMode::ZeroPage)
-            }
-            0x0d => {
-                Ora::from_address(self, AddressMode::Absolute)
-            }
-            0x11 => {
-                Ora::from_address(self, AddressMode::IndirectY)
-            }
-            0x19 => {
-                Ora::from_address(self, AddressMode::AbsoluteY)
-            }
-            0x29 => {
-                And::from_immediate(self)
-            }
-            0x6d => {
-                Adc::from_address(self, AddressMode::Absolute)
-            }
-            0x65 => {
-                Adc::from_address(self, AddressMode::ZeroPage)
-            }
-            0x69 => {
-                Adc::from_immediate(self)
-            }
-            0x79 => {
-                Adc::from_address(self, AddressMode::AbsoluteY)
-            }
-            0x7d => {
-                Adc::from_address(self, AddressMode::AbsoluteX)
-            }
-            0xba => {
-                Tsx::from_address(self, AddressMode::Implied)
-            }
-            0xe0 => {
-                Cpx::from_immediate(self)
-            }
-            0xe5 => {
-                Sbc::from_address(self, AddressMode::ZeroPage)
-            }
-            0xe9 => {
-                Sbc::from_immediate(self)
-            }
+            0x06 => Asl::from_address(self, AddressMode::ZeroPage),
+            0x0a => Asl::from_accumulator(self),
+            0x0e => Asl::from_address(self, AddressMode::Absolute),
+            0x16 => Asl::from_address(self, AddressMode::ZeroPageX),
+            0x1e => Asl::from_address(self, AddressMode::AbsoluteX),
+            0x08 => Php::from_implied(self),
+            0x28 => Plp::from_implied(self),
+            0x09 => Ora::from_immediate(self),
+            0x10 => Bpl::from_relative(self),
+            0xf0 => Beq::from_relative(self),
+            0xd0 => Bne::from_relative(self),
+            0xb0 => Bcs::from_relative(self),
+            0x30 => Bmi::from_relative(self),
+            0x50 => Bvc::from_relative(self),
+            0x70 => Bvs::from_relative(self),
+            0x90 => Bcc::from_relative(self),
+            0xc1 => Cmp::from_address(self, AddressMode::IndirectX),
+            0xc5 => Cmp::from_address(self, AddressMode::ZeroPage),
+            0xc9 => Cmp::from_immediate(self),
+            0xd1 => Cmp::from_address(self, AddressMode::IndirectY),
+            0xd5 => Cmp::from_address(self, AddressMode::ZeroPageX),
+            0xd9 => Cmp::from_address(self, AddressMode::AbsoluteY),
+            0xcd => Cmp::from_address(self, AddressMode::Absolute),
+            0xdd => Cmp::from_address(self, AddressMode::AbsoluteX),
+            0x20 => Jsr::from_address(self, AddressMode::Absolute),
+            0x24 => Bit::from_address(self, AddressMode::ZeroPage),
+            0x2c => Bit::from_address(self, AddressMode::Absolute),
+            0x40 => Rti::from_implied(self),
+            0x60 => Rts::from_implied(self),
+            0x4a => Lsr::from_accumulator(self),
+            0x46 => Lsr::from_address(self, AddressMode::ZeroPage),
+            0x4e => Lsr::from_address(self, AddressMode::Absolute),
+            0x56 => Lsr::from_address(self, AddressMode::ZeroPageX),
+            0x5e => Lsr::from_address(self, AddressMode::AbsoluteX),
+            0x4c => Jmp::from_address(self, AddressMode::Absolute),
+            0x6c => Jmp::from_address(self, AddressMode::Indirect),
+            0x48 => Pha::from_implied(self),
+            0x41 => Eor::from_address(self, AddressMode::IndirectX),
+            0x45 => Eor::from_address(self, AddressMode::ZeroPage),
+            0x49 => Eor::from_immediate(self),
+            0x4d => Eor::from_address(self, AddressMode::Absolute),
+            0x51 => Eor::from_address(self, AddressMode::IndirectY),
+            0x55 => Eor::from_address(self, AddressMode::ZeroPageX),
+            0x59 => Eor::from_address(self, AddressMode::AbsoluteY),
+            0x5d => Eor::from_address(self, AddressMode::AbsoluteX),
+            0x68 => Pla::from_implied(self),
+            0x21 => And::from_address(self, AddressMode::IndirectX),
+            0x25 => And::from_address(self, AddressMode::ZeroPage),
+            0x2d => And::from_address(self, AddressMode::Absolute),
+            0x31 => And::from_address(self, AddressMode::IndirectY),
+            0x35 => And::from_address(self, AddressMode::ZeroPageX),
+            0x39 => And::from_address(self, AddressMode::AbsoluteY),
+            0x3d => And::from_address(self, AddressMode::AbsoluteX),
+            0x01 => Ora::from_address(self, AddressMode::IndirectX),
+            0x05 => Ora::from_address(self, AddressMode::ZeroPage),
+            0x0d => Ora::from_address(self, AddressMode::Absolute),
+            0x11 => Ora::from_address(self, AddressMode::IndirectY),
+            0x15 => Ora::from_address(self, AddressMode::ZeroPageX),
+            0x19 => Ora::from_address(self, AddressMode::AbsoluteY),
+            0x1d => Ora::from_address(self, AddressMode::AbsoluteX),
+            0x29 => And::from_immediate(self),
+            0x6d => Adc::from_address(self, AddressMode::Absolute),
+            0x65 => Adc::from_address(self, AddressMode::ZeroPage),
+            0x69 => Adc::from_immediate(self),
+            0x61 => Adc::from_address(self, AddressMode::IndirectX),
+            0x71 => Adc::from_address(self, AddressMode::IndirectY),
+            0x75 => Adc::from_address(self, AddressMode::ZeroPageX),
+            0x79 => Adc::from_address(self, AddressMode::AbsoluteY),
+            0x7d => Adc::from_address(self, AddressMode::AbsoluteX),
+            0xba => Tsx::from_address(self, AddressMode::Implied),
+            0xe0 => Cpx::from_immediate(self),
+            0xe4 => Cpx::from_address(self, AddressMode::ZeroPage),
+            0xec => Cpx::from_address(self, AddressMode::Absolute),
+            0xe1 => Sbc::from_address(self, AddressMode::IndirectX),
+            0xe5 => Sbc::from_address(self, AddressMode::ZeroPage),
+            0xe9 => Sbc::from_immediate(self),
+            0xf1 => Sbc::from_address(self, AddressMode::IndirectY),
+            0xf5 => Sbc::from_address(self, AddressMode::ZeroPageX),
             0xea => {
                 // This is a nop
                 2
             }
-            0xed => {
-                Sbc::from_address(self, AddressMode::Absolute)
-            }
-            0xf9 => {
-                Sbc::from_address(self, AddressMode::AbsoluteY)
-            }
-            0xfd => {
-                Sbc::from_address(self, AddressMode::AbsoluteX)
-            }
-            0x66 => {
-                Ror::from_address(self, AddressMode::ZeroPage)
-            }
-            0x7e => {
-                Ror::from_address(self, AddressMode::AbsoluteX)
-            }
-            0x6a => {
-                Ror::from_accumulator(self)
-            }
-            0x6e => {
-                Ror::from_address(self, AddressMode::Absolute)
-            }
-            0x2a => {
-                Rol::from_accumulator(self)
-            }
-            0x26 => {
-                Rol::from_address(self, AddressMode::ZeroPage)
-            }
-            0x38 => {
-                Sec::from_implied(self)
-            }
-            0xf8 => {
-                Sed::implied(self) as u32
-            }
-            0x78 => {
-                Sei::implied(self) as u32
-            }
-            0x18 => {
-                Clc::implied(self) as u32
-            }
-            0xb8 => {
-                Clv::implied(self) as u32
-            }
-            0xd8 => {
-                Cld::implied(self) as u32
-            }
-            0xaa => {
-                Tax::from_implied(self)
-            }
-            0xa8 => {
-                Tay::from_implied(self)
-            }
-            0x8a => {
-                Txa::implied(self) as u32
-            }
-            0x98 => {
-                Tya::implied(self) as u32
-            }
-            0x9a => {
-                Txs::implied(self) as u32
-            }
-            0xa0 => {
-                Ldy::from_immediate(self)
-            }
-            0xa4 => {
-                Ldy::from_address(self, AddressMode::ZeroPage)
-            }
-            0xac => {
-                Ldy::from_address(self, AddressMode::Absolute)
-            }
-            0xb4 => {
-                Ldy::from_address(self, AddressMode::ZeroPageX)
-            }
-            0xbc => {
-                Ldy::from_address(self, AddressMode::AbsoluteX)
-            }
-            0xbe => {
-                Ldy::from_address(self, AddressMode::AbsoluteY)
-            }
-            0xa2 => {
-                Ldx::from_immediate(self)
-            }
-            0xa6 => {
-                Ldx::from_address(self, AddressMode::ZeroPage)
-            }
-            0xad => {
-                Lda::from_address(self, AddressMode::Absolute)
-            }
-            0xae => {
-                Ldx::from_address(self, AddressMode::Absolute)
-            }
-            0xa5 => {
-                Lda::from_address(self, AddressMode::ZeroPage)
-            }
-            0xb5 => {
-                Lda::from_address(self, AddressMode::ZeroPageX)
-            }
-            0xa9 => {
-                Lda::from_immediate(self)
-            }
-            0xb1 => {
-                Lda::from_address(self, AddressMode::IndirectY)
-            }
-            0xb9 => {
-                Lda::from_address(self, AddressMode::AbsoluteY)
-            }
-            0xbd => {
-                Lda::from_address(self, AddressMode::AbsoluteX)
-            }
-            0xa1 => {
-                Lda::from_address(self, AddressMode::IndirectX)
-            }
-            0x84 => {
-                Sty::from_address(self, AddressMode::ZeroPage)
-            }
-            0x94 => {
-                Sty::from_address(self, AddressMode::ZeroPageX)
-            }
-            0x8c => {
-                Sty::from_address(self, AddressMode::Absolute)
-            }
-            0x85 => {
-                Sta::from_address(self, AddressMode::ZeroPage)
-            }
-            0x86 => {
-                Stx::from_address(self, AddressMode::ZeroPage)
-            }
-            0x8d => {
-                Sta::from_address(self, AddressMode::Absolute)
-            }
-            0x8e => {
-                Stx::from_address(self, AddressMode::Absolute)
-            }
-            0x9d => {
-                Sta::from_address(self, AddressMode::AbsoluteX)
-            }
-            0x91 => {
-                Sta::from_address(self, AddressMode::IndirectY)
-            }
-            0x95 => {
-                Sta::from_address(self, AddressMode::ZeroPageX)
-            }
-            0x99 => {
-                Sta::from_address(self, AddressMode::AbsoluteY)
-            }
-            0xc6 => {
-                Dec::from_address(self, AddressMode::ZeroPage)
-            }
-            0xd6 => {
-                Dec::from_address(self, AddressMode::ZeroPageX)
-            }
-            0xce => {
-                Dec::from_address(self, AddressMode::Absolute)
-            }
-            0xde => {
-                Dec::from_address(self, AddressMode::AbsoluteX)
-            }
-            0xe6 => {
-                Inc::from_address(self, AddressMode::ZeroPage)
-            }
-            0xf6 => {
-                Inc::from_address(self, AddressMode::ZeroPageX)
-            }
-            0xee => {
-                Inc::from_address(self, AddressMode::Absolute)
-            }
-            0xfe => {
-                Inc::from_address(self, AddressMode::AbsoluteX)
-            }
-            0x88 => {
-                Dey::implied(self) as u32
-            }
-            0xca => {
-                Dex::from_implied(self)
-            }
-            0xc0 => {
-                Cpy::from_immediate(self)
-            }
-            0xc4 => {
-                Cpy::from_address(self, AddressMode::ZeroPage)
-            }
-            0xcc => {
-                Cpy::from_address(self, AddressMode::Absolute)
-            }
-            0xc8 => {
-                Iny::from_implied(self)
-            }
-            0xe8 => {
-                Inx::from_implied(self)
-            }
-            0x00 => {
-                // self.debug_stack();
-                // panic!("Hit a BRK instruction which is probably wrong: {:#x}, {:#x} {:#x}, PC: {:#x}",
-                //    instr,
-                //    self.read_at(self.PC),
-                //    self.read_at(self.PC + 1),
-                //    self.last_pc
-                // );
-                return Err(CpuError::BRKInstruction(self.last_pc));
-            }
+            0xed => Sbc::from_address(self, AddressMode::Absolute),
+            0xf9 => Sbc::from_address(self, AddressMode::AbsoluteY),
+            0xfd => Sbc::from_address(self, AddressMode::AbsoluteX),
+            0x66 => Ror::from_address(self, AddressMode::ZeroPage),
+            0x7e => Ror::from_address(self, AddressMode::AbsoluteX),
+            0x6a => Ror::from_accumulator(self),
+            0x6e => Ror::from_address(self, AddressMode::Absolute),
+            0x2a => Rol::from_accumulator(self),
+            0x26 => Rol::from_address(self, AddressMode::ZeroPage),
+            0x38 => Sec::from_implied(self),
+            0xf8 => Sed::from_implied(self),
+            0x78 => Sei::from_implied(self),
+            0x18 => Clc::from_implied(self),
+            0xb8 => Clv::from_implied(self),
+            0xd8 => Cld::from_implied(self),
+            0xaa => Tax::from_implied(self),
+            0xa8 => Tay::from_implied(self),
+            0x8a => Txa::from_implied(self),
+            0x98 => Tya::from_implied(self),
+            0x9a => Txs::from_implied(self),
+            0xa0 => Ldy::from_immediate(self),
+            0xa4 => Ldy::from_address(self, AddressMode::ZeroPage),
+            0xac => Ldy::from_address(self, AddressMode::Absolute),
+            0xb4 => Ldy::from_address(self, AddressMode::ZeroPageX),
+            0xbc => Ldy::from_address(self, AddressMode::AbsoluteX),
+            0xbe => Ldy::from_address(self, AddressMode::AbsoluteY),
+            0xa2 => Ldx::from_immediate(self),
+            0xa6 => Ldx::from_address(self, AddressMode::ZeroPage),
+            0xb6 => Ldx::from_address(self, AddressMode::ZeroPageY),
+            0xad => Lda::from_address(self, AddressMode::Absolute),
+            0xae => Ldx::from_address(self, AddressMode::Absolute),
+            0xa5 => Lda::from_address(self, AddressMode::ZeroPage),
+            0xb5 => Lda::from_address(self, AddressMode::ZeroPageX),
+            0xa9 => Lda::from_immediate(self),
+            0xb1 => Lda::from_address(self, AddressMode::IndirectY),
+            0xb9 => Lda::from_address(self, AddressMode::AbsoluteY),
+            0xbd => Lda::from_address(self, AddressMode::AbsoluteX),
+            0xa1 => Lda::from_address(self, AddressMode::IndirectX),
+            0x84 => Sty::from_address(self, AddressMode::ZeroPage),
+            0x94 => Sty::from_address(self, AddressMode::ZeroPageX),
+            0x8c => Sty::from_address(self, AddressMode::Absolute),
+            0x85 => Sta::from_address(self, AddressMode::ZeroPage),
+            0x86 => Stx::from_address(self, AddressMode::ZeroPage),
+            0x8d => Sta::from_address(self, AddressMode::Absolute),
+            0x8e => Stx::from_address(self, AddressMode::Absolute),
+            0x96 => Stx::from_address(self, AddressMode::ZeroPageY),
+            0x9d => Sta::from_address(self, AddressMode::AbsoluteX),
+            0x91 => Sta::from_address(self, AddressMode::IndirectY),
+            0x95 => Sta::from_address(self, AddressMode::ZeroPageX),
+            0x99 => Sta::from_address(self, AddressMode::AbsoluteY),
+            0xc6 => Dec::from_address(self, AddressMode::ZeroPage),
+            0xd6 => Dec::from_address(self, AddressMode::ZeroPageX),
+            0xce => Dec::from_address(self, AddressMode::Absolute),
+            0xde => Dec::from_address(self, AddressMode::AbsoluteX),
+            0xe6 => Inc::from_address(self, AddressMode::ZeroPage),
+            0xf6 => Inc::from_address(self, AddressMode::ZeroPageX),
+            0xee => Inc::from_address(self, AddressMode::Absolute),
+            0xfe => Inc::from_address(self, AddressMode::AbsoluteX),
+            0x88 => Dey::from_implied(self),
+            0xca => Dex::from_implied(self),
+            0xc0 => Cpy::from_immediate(self),
+            0xc4 => Cpy::from_address(self, AddressMode::ZeroPage),
+            0xcc => Cpy::from_address(self, AddressMode::Absolute),
+            0xc8 => Iny::from_implied(self),
+            0xe8 => Inx::from_implied(self),
+            0x00 => Brk::from_implied(self),
+            0x58 => Cli::from_implied(self),
             _ => {
                 // self.debug_stack();
                 // panic!("unrecognized opcode {:#04x}, {:#04x} {:#04x}, PC: {:#06x}",
@@ -759,7 +555,6 @@ impl Cpu {
             }
         };
 
-
         self.cycles += burned_cycles;
         Ok(burned_cycles)
     }
@@ -771,13 +566,12 @@ mod test {
     use std::sync::Arc;
 
     use super::Cpu;
-    use crate::nes::ppu::Ppu;
-    use crate::nes::rom::{Bank,Rom};
     use crate::nes::interconnect::Interconnect;
-
+    use crate::nes::ppu::Ppu;
+    use crate::nes::rom::{Bank, Rom};
 
     pub fn rom_with_pc_at_start(words: &[u8]) -> Vec<u8> {
-        let mut mock_rom = vec![0; 1024*32];
+        let mut mock_rom = vec![0; 1024 * 32];
         // Just set PC to the beginning of the rom
         // in each of the banks
         mock_rom[0x3ffc] = 0x00;
@@ -799,7 +593,10 @@ mod test {
                 // 16k
                 panic!("rom not large enough for double banking");
             }
-            Rom::new_double_bank(Bank::new(&interconnect[0..0x4000]), Bank::new(&interconnect[0x4000..]))
+            Rom::new_double_bank(
+                Bank::new(&interconnect[0..0x4000]),
+                Bank::new(&interconnect[0x4000..]),
+            )
         } else {
             // single banked
             Rom::new_single_bank(Bank::new(&interconnect[0..0x4000]))
@@ -844,7 +641,6 @@ mod test {
         assert!(cpu.PC == 0x8002, "expected 0x8002, got: {:#x}", cpu.PC);
         assert!(dword == 0xbeef, "expected 0xbeef, got {:#x}", dword);
     }
-
 
     #[test]
     fn test_stack() {

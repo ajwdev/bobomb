@@ -1,7 +1,7 @@
-use crate::nes::cpu::{Cpu,Registers,AddressMode,FromImmediate,FromAddress};
 use super::load::Load;
+use crate::nes::cpu::{AddressMode, Cpu, FromAddress, FromImmediate, Registers};
 
-pub struct Ldx { }
+pub struct Ldx {}
 
 impl FromImmediate for Ldx {
     fn from_immediate(cpu: &mut Cpu) -> u32 {
@@ -20,9 +20,12 @@ impl FromAddress for Ldx {
 
         match mode {
             AddressMode::ZeroPage => 3,
+            AddressMode::ZeroPageY => 4,
             AddressMode::Absolute => 4,
-            AddressMode::AbsoluteY => { 4 + (extra_cycles as u32) },
-            _ => { panic!("unimplemented address mode {:?} for LDX", mode); }
+            AddressMode::AbsoluteY => 4 + (extra_cycles as u32),
+            _ => {
+                panic!("unimplemented address mode {:?} for LDX", mode);
+            }
         }
     }
 }

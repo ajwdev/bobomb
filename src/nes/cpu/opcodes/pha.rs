@@ -1,9 +1,9 @@
-use crate::nes::cpu::{Cpu,Implied};
+use crate::nes::cpu::{Cpu, FromImplied};
 
-pub struct Pha { }
+pub struct Pha {}
 
-impl Implied for Pha {
-    fn implied(cpu: &mut Cpu) -> usize {
+impl FromImplied for Pha {
+    fn from_implied(cpu: &mut Cpu) -> u32 {
         let reg = cpu.AC;
         cpu.push_word(reg);
 

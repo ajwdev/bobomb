@@ -1,6 +1,6 @@
 use crate::nes::cpu::Cpu;
 
-pub struct Branch { }
+pub struct Branch {}
 
 impl Branch {
     pub fn branch_on_true<F: Fn(&Cpu) -> bool>(cpu: &mut Cpu, cond: F) -> u32 {
