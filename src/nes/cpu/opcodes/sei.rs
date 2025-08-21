@@ -1,20 +1,19 @@
-use crate::nes::cpu::{Cpu,Implied};
+use crate::nes::cpu::status::Flags;
+use crate::nes::cpu::{Cpu, FromImplied};
 
+pub struct Sei {}
 
-
-pub struct Sei { }
-
-impl Implied for Sei {
-    fn implied(cpu: &mut Cpu) -> usize {
-        cpu.SR.set_interrupt();
+impl FromImplied for Sei {
+    fn from_implied(cpu: &mut Cpu) -> u32 {
+        cpu.SR.set(Flags::Interrupt);
         2
     }
 }
 
 #[cfg(test)]
 mod test {
-    use crate::nes::cpu::test::*;
     use crate::nes::cpu::status::Flags;
+    use crate::nes::cpu::test::*;
 
     #[test]
     fn test_sei() {
@@ -22,8 +21,10 @@ mod test {
         cpu.SR.reset(Flags::Interrupt);
 
         cpu.step(None);
-        assert!(cpu.SR.is_set(Flags::Interrupt),
-                "expected true, got {:#?}",
-                cpu.SR.is_set(Flags::Interrupt));
+        assert!(
+            cpu.SR.is_set(Flags::Interrupt),
+            "expected true, got {:#?}",
+            cpu.SR.is_set(Flags::Interrupt)
+        );
     }
 }

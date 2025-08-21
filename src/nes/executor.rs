@@ -8,10 +8,10 @@ use anyhow::Result;
 use futures::channel::oneshot;
 use minifb::{Key, Window, WindowOptions};
 use parking_lot::{Condvar, Mutex};
+use tracing::error;
 
 // grpc related things
 use tonic;
-// use tower::{ServiceBuilder, ServiceExt, Service};
 use tower_http::trace::TraceLayer;
 
 use crate::nes::debugger::Breakpoints;
@@ -114,7 +114,7 @@ impl ExecutorContext {
     pub fn publish_stop(&self, pc: u16) {
         for s in self.events.lock().drain(0..) {
             if let Err(why) = s.send(pc) {
-                eprintln!("subscription error: {:?}", why);
+                error!("subscription error: {:?}", why);
             }
         }
     }

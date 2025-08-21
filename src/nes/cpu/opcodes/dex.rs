@@ -1,6 +1,6 @@
-use crate::nes::cpu::{Cpu,FromImplied};
+use crate::nes::cpu::{Cpu, FromImplied};
 
-pub struct Dex { }
+pub struct Dex {}
 
 impl FromImplied for Dex {
     fn from_implied(cpu: &mut Cpu) -> u32 {
@@ -18,9 +18,9 @@ impl FromImplied for Dex {
 
 #[cfg(test)]
 mod test {
+    use crate::nes::cpu::status::Flags;
     use crate::nes::cpu::test::*;
     use crate::nes::cpu::Registers;
-    use crate::nes::cpu::status::Flags;
 
     #[test]
     fn test_dex() {

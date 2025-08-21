@@ -1,16 +1,6 @@
-use crate::nes::cpu::{Cpu,Absolute,FromAddress,AddressMode};
+use crate::nes::cpu::{AddressMode, Cpu, FromAddress};
 
-pub struct Jmp { }
-
-impl Absolute for Jmp {
-    fn absolute(cpu: &mut Cpu) -> usize {
-        // DRY this up with JSR
-        let addr = cpu.read_dword_and_increment();
-        cpu.PC = addr;
-
-        3
-    }
-}
+pub struct Jmp {}
 
 impl FromAddress for Jmp {
     fn from_address(cpu: &mut Cpu, mode: AddressMode) -> u32 {
@@ -20,7 +10,9 @@ impl FromAddress for Jmp {
         match mode {
             AddressMode::Absolute => 3,
             AddressMode::Indirect => 5,
-            _ => { panic!("unimplemented address mode {:?} for JMP", mode); }
+            _ => {
+                panic!("unimplemented address mode {:?} for JMP", mode);
+            }
         }
     }
 }

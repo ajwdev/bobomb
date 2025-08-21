@@ -1,21 +1,19 @@
-use crate::nes::cpu::{Cpu,Relative};
-use crate::nes::cpu::status::Flags;
 use super::branch::Branch;
+use crate::nes::cpu::status::Flags;
+use crate::nes::cpu::{Cpu, FromRelative};
 
-pub struct Bne { }
+pub struct Bne {}
 
-impl Relative for Bne {
-    fn relative(cpu: &mut Cpu) -> usize {
-        Branch::branch_on_true(cpu, |c| c.SR.is_clear(Flags::Zero));
-
-        2
+impl FromRelative for Bne {
+    fn from_relative(cpu: &mut Cpu) -> u32 {
+        Branch::branch_on_true(cpu, |c| c.SR.is_clear(Flags::Zero))
     }
 }
 
 #[cfg(test)]
 mod test {
-    use crate::nes::cpu::test::*;
     use crate::nes::cpu::status::Flags;
+    use crate::nes::cpu::test::*;
 
     #[test]
     fn test_bne_skip() {

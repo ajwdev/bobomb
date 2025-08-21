@@ -1,12 +1,11 @@
+use std::cell::RefCell;
 
-use std::cell::{RefCell};
-
-use crate::nes::cpu;
-use crate::nes::ppu;
+use crate::nes::address::Address;
 use crate::nes::controller;
-use crate::nes::address::{Address};
-use crate::nes::rom::{Rom};
+use crate::nes::cpu;
 use crate::nes::cpu::disassemble::OPCODES;
+use crate::nes::ppu;
+use crate::nes::rom::Rom;
 
 const SYSTEM_RAM: usize = 2 * 1024;
 
@@ -24,7 +23,6 @@ pub struct Interconnect {
 
     interrupt: Option<cpu::Interrupt>,
 }
-
 
 impl Interconnect {
     pub fn new(ppu: ppu::Ppu, rom: Rom) -> Self {
@@ -86,35 +84,27 @@ impl Interconnect {
                 self.ram[addr as usize] // Includes zero page, stack, and ram
             }
             0x0800..=0x0fff => {
-                self.ram[(addr-0x0800) as usize] // Mirror 1
+                self.ram[(addr - 0x0800) as usize] // Mirror 1
             }
             0x1000..=0x17ff => {
-                self.ram[(addr-0x1000) as usize] // Mirror 2
+                self.ram[(addr - 0x1000) as usize] // Mirror 2
             }
             0x1800..=0x1fff => {
-                self.ram[(addr-0x1800) as usize] // Mirror 3
+                self.ram[(addr - 0x1800) as usize] // Mirror 3
             }
             // PPU
-            0x2002|0x2007 => {
-                self.ppu.read_at(addr)
-            }
+            0x2002 | 0x2007 => self.ppu.read_at(addr),
             // Controllers
             0x4016 => {
-                {
-                    let mut controller = self.controller1.borrow_mut();
-                    controller.read() as u8
-                }
+                let mut controller = self.controller1.borrow_mut();
+                controller.read() as u8
             }
             0x4017 => {
-                {
-                    let mut controller = self.controller2.borrow_mut();
-                    controller.read() as u8
-                }
+                let mut controller = self.controller2.borrow_mut();
+                controller.read() as u8
             }
             // ROM
-            0x8000..=0xFFFF => {
-                self.rom[addr]
-            }
+            0x8000..=0xFFFF => self.rom[addr],
             _ => {
                 panic!("unknown address {:#x}", addr);
             }
@@ -125,7 +115,7 @@ impl Interconnect {
         let end = if count >= 0 {
             start + (count as u16)
         } else {
-            let e = start+1;
+            let e = start + 1;
             start = (start + 1) - (-count as u16);
             e
         };
@@ -175,7 +165,6 @@ impl Interconnect {
                         }
                         _ => {}
                     }
-
                 }
                 None => break,
             }
@@ -193,13 +182,13 @@ impl Interconnect {
                 self.ram[addr as usize] = value;
             }
             0x0800..=0x0fff => {
-                self.ram[(addr-0x0800) as usize] = value; // Mirror 1
+                self.ram[(addr - 0x0800) as usize] = value; // Mirror 1
             }
             0x1000..=0x17ff => {
-                self.ram[(addr-0x1000) as usize] = value; // Mirror 2
+                self.ram[(addr - 0x1000) as usize] = value; // Mirror 2
             }
             0x1800..=0x1fff => {
-                self.ram[(addr-0x1800) as usize] = value; // Mirror 3
+                self.ram[(addr - 0x1800) as usize] = value; // Mirror 3
             }
             // PPU Control
             0x2000 => {
@@ -268,7 +257,7 @@ impl Interconnect {
 mod test {
     use super::Interconnect;
     use crate::nes::ppu::Ppu;
-    use crate::nes::rom::{Bank,Rom};
+    use crate::nes::rom::{Bank, Rom};
 
     #[test]
     fn test_write_word() {
@@ -325,21 +314,45 @@ mod test {
         interconnect.ram[0x008f] = 0xAA;
 
         let (result, start, count) = interconnect.read_range(0x0080, 10);
-        assert!(result.len() == 10, "expected length of 10m got {}", result.len());
-        assert!(result.iter().all(|x| *x == 0xFF), "not all elements equal 0xFF: {:?}", &result);
-        assert!(start == 0x0080, "starting address is wrong; expect 0x0080, got {}", start);
+        assert!(
+            result.len() == 10,
+            "expected length of 10m got {}",
+            result.len()
+        );
+        assert!(
+            result.iter().all(|x| *x == 0xFF),
+            "not all elements equal 0xFF: {:?}",
+            &result
+        );
+        assert!(
+            start == 0x0080,
+            "starting address is wrong; expect 0x0080, got {}",
+            start
+        );
         assert!(count == 10, "count is wrong; expect 10, got {}", count);
 
         let (result2, start2, count2) = interconnect.read_range(0x008f, -6);
-        assert!(result2.len() == 6, "expected length of 6, got {}", result2.len());
-        assert!(result2.iter().all(|x| *x == 0xAA), "not all elements equal 0xAA: {:?}", &result2);
-        assert!(start2 == 0x008a, "starting address is wrong; expect 0x008a, got {:#04x}", start2);
+        assert!(
+            result2.len() == 6,
+            "expected length of 6, got {}",
+            result2.len()
+        );
+        assert!(
+            result2.iter().all(|x| *x == 0xAA),
+            "not all elements equal 0xAA: {:?}",
+            &result2
+        );
+        assert!(
+            start2 == 0x008a,
+            "starting address is wrong; expect 0x008a, got {:#04x}",
+            start2
+        );
         assert!(count2 == 6, "count is wrong; expect 6, got {}", count2);
     }
 
     #[test]
     fn test_find_reset_vector_address() {
-        let mut mock_rom = vec![0; 1024*16];
+        let mut mock_rom = vec![0; 1024 * 16];
         mock_rom[0x3ffc] = 0xef;
         mock_rom[0x3ffd] = 0xbe;
 
@@ -347,17 +360,20 @@ mod test {
         let ppu = Ppu::new();
         let interconnect = Interconnect::new(ppu, rom);
         let result = interconnect.find_reset_vector_address();
-        assert!(result.to_u16() == 0xbeef, "expected 0xbeef, got: {:#x}", result.to_u16());
+        assert!(
+            result.to_u16() == 0xbeef,
+            "expected 0xbeef, got: {:#x}",
+            result.to_u16()
+        );
     }
 
     #[test]
     fn test_read_rom_single_bank() {
-        let mut mock_rom = vec![0; 16*1024];
+        let mut mock_rom = vec![0; 16 * 1024];
         mock_rom[0] = 0xFF;
         mock_rom[0x10] = 0xFF;
         mock_rom[0xa0] = 0xFF;
         mock_rom[0x3FFF] = 0xFF;
-
 
         let rom = Rom::new_single_bank(Bank::new(&mock_rom));
         let ppu = Ppu::new();
@@ -376,7 +392,7 @@ mod test {
 
     #[test]
     fn test_read_rom_double_bank() {
-        let mut mock_rom = vec![0; 32*1024];
+        let mut mock_rom = vec![0; 32 * 1024];
         mock_rom[0] = 0xFF; // beginning of bank
         mock_rom[0x10] = 0xFF;
         mock_rom[0xa0] = 0xFF;
@@ -387,8 +403,10 @@ mod test {
         mock_rom[0x40a0] = 0xAA;
         mock_rom[0x7FFF] = 0xAA; // end of bank
 
-
-        let rom = Rom::new_double_bank(Bank::new(&mock_rom[0..16 * 1024]), Bank::new(&mock_rom[16 * 1024..]));
+        let rom = Rom::new_double_bank(
+            Bank::new(&mock_rom[0..16 * 1024]),
+            Bank::new(&mock_rom[16 * 1024..]),
+        );
         let ppu = Ppu::new();
         let mut interconnect = Interconnect::new(ppu, rom);
         // Lower bank

@@ -1,10 +1,10 @@
-use crate::nes::cpu::{Cpu,Implied};
 use crate::nes::cpu::status::Flags;
+use crate::nes::cpu::{Cpu, FromImplied};
 
-pub struct Clc { }
+pub struct Clc {}
 
-impl Implied for Clc {
-    fn implied(cpu: &mut Cpu) -> usize {
+impl FromImplied for Clc {
+    fn from_implied(cpu: &mut Cpu) -> u32 {
         cpu.SR.reset(Flags::Carry);
         2
     }
@@ -12,8 +12,8 @@ impl Implied for Clc {
 
 #[cfg(test)]
 mod test {
-    use crate::nes::cpu::test::*;
     use crate::nes::cpu::status::Flags;
+    use crate::nes::cpu::test::*;
 
     #[test]
     fn test_clc() {

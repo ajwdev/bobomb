@@ -1,7 +1,7 @@
-use crate::nes::cpu::{Cpu,AddressMode,Immediate,FromAddress};
 use crate::nes::cpu::status::Flags;
+use crate::nes::cpu::{AddressMode, Cpu, FromAddress, FromImmediate};
 
-pub struct Cmp { }
+pub struct Cmp {}
 
 // NOTE Per http://www.atariarchives.org/alp/appendix_1.php, the Cmp instruction does the
 // subtraction as if both numbers are unsigned so watch out for overflows
@@ -19,8 +19,8 @@ impl Cmp {
     }
 }
 
-impl Immediate for Cmp {
-    fn immediate(cpu: &mut Cpu) -> usize {
+impl FromImmediate for Cmp {
+    fn from_immediate(cpu: &mut Cpu) -> u32 {
         let word = cpu.read_word_and_increment();
         Self::compare(cpu, word);
 
@@ -38,24 +38,27 @@ impl FromAddress for Cmp {
         match mode {
             AddressMode::ZeroPage => 3,
             AddressMode::ZeroPageX => 4,
-            AddressMode::Absolute =>  4,
-            AddressMode::AbsoluteX => { 4 + (extra_cycles as u32) },
-            AddressMode::AbsoluteY => { 4 + (extra_cycles as u32) },
-            AddressMode::IndirectY => { 5 + (extra_cycles as u32) },
-            _ => { panic!("unimplemented address mode {:?} for CMP", mode); }
+            AddressMode::Absolute => 4,
+            AddressMode::AbsoluteX => 4 + (extra_cycles as u32),
+            AddressMode::AbsoluteY => 4 + (extra_cycles as u32),
+            AddressMode::IndirectX => 6,
+            AddressMode::IndirectY => 5 + (extra_cycles as u32),
+            _ => {
+                panic!("unimplemented address mode {:?} for CMP", mode);
+            }
         }
     }
 }
 
 #[cfg(test)]
 mod test {
-    use crate::nes::cpu::test::*;
     use crate::nes::cpu::status::Flags;
+    use crate::nes::cpu::test::*;
     use crate::nes::cpu::Registers;
 
     #[test]
     fn test_cmp_equal() {
-        let mut cpu = mock_cpu(&[0xc9,0xAA]);
+        let mut cpu = mock_cpu(&[0xc9, 0xAA]);
         cpu.AC = 0xAA;
         cpu.step(None);
 
@@ -67,7 +70,7 @@ mod test {
 
     #[test]
     fn test_cmp_less_than() {
-        let mut cpu = mock_cpu(&[0xc9,0xA0]);
+        let mut cpu = mock_cpu(&[0xc9, 0xA0]);
         cpu.AC = 0xAA;
         cpu.step(None);
 
@@ -79,7 +82,7 @@ mod test {
 
     #[test]
     fn test_cmp_less_than_twos_comp() {
-        let mut cpu = mock_cpu(&[0xc9,0x10]);
+        let mut cpu = mock_cpu(&[0xc9, 0x10]);
         cpu.AC = 0xAA;
         cpu.step(None);
 
@@ -92,7 +95,7 @@ mod test {
 
     #[test]
     fn test_cmp_greater_than() {
-        let mut cpu = mock_cpu(&[0xc9,0xBB]);
+        let mut cpu = mock_cpu(&[0xc9, 0xBB]);
         cpu.AC = 0xAA;
         cpu.step(None);
 
@@ -104,7 +107,7 @@ mod test {
 
     #[test]
     fn test_cmp_greater_than_twos_comp() {
-        let mut cpu = mock_cpu(&[0xc9,0xBB]);
+        let mut cpu = mock_cpu(&[0xc9, 0xBB]);
         cpu.AC = 0x10;
         cpu.step(None);
 

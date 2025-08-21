@@ -99,7 +99,10 @@ fn new_viewstamp() -> String {
 macro_rules! emulation_running_bail {
     ($shim:expr) => {
         if $shim.is_executing() {
-            return Err(tonic::Status::new(tonic::Code::Aborted, "emulation is running"));
+            return Err(tonic::Status::new(
+                tonic::Code::Aborted,
+                "emulation is running",
+            ));
         }
     };
 }
@@ -326,12 +329,12 @@ impl BobombDebugger for Server {
         _req: tonic::Request<grpc::StatusRequest>,
     ) -> std::result::Result<tonic::Response<grpc::StatusReply>, tonic::Status> {
         if self.ctx.is_executing() {
-            Ok(tonic::Response::new(grpc::StatusReply{
+            Ok(tonic::Response::new(grpc::StatusReply {
                 emulation_state: grpc::status_reply::EmulationState::Running.into(),
                 ..Default::default()
             }))
         } else {
-            Ok(tonic::Response::new(grpc::StatusReply{
+            Ok(tonic::Response::new(grpc::StatusReply {
                 emulation_state: grpc::status_reply::EmulationState::Stopped.into(),
                 ..Default::default()
             }))

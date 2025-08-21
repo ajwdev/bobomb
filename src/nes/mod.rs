@@ -1,20 +1,20 @@
-use anyhow::*;
-use parking_lot::{Mutex};
-use std::sync::Arc;
-
-
-
-pub mod macros;
+pub mod address;
+pub mod controller;
 pub mod cpu;
+pub mod debugger;
+pub mod executor;
+pub mod interconnect;
+pub mod macros;
 pub mod ppu;
 pub mod rom;
-pub mod controller;
-pub mod address;
-pub mod interconnect;
-pub mod debugger;
 
-pub mod executor;
 pub use crate::nes::executor::ExecutorLock;
+
+use std::sync::Arc;
+
+use anyhow::*;
+use parking_lot::Mutex;
+use tracing::debug;
 
 #[derive(Default)]
 pub struct StepInfo {
@@ -96,25 +96,35 @@ impl Nes {
     // /home/andrew/roms/example2.nes: iNES ROM dump, 1x16k PRG, 1x8k CHR, [Horiz.]
     fn rom_is_double_banked(rom: &[u8]) -> bool {
         if rom.len() < 16 {
-            panic!("rom header is too small. expected 16 bytes, got #{}",
-                   rom.len());
+            panic!(
+                "rom header is too small. expected 16 bytes, got #{}",
+                rom.len()
+            );
         }
 
         // The 5th byte indicates how large the ROM should be
         match rom[4] {
             // TODO Is this panic worthy or should we assume 1? Afterall, you can't
             // really have a ROM without any program data.
-            0 => { panic!("rom unit size cannot be zero"); }
+            0 => {
+                panic!("rom unit size cannot be zero");
+            }
 
             // Single bank
-            1 => { return false; }
+            1 => {
+                return false;
+            }
 
             // Double bank
-            2 => { return true; }
+            2 => {
+                return true;
+            }
 
             // If we get here then MMC's do affect the PRG ROM unit size. My
             // guess is that they do.
-            _ => { panic!("unrecognized rom unit size {}", rom[4]); }
+            _ => {
+                panic!("unrecognized rom unit size {}", rom[4]);
+            }
         }
     }
 
@@ -125,7 +135,7 @@ impl Nes {
         let mut should_paint = false;
         {
             let mut interconnect = self.interconnect.lock();
-            for _ in 0..cycles*3 {
+            for _ in 0..cycles * 3 {
                 let result = interconnect.ppu.step();
 
                 interconnect.update_interrupt(result.interrupt);
@@ -135,7 +145,7 @@ impl Nes {
             }
         }
 
-        Ok( StepInfo{
+        Ok(StepInfo {
             should_paint,
             program_counter: self.cpu.PC,
         })

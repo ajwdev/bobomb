@@ -1,13 +1,13 @@
-use std::fmt;
+use anyhow::{bail, Result};
 use std::collections::HashMap;
-use anyhow::{Result, bail};
+use std::fmt;
 
 pub trait Environment {
     fn get(&self, name: &str) -> Option<i32>;
     fn set(&mut self, name: &str, val: i32);
 }
 
-impl Environment for HashMap<String,i32> {
+impl Environment for HashMap<String, i32> {
     fn get(&self, name: &str) -> Option<i32> {
         self.get(name).map(|i| *i)
     }
@@ -44,13 +44,13 @@ impl Cmd {
             Cmd::Clear(_) => "clear",
             Cmd::Continue => "continue",
             Cmd::Display(_) => "display",
-            Cmd::Examine(_,_) => "examine",
+            Cmd::Examine(_, _) => "examine",
             Cmd::Manual(_) => "man",
-            Cmd::Print(_,_) => "print",
+            Cmd::Print(_, _) => "print",
             Cmd::PrintStack => "stack",
             Cmd::PrintVar(_) => "print",
             Cmd::Restart(_) => "restart",
-            Cmd::SetVar(_,_) => "set",
+            Cmd::SetVar(_, _) => "set",
             Cmd::Status => "status",
             Cmd::Step => "step",
             Cmd::Undisplay(_) => "undisplay",
@@ -118,12 +118,10 @@ impl Expression {
     pub fn reduce<E: Environment>(&self, env: &E) -> Result<i32> {
         match &*self {
             // TODO
-            Expression::Variable(v) => {
-                match env.get(&v) {
-                    Some(n) => Ok(n),
-                    None => bail!("undefined variable {}", v),
-                }
-            }
+            Expression::Variable(v) => match env.get(&v) {
+                Some(n) => Ok(n),
+                None => bail!("undefined variable {}", v),
+            },
             Expression::Number(n) => Ok(*n),
             Expression::Op(lhs, op, rhs) => {
                 let a = lhs.reduce(env)?;

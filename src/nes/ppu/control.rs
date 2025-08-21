@@ -1,6 +1,6 @@
-use std::ops::BitAnd;
 use std::cmp::PartialEq;
 use std::fmt;
+use std::ops::BitAnd;
 
 use crate::nes::address::Address;
 
@@ -15,15 +15,14 @@ pub enum SpriteSize {
 }
 
 pub struct ControlRegister {
-    pub base_nametable_address: Address, // 0-1
+    pub base_nametable_address: Address,       // 0-1
     pub vram_address_increment: VramIncrement, // 2
-    pub sprite_address: Address, // 3
-    pub background_address: Address, //4
-    pub sprite_size: SpriteSize, //5
-    pub output_to_ext: bool, //6
-    pub nmi_during_vblank: bool, // 7
+    pub sprite_address: Address,               // 3
+    pub background_address: Address,           // 4
+    pub sprite_size: SpriteSize,               // 5
+    pub output_to_ext: bool,                   // 6
+    pub nmi_during_vblank: bool,               // 7
 }
-
 
 impl ControlRegister {
     pub fn new() -> ControlRegister {
@@ -48,33 +47,56 @@ impl ControlRegister {
         let mut result: u8 = 0;
 
         match self.base_nametable_address.to_u16() {
-            0x2000 => { }
-            0x2400 => { result |= 0x01; }
-            0x2800 => { result |= 0x02; }
-            0x2C00 => { result |= 0x03; }
-            _ => { panic!("invalid nametable address: {:#X}", self.base_nametable_address); }
+            0x2000 => {}
+            0x2400 => {
+                result |= 0x01;
+            }
+            0x2800 => {
+                result |= 0x02;
+            }
+            0x2C00 => {
+                result |= 0x03;
+            }
+            _ => {
+                panic!(
+                    "invalid nametable address: {:#X}",
+                    self.base_nametable_address
+                );
+            }
         }
 
         match self.vram_address_increment {
-            VramIncrement::DownThirtyTwo => { result |= 0b00000100; },
-            VramIncrement::AcrossOne => { },
+            VramIncrement::DownThirtyTwo => {
+                result |= 0b00000100;
+            }
+            VramIncrement::AcrossOne => {}
         }
 
         match self.sprite_address.to_u16() {
-            0x1000 => { result |= 0b00001000; }
-            0x0000 => { }
-            _ => { panic!("invalid sprite address: {:#X}", self.background_address); }
+            0x1000 => {
+                result |= 0b00001000;
+            }
+            0x0000 => {}
+            _ => {
+                panic!("invalid sprite address: {:#X}", self.background_address);
+            }
         }
 
         match self.background_address.to_u16() {
-            0x1000 => { result |= 0b00010000; }
-            0x0000 => { }
-            _ => { panic!("invalid background address: {:#X}", self.background_address); }
+            0x1000 => {
+                result |= 0b00010000;
+            }
+            0x0000 => {}
+            _ => {
+                panic!("invalid background address: {:#X}", self.background_address);
+            }
         }
 
-        match self.sprite_size  {
-            SpriteSize::EightBySixteen => { result |= 0b00100000; }
-            SpriteSize::EightByEight => { }
+        match self.sprite_size {
+            SpriteSize::EightBySixteen => {
+                result |= 0b00100000;
+            }
+            SpriteSize::EightByEight => {}
         }
 
         result |= (self.output_to_ext as u8) << 6;
@@ -85,11 +107,13 @@ impl ControlRegister {
 
     pub fn write_register(&mut self, word: u8) {
         self.base_nametable_address = match word & 0b00000011 {
-            0x00 => { Address(0x2000) }
-            0x01 => { Address(0x2400) }
-            0x02 => { Address(0x2800) }
-            0x03 => { Address(0x2C00) }
-            _ => { panic!("we should not be here"); }
+            0x00 => Address(0x2000),
+            0x01 => Address(0x2400),
+            0x02 => Address(0x2800),
+            0x03 => Address(0x2C00),
+            _ => {
+                panic!("we should not be here");
+            }
         };
 
         self.vram_address_increment = if (word & 0b00000100) > 0 {
@@ -120,7 +144,6 @@ impl ControlRegister {
         self.nmi_during_vblank = (word & 0b10000000) > 0;
     }
 }
-
 
 impl BitAnd for ControlRegister {
     type Output = Self;

@@ -1,6 +1,6 @@
-use crate::nes::cpu::{Cpu,Registers};
+use crate::nes::cpu::{Cpu, Registers};
 
-pub struct Load { }
+pub struct Load {}
 
 impl Load {
     pub fn immediate(cpu: &mut Cpu, dst: Registers) -> usize {
@@ -28,11 +28,13 @@ impl Load {
 
     fn save_destination(cpu: &mut Cpu, dest: Registers, value: u8) {
         match dest {
-            Registers::X => { cpu.X = value },
-            Registers::Y => { cpu.Y = value },
-            Registers::AC => { cpu.AC = value },
-            Registers::SP => { cpu.SP = value },
-            Registers::PC => { panic!("PC is not supported here!") },
+            Registers::X => cpu.X = value,
+            Registers::Y => cpu.Y = value,
+            Registers::AC => cpu.AC = value,
+            Registers::SP => cpu.SP = value,
+            Registers::PC => {
+                panic!("PC is not supported here!")
+            }
         }
     }
 }

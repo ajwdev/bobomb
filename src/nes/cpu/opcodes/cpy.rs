@@ -1,6 +1,6 @@
-use crate::nes::cpu::{Cpu,FromImmediate};
-use crate::nes::cpu::{FromAddress,AddressMode};
 use crate::nes::cpu::status::Flags;
+use crate::nes::cpu::{AddressMode, FromAddress};
+use crate::nes::cpu::{Cpu, FromImmediate};
 
 pub struct Cpy {}
 
@@ -38,19 +38,21 @@ impl FromAddress for Cpy {
         match mode {
             AddressMode::ZeroPage => 3,
             AddressMode::Absolute => 4,
-            _ => { panic!("unimplemented address mode {:?} for CPY", mode); }
+            _ => {
+                panic!("unimplemented address mode {:?} for CPY", mode);
+            }
         }
     }
 }
 
 #[cfg(test)]
 mod test {
-    use crate::nes::cpu::test::*;
     use crate::nes::cpu::status::Flags;
+    use crate::nes::cpu::test::*;
 
     #[test]
     fn test_cpy() {
-        let mut cpu = mock_cpu(&[0xc0,10]);
+        let mut cpu = mock_cpu(&[0xc0, 10]);
         cpu.Y = 100;
 
         cpu.step(None);

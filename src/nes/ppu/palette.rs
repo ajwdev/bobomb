@@ -2,7 +2,7 @@
 macro_rules! rgb_to_u32 {
     ($r:expr, $g:expr, $b:expr) => {
         (($r as u32) << 16) | (($g as u32) << 8) | $b as u32
-    }
+    };
 }
 
 pub static COLORS: [u32; 64] = [

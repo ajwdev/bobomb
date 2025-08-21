@@ -1,7 +1,7 @@
-use crate::nes::cpu::{Cpu,FromImplied};
 use crate::nes::address::Address;
+use crate::nes::cpu::{Cpu, FromImplied};
 
-pub struct Rts { }
+pub struct Rts {}
 
 impl FromImplied for Rts {
     fn from_implied(cpu: &mut Cpu) -> u32 {

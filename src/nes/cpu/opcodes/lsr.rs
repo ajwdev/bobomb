@@ -1,7 +1,7 @@
-use crate::nes::cpu::{Cpu,AddressMode,Accumulator,FromAddress};
 use crate::nes::cpu::status::Flags;
+use crate::nes::cpu::{AddressMode, Cpu, FromAccumulator, FromAddress};
 
-pub struct Lsr { }
+pub struct Lsr {}
 
 impl Lsr {
     #[inline]
@@ -26,8 +26,8 @@ impl Lsr {
     }
 }
 
-impl Accumulator for Lsr {
-    fn accumulator(cpu: &mut Cpu) -> usize {
+impl FromAccumulator for Lsr {
+    fn from_accumulator(cpu: &mut Cpu) -> u32 {
         let src = cpu.AC;
         let result = Lsr::shift_right(cpu, src);
         cpu.AC = result;
@@ -46,22 +46,27 @@ impl FromAddress for Lsr {
 
         match mode {
             AddressMode::ZeroPage => 5,
-            _ => { panic!("unimplemented address mode {:?} for LSR", mode); }
+            AddressMode::ZeroPageX => 6,
+            AddressMode::Absolute => 6,
+            AddressMode::AbsoluteX => 7,
+            _ => {
+                panic!("unimplemented address mode {:?} for LSR", mode);
+            }
         }
     }
 }
 
 #[cfg(test)]
 mod test {
+    use crate::nes::cpu::status::Flags;
     use crate::nes::cpu::test::*;
     use crate::nes::cpu::Registers;
-    use crate::nes::cpu::status::Flags;
 
     #[test]
     fn test_lsr() {
         // TODO Would it be useful to have `rewind` function
         // that would let us replay an instruction (ignoring side effects)
-        let mut cpu = mock_cpu(&[0x4a,0x4a,0x4a,0x4a]);
+        let mut cpu = mock_cpu(&[0x4a, 0x4a, 0x4a, 0x4a]);
         cpu.AC = 255;
         cpu.SR.reset(Flags::Carry);
         cpu.SR.set(Flags::Negative);

@@ -1,6 +1,6 @@
-use crate::nes::cpu::{Cpu,FromImmediate,FromAddress,AddressMode};
+use crate::nes::cpu::{AddressMode, Cpu, FromAddress, FromImmediate};
 
-pub struct Eor { }
+pub struct Eor {}
 
 impl Eor {
     #[inline]
@@ -30,27 +30,30 @@ impl FromAddress for Eor {
 
         match mode {
             AddressMode::ZeroPage => 3,
-            AddressMode::Absolute =>  4,
-            AddressMode::AbsoluteX => { 4 + (extra_cycles as u32) },
-            AddressMode::AbsoluteY => { 4 + (extra_cycles as u32) },
-            AddressMode::IndirectY => { 5 + (extra_cycles as u32) },
-            _ => { panic!("unimplemented address mode {:?} for EOR", mode); }
+            AddressMode::ZeroPageX => 4,
+            AddressMode::Absolute => 4,
+            AddressMode::AbsoluteX => 4 + (extra_cycles as u32),
+            AddressMode::AbsoluteY => 4 + (extra_cycles as u32),
+            AddressMode::IndirectX => 6,
+            AddressMode::IndirectY => 5 + (extra_cycles as u32),
+            _ => {
+                panic!("unimplemented address mode {:?} for EOR", mode);
+            }
         }
     }
 }
 
 #[cfg(test)]
 mod test {
+    use crate::nes::cpu::status::Flags;
     use crate::nes::cpu::test::*;
     use crate::nes::cpu::Registers;
-    use crate::nes::cpu::status::Flags;
 
     #[test]
     fn test_eor() {
-        let mut cpu = mock_cpu(&[0x49,0xF0,0x49,0xFF]);
+        let mut cpu = mock_cpu(&[0x49, 0xF0, 0x49, 0xFF]);
         cpu.AC = 0x0F;
         cpu.SR.reset(Flags::Zero);
-
 
         cpu.step(None);
         assert_cpu_register!(cpu, Registers::AC, 0xFF);
@@ -63,5 +66,3 @@ mod test {
         assert_status_reset!(cpu, Flags::Negative);
     }
 }
-
-

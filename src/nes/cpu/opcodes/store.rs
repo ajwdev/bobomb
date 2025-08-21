@@ -1,6 +1,6 @@
-use crate::nes::cpu::{Cpu,Registers};
+use crate::nes::cpu::{Cpu, Registers};
 
-pub struct Store { }
+pub struct Store {}
 
 impl Store {
     pub fn absolute(cpu: &mut Cpu, src: Registers) {
@@ -22,11 +22,13 @@ impl Store {
 
     pub fn save_destination(cpu: &mut Cpu, src: Registers, dest: u16) {
         let result = match src {
-            Registers::X => { cpu.X },
-            Registers::Y => { cpu.Y },
-            Registers::AC => { cpu.AC },
-            Registers::SP => { cpu.SP },
-            Registers::PC => { panic!("PC is not supported here!") },
+            Registers::X => cpu.X,
+            Registers::Y => cpu.Y,
+            Registers::AC => cpu.AC,
+            Registers::SP => cpu.SP,
+            Registers::PC => {
+                panic!("PC is not supported here!")
+            }
         };
         cpu.write_at(dest, result);
     }

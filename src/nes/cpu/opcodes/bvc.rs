@@ -1,14 +1,12 @@
-use crate::nes::cpu::{Cpu,Relative};
-use crate::nes::cpu::status::Flags;
 use super::branch::Branch;
+use crate::nes::cpu::status::Flags;
+use crate::nes::cpu::{Cpu, FromRelative};
 
-pub struct Bvc { }
+pub struct Bvc {}
 
-impl Relative for Bvc {
-    fn relative(cpu: &mut Cpu) -> usize {
-        Branch::branch_on_true(cpu, |c| c.SR.is_clear(Flags::Overflow)) as usize;
-        // TODO Add two cycles if new page
-        2
+impl FromRelative for Bvc {
+    fn from_relative(cpu: &mut Cpu) -> u32 {
+        Branch::branch_on_true(cpu, |c| c.SR.is_clear(Flags::Overflow))
     }
 }
 
@@ -50,4 +48,3 @@ impl Relative for Bvc {
 //         assert!(cpu.PC == 0x7f84, "expected 0x7f82, got {:#x}", cpu.PC);
 //     }
 // }
-
