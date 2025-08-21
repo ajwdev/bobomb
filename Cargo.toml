@@ -4,6 +4,7 @@ version = "0.2.0"
 authors = ["Andrew Williams <williams.andrew@gmail.com>"]
 edition = "2024"
 build = "build.rs"
+default-run = "bobomb"
 
 [dependencies]
 ansi_term = "0.12"
