@@ -35,7 +35,7 @@ fn main() -> Result<()> {
     let mut opts = Args::parse();
 
     let subscriber = FmtSubscriber::builder()
-        .with_max_level(Level::INFO)
+        .with_max_level(Level::DEBUG)
         .finish();
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 
@@ -54,7 +54,7 @@ fn main() -> Result<()> {
         match executor.run() {
             Ok(exitstatus) => match exitstatus {
                 ExitStatus::Restart(new_pc) => {
-                    println!("Restart reqested");
+                    info!("Restart requested");
                     if new_pc.is_some() {
                         opts.program_counter = new_pc
                     }
