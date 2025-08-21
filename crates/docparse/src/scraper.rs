@@ -3,7 +3,7 @@ use ego_tree::{NodeId, Tree};
 use itertools::Itertools;
 use regex::Regex;
 use scraper::{ElementRef, Html, Node, Selector};
-use tracing::{info, debug, field, span, trace, Level};
+use tracing::{debug, field, info, span, trace, Level};
 
 use std::fmt::Write;
 // rust seems to get confused about this import. We do end up using it but not directly
