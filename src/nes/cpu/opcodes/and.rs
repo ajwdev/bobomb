@@ -1,19 +1,6 @@
-use crate::nes::cpu::{Cpu,FromImmediate,FromAddress,AddressMode};
+use crate::nes::cpu::{AddressMode, Cpu, FromAddress, FromImmediate};
 
-pub struct And { }
-
-macro_rules! from_immediate {
-    ($s:ident, $c:expr, $fn:ident) => {
-        impl FromImmediate for $s {
-            fn from_immediate(cpu: &mut Cpu) -> u32 {
-                let word = cpu.read_word_and_increment();
-                $s::$fn(cpu, word);
-
-                $c
-            }
-        }
-    };
-}
+pub struct And {}
 
 impl And {
     #[inline]
@@ -25,15 +12,13 @@ impl And {
     }
 }
 
-// impl FromImmediate for $s {
-    // fn from_immediate(cpu: &mut Cpu) -> u32 {
-    //     let word = cpu.read_word_and_increment();
-    //     Self::and(cpu, word);
-
-    //     2
-    // }
-    from_immediate!(And, 2, and);
-// }
+impl FromImmediate for And {
+    fn from_immediate(cpu: &mut Cpu) -> u32 {
+        let word = cpu.read_word_and_increment();
+        And::and(cpu, word);
+        2
+    }
+}
 
 impl FromAddress for And {
     fn from_address(cpu: &mut Cpu, mode: AddressMode) -> u32 {
@@ -45,10 +30,14 @@ impl FromAddress for And {
         match mode {
             AddressMode::ZeroPage => 3,
             AddressMode::ZeroPageX => 4,
-            AddressMode::AbsoluteX => { 4 + (extra_cycles as u32) },
-            AddressMode::AbsoluteY => { 4 + (extra_cycles as u32) },
-            AddressMode::IndirectY => { 5 + (extra_cycles as u32) },
-            _ => { panic!("unimplemented address mode {:?} for AND", mode); }
+            AddressMode::Absolute => 4,
+            AddressMode::AbsoluteX => 4 + (extra_cycles as u32),
+            AddressMode::AbsoluteY => 4 + (extra_cycles as u32),
+            AddressMode::IndirectX => 6,
+            AddressMode::IndirectY => 5 + (extra_cycles as u32),
+            _ => {
+                panic!("unimplemented address mode {:?} for AND", mode);
+            }
         }
     }
 }
