@@ -63,6 +63,7 @@ pub struct Ppu {
     // vram: Vec<u8>,
     vram: Box<[u8]>,
     oam: Box<[u8]>,
+    chr_rom: Option<Vec<u8>>,
 
     // Frame buffers
     pub front: Box<[u32]>,
@@ -121,6 +122,7 @@ impl Ppu {
 
             front: Box::new([0; 256 * 240]),
             back: Box::new([0; 256 * 240]),
+            chr_rom: None,
 
             // https://wiki.nesdev.com/w/index.php/PPU_power_up_state
             control: ControlRegister::new(),
@@ -161,13 +163,17 @@ impl Ppu {
         }
     }
 
+    pub fn load_chr_rom(&mut self, chr_data: Vec<u8>) {
+        self.chr_rom = Some(chr_data);
+    }
+
     pub fn step(&mut self) -> PpuStepResult {
         let mut result = PpuStepResult {
             should_redraw: false,
             interrupt: None,
         };
 
-        if self.scanline >= -1 && self.scanline < 240  {
+        if self.scanline >= -1 && self.scanline < 240 {
             if self.scanline == 0 && self.cycle == 0 {
                 // skip cycle
                 self.cycle = 1;
@@ -177,29 +183,31 @@ impl Ppu {
                 self.is_vblank.set(false);
             }
 
-            if (self.cycle >= 2 && self.cycle < 258) || (self.cycle >= 321 && self.cycle < 338) {
-                self.fetch()
-            }
+            if self.rendering_enabled() {
+                if ((self.cycle >= 2 && self.cycle < 258)
+                    || (self.cycle >= 321 && self.cycle < 338))
+                {
+                    self.fetch()
+                }
 
-            if self.cycle == 256 {
-                self.increment_scroll_y();
-            }
+                if self.cycle == 256 {
+                    self.increment_scroll_y();
+                }
 
-            if self.cycle == 257 {
-                // copy X
-                // https://wiki.nesdev.com/w/index.php/PPU_scrolling#At_dot_257_of_each_scanline
-                self.load_background_shifters();
-                self.copy_scroll_x();
-            }
+                if self.cycle == 257 {
+                    // copy X
+                    // https://wiki.nesdev.com/w/index.php/PPU_scrolling#At_dot_257_of_each_scanline
+                    self.load_background_shifters();
+                    self.copy_scroll_x();
+                }
 
-            if self.cycle == 338 || self.cycle == 340 {
-                self.next_tile_id = self.ppu_read_at(
-                    0x2000 | self.addr_v & 0x0fff
-                );
-            }
+                if (self.cycle == 338 || self.cycle == 340) {
+                    self.next_tile_id = self.ppu_read_at(0x2000 | self.addr_v & 0x0fff);
+                }
 
-            if self.scanline == -1 && self.cycle >= 280 && self.cycle < 305 {
-                self.copy_scroll_y();
+                if self.scanline == -1 && self.cycle >= 280 && self.cycle < 305 {
+                    self.copy_scroll_y();
+                }
             }
         }
 
@@ -235,34 +243,6 @@ impl Ppu {
         }
 
         result
-
-
-        // Draw some pixels
-        // if self.rendering_enabled() {
-        //     self.render();
-        // }
-
-        // if self.cycle == 1 {
-        //     match self.scanline {
-        //         VBLANK_SCANLINE => {
-
-        //             if self.control.nmi_during_vblank {
-        //                 result.interrupt = Some(Interrupt::Nmi);
-        //             }
-
-        //             self.is_vblank.set(true);
-        //             std::mem::swap(&mut self.front, &mut self.back);
-        //             result.should_redraw = true;
-        //         }
-        //         PRERENDER_SCANLINE => {
-        //             self.is_vblank.set(false);
-
-        //             // TODO reset sprite overflow/zerohit
-        //         }
-        //         _ => {} // Nothing to do
-        //     }
-        // }
-
     }
 
     fn copy_scroll_x(&mut self) {
@@ -312,6 +292,15 @@ impl Ppu {
     fn draw(&mut self) {
         let mut pixel: u8 = 0;
         let mut palette: u8 = 0;
+
+        // Only render if rendering is enabled
+        if !self.rendering_enabled() {
+            let i = (256 * self.scanline) + self.cycle - 1;
+            if i >= 0 && (i as usize) < self.back.len() {
+                self.back[i as usize] = COLORS[0]; // Use background color
+            }
+            return;
+        }
 
         // Backgrounds first
         if self.mask.show_background {

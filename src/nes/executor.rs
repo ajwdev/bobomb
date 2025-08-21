@@ -218,7 +218,8 @@ impl Executor {
         });
 
         // Limit to max ~60 fps update rate
-        // self.window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
+        self.window
+            .limit_update_rate(Some(std::time::Duration::from_micros(16600)));
 
         let mut last_pc: u16 = self.nes.lock().cpu.PC;
 
