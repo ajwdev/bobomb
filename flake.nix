@@ -20,11 +20,10 @@
           "rust-src"
           "rustc"
           "rustfmt"
+          "rust-analyzer"
         ])
         protobuf
         llvmPackages_16.bintools clang 
-        rust-analyzer
-        # rust-analyzer-nightly
         pkg-config libxkbcommon openssl libiconv
       ] ++ lib.optionals stdenv.isDarwin [
         darwin.apple_sdk.frameworks.Foundation
