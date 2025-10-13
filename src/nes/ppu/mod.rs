@@ -1,4 +1,5 @@
 use crate::nes::cpu::Interrupt;
+use crate::nes::ppu::oam::Oam;
 use std::cell::Cell;
 
 // TODO This file is a mess. We need to heavily refactor after we're
@@ -9,6 +10,7 @@ use std::cell::Cell;
 
 mod control;
 mod mask;
+mod oam;
 mod palette;
 use crate::nes::ppu::control::{ControlRegister, VramIncrement};
 use crate::nes::ppu::mask::MaskRegister;
@@ -61,8 +63,8 @@ pub struct PpuStepResult {
 #[derive(Debug)]
 pub struct Ppu {
     // vram: Vec<u8>,
-    vram: Box<[u8]>,
-    oam: Box<[u8]>,
+    vram: Box<[u8; 0x4000]>, // 2kb vram
+    oam: Box<[u8; 256]>,
     chr_rom: Option<Vec<u8>>,
 
     // Frame buffers
@@ -157,7 +159,7 @@ impl Ppu {
             // fine_x_scroll: 0,
             sprite_overflow: false,
             // frame_is_even: true,
-            // TODO We should have seperate fields for an NMI being fired and a vblank. They are
+            // TODO We should have separate fields for an NMI being fired and a vblank. They are
             // not technically the same as reading the status register will reset the nmi state.
             // Maybe we just need to rename this?
         }
@@ -169,7 +171,7 @@ impl Ppu {
             interrupt: None,
         };
 
-        if self.scanline >= -1 && self.scanline < 240  {
+        if self.scanline >= -1 && self.scanline < 240 {
             if self.scanline == 0 && self.cycle == 0 {
                 // skip cycle
                 self.cycle = 1;
@@ -179,29 +181,29 @@ impl Ppu {
                 self.is_vblank.set(false);
             }
 
-            if (self.cycle >= 2 && self.cycle < 258) || (self.cycle >= 321 && self.cycle < 338) {
-                self.fetch()
-            }
+            if self.rendering_enabled() {
+                if self.cycle >= 2 && self.cycle < 258 || self.cycle >= 321 && self.cycle < 338 {
+                    self.fetch()
+                }
 
-            if self.cycle == 256 {
-                self.increment_scroll_y();
-            }
+                if self.cycle == 256 {
+                    self.increment_scroll_y();
+                }
 
-            if self.cycle == 257 {
-                // copy X
-                // https://wiki.nesdev.com/w/index.php/PPU_scrolling#At_dot_257_of_each_scanline
-                self.load_background_shifters();
-                self.copy_scroll_x();
-            }
+                if self.cycle == 257 {
+                    // copy X
+                    // https://wiki.nesdev.com/w/index.php/PPU_scrolling#At_dot_257_of_each_scanline
+                    self.load_background_shifters();
+                    self.copy_scroll_x();
+                }
 
-            if self.cycle == 338 || self.cycle == 340 {
-                self.next_tile_id = self.ppu_read_at(
-                    0x2000 | self.addr_v & 0x0fff
-                );
-            }
+                if self.cycle == 338 || self.cycle == 340 {
+                    self.next_tile_id = self.ppu_read_at(0x2000 | self.addr_v & 0x0fff);
+                }
 
-            if self.scanline == -1 && self.cycle >= 280 && self.cycle < 305 {
-                self.copy_scroll_y();
+                if self.scanline == -1 && self.cycle >= 280 && self.cycle < 305 {
+                    self.copy_scroll_y();
+                }
             }
         }
 
@@ -237,34 +239,6 @@ impl Ppu {
         }
 
         result
-
-
-        // Draw some pixels
-        // if self.rendering_enabled() {
-        //     self.render();
-        // }
-
-        // if self.cycle == 1 {
-        //     match self.scanline {
-        //         VBLANK_SCANLINE => {
-
-        //             if self.control.nmi_during_vblank {
-        //                 result.interrupt = Some(Interrupt::Nmi);
-        //             }
-
-        //             self.is_vblank.set(true);
-        //             std::mem::swap(&mut self.front, &mut self.back);
-        //             result.should_redraw = true;
-        //         }
-        //         PRERENDER_SCANLINE => {
-        //             self.is_vblank.set(false);
-
-        //             // TODO reset sprite overflow/zerohit
-        //         }
-        //         _ => {} // Nothing to do
-        //     }
-        // }
-
     }
 
     fn copy_scroll_x(&mut self) {
@@ -312,24 +286,47 @@ impl Ppu {
     }
 
     fn draw(&mut self) {
-        let mut pixel: u8 = 0;
-        let mut palette: u8 = 0;
+        // Only render if rendering is enabled
+        if !self.rendering_enabled() {
+            let i = (256 * self.scanline) + self.cycle - 1;
+            if i >= 0 && (i as usize) < self.back.len() {
+                self.back[i as usize] = COLORS[0]; // Use background color
+            }
+            return;
+        }
+
+        // Framebuffer index
+        let i = (256 * self.scanline) + self.cycle - 1;
 
         // Backgrounds first
+        let mut bg_pixel: u8 = 0;
+        let mut bg_palette: u8 = 0;
         if self.mask.show_background {
             let m = 0x8000 >> self.fine_x;
 
             let p0: u8 = ((self.pattern_lo & m) > 0).into();
             let p1: u8 = ((self.pattern_hi & m) > 0).into();
-            pixel = (p1 << 1) | p0;
+            bg_pixel = (p1 << 1) | p0;
 
             let pal0: u8 = ((self.attrib_lo & m) > 0).into();
             let pal1: u8 = ((self.attrib_hi & m) > 0).into();
-            palette = (pal1 << 1) | pal0;
+            bg_palette = (pal1 << 1) | pal0;
         }
 
-        let c = self.ppu_read_at(0x3f00 + ((palette as u16) << 2) + (pixel as u16)) & 0x3f;
-        let i = (256 * self.scanline) + self.cycle - 1;
+        let mut sprite_pixel: u8 = 0;
+        let mut sprite_palette: u8 = 0;
+        if self.mask.show_sprites {
+            let spites = Oam::new(&self.oam)
+                .iter()
+                .filter(|s| self.scanline == s.pos_x as i64)
+                .collect::<Vec<_>>();
+        }
+
+        // Read palette index from palette RAM base at 0x3f00
+        // Each palette has 4 colors, so multiply by 4  to get the palette offset
+        // pixel (0-3) selects which color within that palette
+        // Mask to 6 bits since NES has 64 system colors (0x00-0x3f)
+        let c = self.ppu_read_at(0x3f00 + ((bg_palette as u16) << 2) + (bg_pixel as u16)) & 0x3f;
         // dbg!(self.scanline, self.cycle-1);
         self.back[i as usize] = COLORS[c as usize];
     }
@@ -523,7 +520,7 @@ impl Ppu {
             }
             // 0x2007
             PpuRegister::Data => {
-                // PPU RAM is just mirroed starting at 0x4000
+                // PPU RAM is just mirrored starting at 0x4000
                 let idx = (self.addr_v % 0x4000) as usize;
                 self.vram[idx] = value;
 
