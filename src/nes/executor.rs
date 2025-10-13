@@ -160,23 +160,25 @@ impl Executor {
             ctx.breakpoints.lock().enable_step();
         }
 
+        let window = Window::new(
+            "Bobomb",
+            WIDTH,
+            HEIGHT,
+            WindowOptions {
+                title: true,
+                resize: false,
+                scale: minifb::Scale::X2,
+                ..WindowOptions::default()
+            },
+        ).map_err(|e| anyhow::anyhow!("Failed to create window: {:?}", e))?;
+
         Ok(Self {
             nes: Arc::new(Mutex::new(nes)),
             execution_gate,
             ctx,
             // server_address: String::from("127.0.0.1:6502"),
             wait_on_error: true,
-            window: Window::new(
-                "Bobomb",
-                WIDTH,
-                HEIGHT,
-                WindowOptions {
-                    title: true,
-                    resize: false,
-                    scale: minifb::Scale::X2,
-                    ..WindowOptions::default()
-                },
-            )?,
+            window,
         })
     }
 
@@ -218,7 +220,8 @@ impl Executor {
         });
 
         // Limit to max ~60 fps update rate
-        // self.window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
+        self.window
+            .limit_update_rate(Some(std::time::Duration::from_micros(16600)));
 
         let mut last_pc: u16 = self.nes.lock().cpu.PC;
 
