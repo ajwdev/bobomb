@@ -262,7 +262,7 @@ mod test {
     #[test]
     fn test_write_word() {
         let rom = Rom::new_double_bank(Bank::new(&[0; 16384]), Bank::new(&[0; 16384]));
-        let ppu = Ppu::new();
+        let ppu = Ppu::new(None);
         let mut interconnect = Interconnect::new(ppu, rom);
         let mut result: u8;
 
@@ -277,7 +277,7 @@ mod test {
     #[test]
     fn test_read_system_ram() {
         let rom = Rom::new_double_bank(Bank::new(&[0; 16384]), Bank::new(&[0; 16384]));
-        let ppu = Ppu::new();
+        let ppu = Ppu::new(None);
         let mut interconnect = Interconnect::new(ppu, rom);
         interconnect.ram[0] = 0xFF;
         interconnect.ram[0x10] = 0xFF;
@@ -293,7 +293,7 @@ mod test {
     #[test]
     fn test_read_range() {
         let rom = Rom::new_double_bank(Bank::new(&[0; 16384]), Bank::new(&[0; 16384]));
-        let ppu = Ppu::new();
+        let ppu = Ppu::new(None);
         let mut interconnect = Interconnect::new(ppu, rom);
 
         interconnect.ram[0x0080] = 0xFF;
@@ -357,7 +357,7 @@ mod test {
         mock_rom[0x3ffd] = 0xbe;
 
         let rom = Rom::new_single_bank(Bank::new(&mock_rom));
-        let ppu = Ppu::new();
+        let ppu = Ppu::new(None);
         let interconnect = Interconnect::new(ppu, rom);
         let result = interconnect.find_reset_vector_address();
         assert!(
@@ -376,7 +376,7 @@ mod test {
         mock_rom[0x3FFF] = 0xFF;
 
         let rom = Rom::new_single_bank(Bank::new(&mock_rom));
-        let ppu = Ppu::new();
+        let ppu = Ppu::new(None);
         let mut interconnect = Interconnect::new(ppu, rom);
         // Lower bank
         assert_eq!(0xFF, interconnect.read_word(0x8000));
@@ -407,7 +407,7 @@ mod test {
             Bank::new(&mock_rom[0..16 * 1024]),
             Bank::new(&mock_rom[16 * 1024..]),
         );
-        let ppu = Ppu::new();
+        let ppu = Ppu::new(None);
         let mut interconnect = Interconnect::new(ppu, rom);
         // Lower bank
         assert_eq!(0xFF, interconnect.read_word(0x8000));

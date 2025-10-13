@@ -447,7 +447,7 @@ mod test {
             Rom::new_single_bank(Bank::new(&interconnect[0..0x4000]))
         };
 
-        let ppu = Ppu::new();
+        let ppu = Ppu::new(None);
         Interconnect::new(ppu, rom)
     }
 

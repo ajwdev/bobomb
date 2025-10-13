@@ -63,6 +63,7 @@ pub struct Ppu {
     // vram: Vec<u8>,
     vram: Box<[u8]>,
     oam: Box<[u8]>,
+    chr_rom: Option<Vec<u8>>,
 
     // Frame buffers
     pub front: Box<[u32]>,
@@ -110,7 +111,7 @@ pub struct Ppu {
 }
 
 impl Ppu {
-    pub fn new() -> Self {
+    pub fn new(chr_rom: Option<Vec<u8>>) -> Self {
         Ppu {
             // vram: vec![0; VRAM_SIZE],
             vram: Box::new([0; VRAM_SIZE]),
@@ -121,6 +122,7 @@ impl Ppu {
 
             front: Box::new([0; 256 * 240]),
             back: Box::new([0; 256 * 240]),
+            chr_rom: chr_rom,
 
             // https://wiki.nesdev.com/w/index.php/PPU_power_up_state
             control: ControlRegister::new(),

@@ -17,7 +17,7 @@ futures-cpupool = "0.1.8"
 lalrpop = { version = "0.20", features = ["lexer"] }
 lalrpop-util = "0.20"
 lazy_static = "1.5.0"
-minifb = "0.25.0"
+minifb = "0.28"
 num-traits = "0.2.19"
 parking_lot = "0.12.4"
 prost = "0.12"
