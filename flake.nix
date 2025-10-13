@@ -23,8 +23,9 @@
           "rust-analyzer"
         ])
         protobuf
-        llvmPackages_16.bintools clang 
+        llvmPackages_16.bintools clang
         pkg-config libxkbcommon openssl libiconv
+        wayland wayland-protocols libffi
       ] ++ lib.optionals stdenv.isDarwin [
         darwin.apple_sdk.frameworks.Foundation
         darwin.apple_sdk.frameworks.Cocoa
@@ -40,6 +41,11 @@
       # RUSTFLAGS = "-C target-cpu=native";
       PROTOC = "${pkgs.protobuf}/bin/protoc";
       PROTOC_INCLUDE = "${pkgs.protobuf}/include";
+      LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
+        pkgs.libxkbcommon
+        pkgs.wayland
+        pkgs.libffi
+      ];
     };
   });
 }
