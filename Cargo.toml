@@ -9,7 +9,7 @@ default-run = "bobomb"
 [dependencies]
 ansi_term = "0.12"
 anyhow = "1.0.99"
-bytes = "1.10.1"
+bytes = "1.11.1"
 clap = { version = "4.5.45", features = ["derive"] }
 ctrlc = "3.4.7"
 futures = "0.3.31"
